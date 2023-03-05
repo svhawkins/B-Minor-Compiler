@@ -61,22 +61,6 @@
 %token TOKEN_COMMA
 
 %%
-program : expr TOKEN_SEMI { return 0; }
-	;
-
-expr	: expr TOKEN_ADD term | expr TOKEN_SUB term
-	| term
-	;
-
-term	: term TOKEN_MULT factor
-	| term TOKEN_DIV factor
-	| factor
-	;
-
-factor	: TOKEN_SUB factor
-	| TOKEN_LPAR expr TOKEN_RPAR
-	| TOKEN_NUMBER
-	;
 
 %%
 int yyerror(char* str) { fprintf(stderr, "%s\n", str); return 0; }
