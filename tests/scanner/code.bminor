@@ -1,0 +1,173 @@
+// no | or & operators, just && and ||!
+if (a | b)  // should fail at |
+{
+        print " a || b is true";
+}
+if (a & b)  // should fail at &
+{
+        print " a || b is true";
+}
+
+
+//
+z = -x; // unary negation
+x^2; //exponantiation
+
+//simple test cases
+x ^ 2
+z != x % 2
+z = 5 + 6;
+z = 5 * 6;
+z = 5 - 6;
+z = 5 / 6;
+q++;	// no longer +++ since this is a scannner, not a parser
+z--;	// see above comment
+z = 7 + 7 - z;
+
+//
+
+z = -(5 * 4);
+z = 15 + 5 - 4*3/7;
+z = x + (y * 5 - (4 + 20/v) - 15) % 6 + z;
+
+//
+x:integer;
+for(x = 0; x < 5; x++)
+{
+        print "counting: ", x;
+}
+a:integer = 0;
+while(a > 0)
+{
+        a--;
+}
+
+//
+main: function integer ( argc: integer, argv: array [] string ) =
+{
+}
+boolFunction: function boolean(intVar:integer) =
+{
+        return intVar > 5;
+}
+intFunction: function integer(integer n) =
+{
+        total:integer = 0;
+        int count;
+        for(count = 0; count < n+1; count++)
+        {
+                total = total + count;
+
+}
+
+
+//
+intFunction: function integer(intVar:integer, boolVar: boolean)
+{
+        if(boolVar)
+        {
+                intVar = intVar * 2;
+        }
+        return intVar;
+}
+// finds the largest value in the array
+getLargest: function integer(intArrVar:array [] integer, int len) =
+{
+        largest:integer = 0;
+        x:integer;
+        for(x = 0; x < len; x++)
+        {
+                if(intArrVar[x] > largest)
+                {
+                        largest = intArrVar[x];
+                }
+        }
+        return largest;
+
+}
+
+main: function integer ( argc: integer, argv: array [] string ) =
+{
+        b:array [10] integer = {0,1,2,3,4,5};
+        b[4] = 6;
+        i:integer;
+        z:integer = intFunction(i, true);
+        print intArrFunction(v, z);
+}
+
+if ( a >= 5 )
+{
+        print "a >= 5";
+}
+if( a > 5 )
+{
+        print "a > 5";
+}
+if( a <= 5 )
+{
+        print "a <= 5";
+}
+if( a < 5 )
+{
+        print "a < 5";
+}
+if( a == 5 )
+{
+        print "a == 5";
+}
+if( a != 5 )
+{
+        print "a != 5";
+}
+a = 5; // test assigment
+if (a || b)
+{
+        print " a || b is true";
+}
+if (a && b)
+{
+        print " a && b is true";
+}
+
+// good strings (code)
+str:string = "";
+
+str:string = "we can write an escaped backslash \\";
+str:string = "single qoute ' or \' ";
+str:string = " double qoute \" ";
+str:string = "";
+
+str:string = "hello this is a string!";
+str:string = "hello this is \1 a string!";
+str:string = "1123456789112345678911234567891123456789112345678911234567891>"
+
+f:array [5]integer = { 1, 2, 3, 4, 5};
+f:array[5]char = {'a', 'b', 'c', 'd', 'e'};
+f:array[5] boolean = {false, false, true, true, true};
+f:array []      string = {"this", "i", "s", "a,", "test", "."};
+
+// good numbers
+number: integer;
+number = 56;
+number = -56;
+number = +56;
+number = 0005006;
+number = +0005006;
+number = -000050006;
+
+// good booleans
+bool:boolean = true;
+bool:boolean = false;
+bool = 5 > 4;
+
+// good chars (code)
+
+character:              char = 'c';
+character: char = '\n';
+character:      char = '\0';
+character = '\6';
+character = '\c'
+character = '\t'
+
+// misc
+return foo(bar);

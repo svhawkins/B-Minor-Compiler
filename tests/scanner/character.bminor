@@ -1,0 +1,28 @@
+'x' // should pass
+'x"
+'
+'\n' // should pass
+'493'
+'/n'
+'\0' // should pass
+'\%' // should pass
+'x'z'	// produces 3 tokens
+'x'y	// produces 2 tokens
+
+'\'
+''
+'ca'
+'\ac'
+'"
+
+// produces 2 tokens: 1. ' and then nothing 2. and then nothing '
+'
+'
+
+
+'\\n'
+
+'A' // should pass
+'\A' // should pass
+
+''

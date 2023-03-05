@@ -1,0 +1,72 @@
+ident55
+ident55_
+minus#44  // should fail
+ident__55__
+thisIsAReallyReallyLongIdentifierNameThatHasTonsOfLettersInIt
+variable_names_may_contain_underscores_
+_variables_can_start_with_an_underscore_67
+$minus // should fail
+
+while
+/* comment */
+abc
+/*
+multi
+line
+comment
+*/
+493 // should fail
+_
+abcde 12345 // number should fail
+___identifier
+__identifier
+the
+cat
+
+foo
+_
+foo_c
+24_fox		// should fail
+foo_2
+f
+2_foo		// should fail
+bob
+house
+__
+jj
+i
+johnny
+SNAKE_CASE
+SNAKE_CASE2
+3SNAKE_CASE		// should fail
+camelCase
+CapitalizedCamelCase
+
+true  // should fail
+false // should fail
+TRUE
+FALSE
+True
+False
+tRUE
+fALSE
+
+// C++ COMMENT
+/* C COMMENT */
+/**/
+/*
+*/
+// comment\n
+//\n
+
+KEYWORD
+False
+false_
+true_
+if_
+else_
+while2
+for2
+
+/* should fail */
+foo\nbar\0  // produces 5 tokens: foo \ nbar \ 0

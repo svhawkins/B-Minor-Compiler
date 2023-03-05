@@ -1,0 +1,17 @@
+"\5"
+"5"     // should be same length, identical
+"5\0"
+"\5\0"
+
+"groo\vy"
+"groovy"        // should be same length, identical
+"groovy\0"
+"groo\vy\0"
+"\g\r\o\o\v\y\0"
+
+
+'p'
+'\p'	// should be same length, identical
+
+'\n'	// should not be literal n, should be newline
+'\0'	// should not be literal 0, should be null terminator

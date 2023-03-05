@@ -1,0 +1,19 @@
+
+/* sample file */
+
+n: integer = 493;
+main: function integer(void) {
+  str: string = "foo;
+  print "Hello world! :)\n", n;
+  ch: character = 'xx';
+
+  print "Goodbye world! :(\n", -n;
+
+  x: integer = 9223372036854775808;
+
+
+  c: character = 'xyz;
+  return 0;
+}
+
+/* unmatched comment
