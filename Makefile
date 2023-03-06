@@ -17,7 +17,7 @@ test: tests/test.c
 	gcc -o $@ $^
 tests/test_scan: tests/scanner/test_scanner.o source/scanner.o
 	gcc -o $@ $^
-tests/test_parse: tests/parser/test_parser.o source/scanner.o
+tests/test_parse: tests/parser/test_parser.o source/scanner.o source/parser.o
 	gcc -o $@ $^
 
 ## root targets
@@ -34,7 +34,7 @@ parse: source/main.o source/scanner.o source/parser.o
 source/scanner.c: source/scanner.flex
 	flex -o$@ $^
 source/parser.c: source/grammar.bison
-	bison --output=$@ $^
+	bison --output=$@ -t $^
 	#-k -v --report-file=source/grammar.txt $^
 
 ## directory tests code

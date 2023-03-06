@@ -1,10 +1,14 @@
 %{
   #include <stdio.h>
   #include <stdlib.h>
+  #include <string.h>
+  #define YYLMAX 256
   extern char* yytext;
   extern int yylex();
-  extern int yyerror(char* str);
+  extern int yyerror(const char* str);
+  char error_text[YYLMAX];
 
+// %define parse.error verbose
 %}
 
 %token TOKEN_ERROR
@@ -62,5 +66,76 @@
 
 %%
 
+stmt: expr_stmt { return 0; }
+
+expr_stmt : expr TOKEN_SEMI
+          | TOKEN_SEMI
+	  ;
+
+expr : assign_expr
+     | expr TOKEN_COMMA assign_expr
+     ;
+
+assign_expr : lor_expr
+     | unary_expr TOKEN_ASSIGN assign_expr
+     ;
+
+unary_expr : postfix_expr
+	   | TOKEN_ADD cast_expr
+	   | TOKEN_NOT cast_expr
+	   | TOKEN_SUB cast_expr
+	   ;
+	
+cast_expr : unary_expr;
+
+postfix_expr : primary_expr
+	     | postfix_expr TOKEN_LBRACK expr TOKEN_RBRACK
+	     | postfix_expr TOKEN_INC
+	     | postfix_expr TOKEN_DEC
+	     ;
+
+primary_expr : TOKEN_BOOL
+	     | TOKEN_CH
+	     | TOKEN_IDENT
+	     | TOKEN_NUMBER
+	     | TOKEN_STR
+	     | TOKEN_LPAR expr TOKEN_RPAR
+	     ;
+
+lor_expr : land_expr
+	 | lor_expr TOKEN_OR land_expr
+	 ;
+
+land_expr : eq_expr
+	  | land_expr TOKEN_AND eq_expr
+	  ;
+
+eq_expr : rel_expr
+	| eq_expr TOKEN_EQ rel_expr
+	| eq_expr TOKEN_NEQ rel_expr
+	;
+
+rel_expr : add_expr
+	 | rel_expr TOKEN_LESS add_expr
+	 | rel_expr TOKEN_GREAT add_expr
+	 | rel_expr TOKEN_LEQ add_expr
+	 | rel_expr TOKEN_GEQ add_expr
+	 ;
+
+add_expr : mult_expr
+	 | add_expr TOKEN_ADD mult_expr
+	 | add_expr TOKEN_SUB mult_expr
+	 ;
+
+mult_expr : exp_expr
+	  | mult_expr TOKEN_MULT exp_expr
+	  | mult_expr TOKEN_DIV exp_expr
+	  | mult_expr TOKEN_MOD exp_expr
+	  ;
+
+exp_expr : cast_expr
+	 | mult_expr TOKEN_EXP cast_expr
+	 ;
+
 %%
-int yyerror(char* str) { fprintf(stderr, "%s\n", str); return 0; }
+int yyerror(const char* str) { sprintf(error_text, "%s", str); return 1; }
