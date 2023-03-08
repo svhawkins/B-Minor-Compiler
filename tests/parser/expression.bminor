@@ -1,26 +1,53 @@
-2;
+%"493"; // bad -> odd
+2; // good -> even
+; // bad
 1 + 1; // good
-x = 12;
-x = !(12 + 24^3 - 9);
-x = +(12 * x);
-14 % "493";
-x = -'a';
-x = !true;
-z || true;
-z && false;
-4 < 5;
-4 > 5;
-4 <= 5;
-4 >= 5;
-4++;
-4--;
-(-x)++;
-(!false)++;
-1 + -5;
-1 - 1;
-x * (98);
-x / (98);
-x % (98);
-2^2;
-a + b;
-(a + b);
+; //bad
+x = 12; //good
+x = ; // bad
+x = !(12 + 24^3 - 9); // good
+x = ^(12 * x); // bad
+x = +(12 * x); // good
+; // bad
+x = -'a'; // good
+x = %'a'; // bad
+x = !true; // good
+x = <true; // bad
+z || true; // good
+; // bad
+z && false; // good
+; // bad
+4 < 5; // good
+4 << 5; // bad
+4 > 5; // good
+4 >> 5; // bad
+4 <= 5; // good
+4 <<= 5; // bad
+4 >= 5; // good
+4 >>= 5; // bad
+4++; // good
+++4; // bad
+4--; // good
+--4; // bad
+(-x)++; // good
+++(-x); // bad
+(!false)++; // good
+5*-; // bad
+1 + -5; // good
+^-2; // bad
+1 + 1; // good
+1 +; // bad
+1 - 1; // good
+1 -; // bad
+x * (98); // good
+x *= (98); // bad
+x / (98); // good
+x /= (98); // bad
+x % (98); // good
+x %= (98); // bad
+2^2; // good
+2^^2; // bad
+a + b; // good
+a + b); // bad
+(a + b); // good
+(a + b; // bad

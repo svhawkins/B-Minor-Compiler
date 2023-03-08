@@ -7,9 +7,8 @@
   extern int yylex();
   extern int yyerror(const char* str);
   char error_text[YYLMAX];
-
-// %define parse.error verbose
 %}
+%define parse.error verbose
 
 %token TOKEN_ERROR
 %token TOKEN_EOF
@@ -66,10 +65,9 @@
 
 %%
 
-stmt: expr_stmt { return 0; }
+stmt: expr_stmt TOKEN_SEMI { return 0; }
 
-expr_stmt : expr TOKEN_SEMI
-          | TOKEN_SEMI
+expr_stmt : expr
 	  ;
 
 expr : assign_expr
@@ -138,4 +136,7 @@ exp_expr : cast_expr
 	 ;
 
 %%
-int yyerror(const char* str) { sprintf(error_text, "%s", str); return 1; }
+int yyerror(const char* str) {
+  sprintf(error_text, "%s", str);
+  return 0;
+}
