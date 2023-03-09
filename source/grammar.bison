@@ -65,9 +65,23 @@
 
 %%
 
-stmt: expr_stmt TOKEN_SEMI { return 0; }
+program: stmt { return 0; }
+stmt : print_stmt
+     | expr_stmt
+     | select_stmt
+     | iter_stmt
+     | jump_stmt
+     | cmpnd_stmt
+     ;
 
-expr_stmt : expr
+print_stmt : TOKEN_PRINT print_list
+	   ;
+
+print_list : unary_expr TOKEN_COMMA print_list
+	   | unary_expr
+	   ;
+
+expr_stmt : expr TOKEN_SEMI
 	  ;
 
 expr : assign_expr
@@ -135,8 +149,53 @@ exp_expr : cast_expr
 	 | mult_expr TOKEN_EXP cast_expr
 	 ;
 
+
+select_stmt : TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt
+	    | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt
+	    ;
+
+iter_stmt : TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt
+	  | TOKEN_FOR TOKEN_LPAR for TOKEN_RPAR stmt
+	  ;
+
+for : TOKEN_SEMI TOKEN_SEMI
+    | TOKEN_SEMI TOKEN_SEMI expr
+    | TOKEN_SEMI expr TOKEN_SEMI
+    | TOKEN_SEMI expr TOKEN_SEMI expr
+    | expr TOKEN_SEMI TOKEN_SEMI
+    | expr TOKEN_SEMI TOKEN_SEMI expr
+    | expr TOKEN_SEMI expr TOKEN_SEMI
+    | expr TOKEN_SEMI expr TOKEN_SEMI expr
+    | decl TOKEN_SEMI TOKEN_SEMI
+    | decl TOKEN_SEMI TOKEN_SEMI expr
+    | decl TOKEN_SEMI expr TOKEN_SEMI
+    | decl TOKEN_SEMI expr TOKEN_SEMI expr
+    ;
+
+
+jump_stmt : TOKEN_RETURN TOKEN_SEMI
+	  | TOKEN_RETURN expr TOKEN_SEMI
+	  ;
+
+cmpnd_stmt : TOKEN_LCURL TOKEN_RCURL
+	   | TOKEN_LCURL block_list TOKEN_RCURL
+	   ;
+
+block_list : block
+	   | block_list block
+	   ;
+
+block : decl
+      | stmt
+      ;
+
+decl : TOKEN_IDENT
+     ;
+
 %%
 int yyerror(const char* str) {
+  // TO DO: custom error message function that returns an EOF flag based on error_text contents
+  fprintf(stderr, "%s\n", str);
   sprintf(error_text, "%s", str);
   return 0;
 }

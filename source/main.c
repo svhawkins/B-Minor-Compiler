@@ -16,6 +16,6 @@ int main(int argc, const char* argv[]) {
     if (yyparse() == 0) { printf("[Successful parse!]\n"); }
     else { printf("[Parse failure]\n"); }
     i++;
-  } while (i < 1);
+  } while (i < 10);
   return 0;
 }
