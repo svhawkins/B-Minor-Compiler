@@ -65,7 +65,9 @@ CAVEATS:
 - This is considered a "Successful parse!": if (true) {}} even though there is an uneven number of curly brackets.
 
 - I added a grammar rule called test_program that uses statements (instead of just declarations or function definitions) since
-  I made all of my tests really before doing that (and I didn't want to undo all my work...)
+  I made all of my tests before making a rule for the actual start symbol (and I didn't want to undo all my work...)
+
+- yyparse() causes a memory leak.
 *************************************************************************************
 DIFFICULTIES:
 

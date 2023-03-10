@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-//#include "../../source/parser.h"
 #define MAX_BUFFER 256
 
 extern FILE* yyin;
@@ -168,9 +167,6 @@ Status test_jump_statements(void) {
   return overall_status;
 }
 
-
-// TO DO: test lone if statements WITHOUT else
-// currently a problem where they don't parse properly
 Status test_iteration_statements(void) {
   strcpy(test_type, "Testing: For and While statements");
   char* filename = "./tests/parser/iteration.bminor";
@@ -190,7 +186,6 @@ Status test_iteration_statements(void) {
   while(fgets(line, MAX_BUFFER, ifp)) {
     actual = yyparse();
     expect = (!expected[n_parse]) ? PARSE_SUCCESS : PARSE_FAILURE;
-    //printf("[[%d], [%d, %d]]: %s", n_parse, expect, actual, line);
     status = test_parse(expect, actual);
     if (status == FAILURE) {
       print_error(test_type, line, yylineno, expect, actual);
@@ -201,6 +196,9 @@ Status test_iteration_statements(void) {
   fclose(yyin); fclose(ifp);
   return overall_status;
 }
+
+// TO DO: test lone if statements WITHOUT else
+// currently a problem where they don't parse properly
 Status test_selection_statements(void) {
   strcpy(test_type, "Testing: If and Else statements");
   char* filename = "./tests/parser/selection.bminor";

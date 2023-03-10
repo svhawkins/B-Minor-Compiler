@@ -80,8 +80,8 @@ stmt : print_stmt TOKEN_SEMI
 print_stmt : TOKEN_PRINT print_list
 	   ;
 
-print_list : lor_expr TOKEN_COMMA print_list
-	   | lor_expr
+print_list : assign_expr TOKEN_COMMA print_list
+	   | assign_expr
 	   ;
 
 expr_stmt : expr
