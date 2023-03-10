@@ -96,6 +96,7 @@ THIS MIGHT CHANGE AFTER GETTING EVERYTHING AND TESTS BEGIN TO FAIL.
 
 - Didn't realize that [yyrestart(yyin);] is necessary to 'flush' the input token buffer when changing file pointers.
   Otherwise it will incorrectly parse everything and make all of my tests fail after I changed yyin's file pointer.
+  (Saying there is an 'unexpected TOKEN_whatever' even though that TOKEN_whatever is not at all whatsoever present in the current file)
 
   
 
