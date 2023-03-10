@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 // for debugging purposes
 // TO DO: have a command line option to toggle this
 int yydebug = 0;
@@ -16,6 +15,6 @@ int main(int argc, const char* argv[]) {
     if (yyparse() == 0) { printf("[Successful parse!]\n"); }
     else { printf("[Parse failure]\n"); }
     i++;
-  } while (i < 10);
+  } while (i < 100);
   return 0;
 }

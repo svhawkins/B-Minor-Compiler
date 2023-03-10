@@ -66,8 +66,9 @@
 %%
 
 program: stmt { return 0; }
-stmt : print_stmt
-     | expr_stmt
+
+stmt : print_stmt TOKEN_SEMI
+     | expr_stmt TOKEN_SEMI
      | select_stmt
      | iter_stmt
      | jump_stmt
@@ -77,11 +78,11 @@ stmt : print_stmt
 print_stmt : TOKEN_PRINT print_list
 	   ;
 
-print_list : unary_expr TOKEN_COMMA print_list
-	   | unary_expr
+print_list : lor_expr TOKEN_COMMA print_list
+	   | lor_expr
 	   ;
 
-expr_stmt : expr TOKEN_SEMI
+expr_stmt : expr
 	  ;
 
 expr : assign_expr
@@ -93,15 +94,13 @@ assign_expr : lor_expr
      ;
 
 unary_expr : postfix_expr
-	   | TOKEN_ADD cast_expr
-	   | TOKEN_NOT cast_expr
-	   | TOKEN_SUB cast_expr
+	   | TOKEN_ADD unary_expr
+	   | TOKEN_NOT unary_expr
+	   | TOKEN_SUB unary_expr
 	   ;
-	
-cast_expr : unary_expr;
 
 postfix_expr : primary_expr
-	     | postfix_expr TOKEN_LBRACK expr TOKEN_RBRACK
+	     | postfix_expr TOKEN_LPAR expr TOKEN_RPAR
 	     | postfix_expr TOKEN_INC
 	     | postfix_expr TOKEN_DEC
 	     ;
@@ -145,13 +144,13 @@ mult_expr : exp_expr
 	  | mult_expr TOKEN_MOD exp_expr
 	  ;
 
-exp_expr : cast_expr
-	 | mult_expr TOKEN_EXP cast_expr
+exp_expr : unary_expr
+	 | mult_expr TOKEN_EXP unary_expr
 	 ;
 
 
-select_stmt : TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt
-	    | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt
+select_stmt : TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt
+	    | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt
 	    ;
 
 iter_stmt : TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt
@@ -195,7 +194,9 @@ decl : TOKEN_IDENT
 %%
 int yyerror(const char* str) {
   // TO DO: custom error message function that returns an EOF flag based on error_text contents
-  fprintf(stderr, "%s\n", str);
+
+  //fflush(stdout);
+  //fprintf(stderr, "%s\n", str);
   sprintf(error_text, "%s", str);
   return 0;
 }

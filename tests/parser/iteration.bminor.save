@@ -1,0 +1,25 @@
+while (i < 12); // bad 0
+while (i < 12) {} // good 1
+while (i < 12) {{ print f; }} // good 2
+while (i < 12 x = 0; // bad 3 4 5
+while i < 12) x = 0; // bad 6 7 8 9
+while (i < 12) { x = 12; // bad 10
+while (i < 12) x = 12; } // bad 11
+while i < 12 { } // bad 12 13 14 15
+while i < 12 x = 4; // bad 16 17 18 19 20
+for (; ;) { } // good 21
+for (; ; i++) {} // good 22
+for (; i < 5 ; ) {} // good 23
+for (; i < 5; i++) {} // good 24
+for (i = 0; ;) {} // good 25
+for (i = 0; ; i++) {} // good 26
+for (i = 0; i < 5; ) {} // good 27
+for (i = 0; i < 5; i++) {} // good 28
+for (; ;) print f; // good 29
+for (; ;); // bad 30
+for (;) {} // bad 31 32
+for () {} // bad 33 34
+for (i < 5) {} // bad 35 36
+while (i < 12) { x = 12; // bad 10
+for (; ;) {} // good 37 // EOF mark if want to add more tests
+

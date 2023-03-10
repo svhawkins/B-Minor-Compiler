@@ -51,3 +51,4 @@ a + b; // good
 a + b); // bad
 (a + b); // good
 (a + b; // bad
+1 + 1;
