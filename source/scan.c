@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include "parser.h" // TO DO: move to_str code elsewhere (perhaps just here), n_tokens to here, remove token.c
+#include "parser.h"
 #define YYLMAX 256
 
 extern FILE* yyin;

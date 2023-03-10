@@ -51,7 +51,7 @@ void print_error(char* test_type, char* line, int lineno, int expect, int actual
   char* expect_str = (expect == PARSE_SUCCESS) ? "PARSE_SUCCESS" : "PARSE_FAILURE";
   char* actual_str = (actual == PARSE_SUCCESS) ? "PARSE_SUCCESS" : "PARSE_FAILURE";
 
-  printf("%s", "Error:\n");
+  printf("ERROR %s\n", test_type);
   printf("%d : %s", lineno, line);
   printf("Expected result: %s, recieved result: %s\n\n", expect_str, actual_str);
 }
@@ -169,6 +169,8 @@ Status test_jump_statements(void) {
 }
 
 
+// TO DO: test lone if statements WITHOUT else
+// currently a problem where they don't parse properly
 Status test_iteration_statements(void) {
   strcpy(test_type, "Testing: For and While statements");
   char* filename = "./tests/parser/iteration.bminor";
@@ -208,7 +210,7 @@ Status test_selection_statements(void) {
   Status status, overall_status = SUCCESS;
 
   unsigned char expected[40] = { 0, 1, 0, 0, 0, 1, 0, 0, 1, 0,
-                                 1, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+                                 1, 0, 0, 0, 0, 0, 0, 0, 1, 0,
                                  0, 1, 0, 1, 0, 1, 1, 1, 0, 1,
                                  1, 1, 0, 1, 0, 0, 0, 1, 1, 1
                                };

@@ -7,6 +7,8 @@
   extern int yylex();
   extern int yyerror(const char* str);
   char error_text[YYLMAX];
+  unsigned char eof = 0;
+  void print_error_message(void);
 %}
 %define parse.error verbose
 
@@ -195,8 +197,12 @@ decl : TOKEN_IDENT
 int yyerror(const char* str) {
   // TO DO: custom error message function that returns an EOF flag based on error_text contents
 
-  //fflush(stdout);
-  //fprintf(stderr, "%s\n", str);
-  sprintf(error_text, "%s", str);
+  fflush(stdout);
+
+  if (!strcmp(str, "syntax error, unexpected $end")) { eof = 1; }
+  if (!eof) { sprintf(error_text, "%s", str); eof = 0; }
   return 0;
 }
+
+/* prints error messages that are NOT eof errors */
+void print_error_message(void) { fprintf(stderr, "%s\n", error_text); }
