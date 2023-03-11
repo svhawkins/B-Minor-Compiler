@@ -67,7 +67,12 @@
 
 %%
 
-program: stmt { return 0; }
+program : decl { return 0; }
+	| cmpnd_stmt { return 0; }
+	| TOKEN_MOD TOKEN_MOD test_stmt
+	;
+
+test_stmt: stmt { return 0; }
 
 stmt : print_stmt TOKEN_SEMI
      | expr_stmt TOKEN_SEMI
@@ -109,11 +114,26 @@ postfix_expr : primary_expr
 
 primary_expr : TOKEN_BOOL
 	     | TOKEN_CH
-	     | TOKEN_IDENT
 	     | TOKEN_NUMBER
 	     | TOKEN_STR
 	     | TOKEN_LPAR expr TOKEN_RPAR
+	     | designator
 	     ;
+
+designator : decltr subscript_list
+	   | decltr
+	   ;
+
+subscript_list : subscript
+	       | subscript_list subscript
+	       ;
+
+subscript : TOKEN_LBRACK assign_expr TOKEN_RBRACK
+	  ;
+
+decltr : TOKEN_IDENT
+       | TOKEN_LPAR decltr TOKEN_RPAR
+       ;
 
 lor_expr : land_expr
 	 | lor_expr TOKEN_OR land_expr
@@ -147,7 +167,7 @@ mult_expr : exp_expr
 	  ;
 
 exp_expr : unary_expr
-	 | mult_expr TOKEN_EXP unary_expr
+	 | exp_expr TOKEN_EXP unary_expr
 	 ;
 
 
@@ -179,19 +199,53 @@ jump_stmt : TOKEN_RETURN TOKEN_SEMI
 	  ;
 
 cmpnd_stmt : TOKEN_LCURL TOKEN_RCURL
-	   | TOKEN_LCURL block_list TOKEN_RCURL
-	   ;
+           | TOKEN_LCURL block_list TOKEN_RCURL
+           ;
 
 block_list : block
-	   | block_list block
-	   ;
+           | block_list block
+           ;
 
 block : decl
       | stmt
       ;
 
-decl : TOKEN_IDENT
+decl : decltr TOKEN_COLON type TOKEN_SEMI
+     | decltr TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI
+     | designator TOKEN_ASSIGN init TOKEN_SEMI
      ;
+
+
+decl_list : decltr TOKEN_COMMA decl_list
+	  | decltr
+	  ;
+
+init : TOKEN_LCURL init_list TOKEN_RCURL
+     | assign_expr
+     ;
+
+init_list : init
+	  | init_list TOKEN_COMMA init
+	  ;
+
+
+type : atomic_type
+     | TOKEN_AUTO
+     | array_list atomic_type
+     ;
+
+atomic_type : TOKEN_BOOLEAN
+	    | TOKEN_CHAR
+	    | TOKEN_INTEGER
+	    | TOKEN_STRING
+	    ;
+
+array_list : array
+	   | array_list array
+	   ;
+
+array : TOKEN_ARRAY TOKEN_LBRACK assign_expr TOKEN_RBRACK
+      ;
 
 %%
 int yyerror(const char* str) {

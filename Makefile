@@ -34,7 +34,7 @@ parse: source/main.o source/scanner.o source/parser.o
 source/scanner.c: source/scanner.flex
 	flex -o$@ $^
 source/parser.c: source/grammar.bison
-	bison --output=$@ -t -W --feature=caret $^
+	bison --output=$@ -t -W -k -v --feature=caret --report-file=source/grammar.txt $^
 	#-k -v --report-file=source/grammar.txt $^
 
 ## directory tests code
