@@ -1,15 +1,15 @@
-return; // good, 0
-return x = 4; // good, 1
-return true; // good, 2
-return while; // bad, 3 4
-return !("493")^2; // good, 5
-return ((493); // bad 6
-return (); // bad 7 8
-return 493); // bad 9 10
-return (493; // bad 11
-return 493; // good 12
-return !((4*x^5 + 4) - 4 >= 1); // good 13
-//return (493, 12); // good 11
-//return (493, ); // bad 12
-//return (,493) // bad 13
-//return (,); // bad 14
+%% return; // good, 0
+%% return x = 4; // good, 1
+%% return true; // good, 2
+%% return while; // bad, 3 4
+%% return !("493")^2; // good, 5
+%% return ((493); // bad 6
+%% return (); // bad 7 8
+%% return 493); // bad 9 10
+%% return (493; // bad 11
+%% return 493; // good 12
+%% return !((4*x^5 + 4) - 4 >= 1); // good 13
+%% return (493, ); // bad 14 15
+%% return (,493) // bad 16 17 18 19
+%% return (,); // bad 20 21 22
+%% return foo(493, 12); // good 23, also works without the foo :/

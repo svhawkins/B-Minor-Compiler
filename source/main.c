@@ -14,7 +14,7 @@ int main(int argc, const char* argv[]) {
   if (argc > 1 && !strcmp(argv[1], "-t")) { yydebug = 1; }
   int i = 0;
   do {
-    printf("%d: ", i + 1);
+    printf("%d: ", i);
     if (yyparse() == 0) {
       printf("[Successful parse!]\n");
     } else {

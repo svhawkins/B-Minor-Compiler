@@ -24,6 +24,8 @@ Status test_print_statements(void);
 Status test_jump_statements(void);
 Status test_iteration_statements(void);
 Status test_selection_statements(void);
+Status test_declarations(void);
+Status test_initializations(void);
 
 int main(int argc, const char* argv[]) {
   Status (*tests[])(void) = {
@@ -33,7 +35,9 @@ int main(int argc, const char* argv[]) {
     test_print_statements,
     test_jump_statements,
     test_iteration_statements,
-    test_selection_statements
+    test_selection_statements//,
+    //test_declarations,
+    //test_initializations
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -82,20 +86,23 @@ Status test_expressions(void) {
   // have an array to hold expected values due to yyparse() continuing even after a failed parse.
   // there are more expected values than there are lines in the file.
   // since n_parse starts at 1, [0] index is skipped.
-  unsigned char expected[100] = { 0, 1, 0, 0, 1, 0, 1, 0, 1, 0,
-			     1, 0, 0, 1, 0, 1, 0, 0, 1, 0,
-			     0, 1, 0, 1, 0, 1, 0, 0, 1, 0,
-			     0, 1, 0, 0, 1, 0, 0, 1, 0, 0,
-			     1, 0, 0, 1, 0, 0, 1, 0, 1, 0,
-			     0, 1, 0, 1, 0, 1, 0, 0, 1, 0,
-			     0, 1, 0, 0, 1, 0, 0, 1, 1, 0,
-			     1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-			     1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			     1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-		            };
+  unsigned char expected[100] = { 1, 1, 1, 0, 1, 0, 0, 0, 1, 1,
+				  1, 1, 1, 0, 0, 1, 1, 1, 0, 1,
+				  1, 1, 0, 0, 0, 1, 1, 1, 0, 1,
+
+				  1, 1, 0, 1, 1, 1, 0, 1, 1, 1,
+				  0, 1, 1, 1, 0, 1, 1, 1, 0, 1,
+				  1, 1, 1, 0, 1, 0, 1, 1, 1, 0,
+
+				  1, 0, 1, 1, 1, 1, 0, 0, 0, 1,
+				  1, 1, 0, 1, 1, 0, 1, 0, 1, 1,
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
+				  1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+		            	 };
   yylineno = 0;
   char line[MAX_BUFFER];
-  for(int i = 1; fgets(line, MAX_BUFFER, ifp); i++) {
+  for(int i = 0; fgets(line, MAX_BUFFER, ifp); i++) {
     actual = yyparse();
     expect = (!expected[i]) ? PARSE_SUCCESS : PARSE_FAILURE;
     status = test_parse(expect, actual);
@@ -119,8 +126,8 @@ Status test_print_statements(void) {
   Status status, overall_status = SUCCESS;
 
   unsigned char expected[30] = { 0, 0, 0, 0, 0, 0, 0, 1, 0, 1,
-				 0, 1, 0, 0, 0, 1, 1, 1, 1, 1,
-				 0, 1, 0, 1, 1, 1, 1, 1, 1, 1
+				 1, 1, 0, 0, 0, 1, 1, 1, 1, 1,
+				 0, 1, 1, 1, 1, 1, 1, 1, 0, 1
 			       };
 
   int expect, actual; yylineno = 0;
@@ -149,7 +156,7 @@ Status test_jump_statements(void) {
 
   unsigned char expected[30] = { 0, 0, 0, 1, 1, 0, 1, 1, 1, 1,
                                  1, 1, 0, 0, 1, 1, 1, 1, 1, 1,
-                                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+                                 1, 1, 1, 0, 1, 1, 1, 1, 1, 1
                                };
 
   int expect, actual; yylineno = 0;
@@ -167,6 +174,8 @@ Status test_jump_statements(void) {
   return overall_status;
 }
 
+
+// TO DO: add tests for declarations within a for-loop
 Status test_iteration_statements(void) {
   strcpy(test_type, "Testing: For and While statements");
   char* filename = "./tests/parser/iteration.bminor";
@@ -175,30 +184,30 @@ Status test_iteration_statements(void) {
   if (!(yyin && ifp)) { return file_error(test_type, filename); }
   Status status, overall_status = SUCCESS;
 
-  unsigned char expected[40] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+  unsigned char expected[50] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 				 1, 0, 1, 0, 1, 0, 0, 0, 0, 1,
-				 1, 1, 0, 1, 1, 1, 0, 1, 1, 1,
-				 1, 1, 1, 1, 1, 1, 0, 1, 1, 1
+				 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
+				 1, 0, 0, 1, 1, 0, 1, 1, 1, 1,
+				 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
                                };
 
-  int n_parse = 0, expect, actual; yylineno = 0;
+  int expect, actual; yylineno = 0;
   char line[MAX_BUFFER];
-  while(fgets(line, MAX_BUFFER, ifp)) {
+  for(int i = 0; fgets(line, MAX_BUFFER, ifp); i++) {
     actual = yyparse();
-    expect = (!expected[n_parse]) ? PARSE_SUCCESS : PARSE_FAILURE;
+    expect = (!expected[i]) ? PARSE_SUCCESS : PARSE_FAILURE;
     status = test_parse(expect, actual);
     if (status == FAILURE) {
       print_error(test_type, line, yylineno, expect, actual);
       overall_status = FAILURE;
     }
-    n_parse++;
   }
   fclose(yyin); fclose(ifp);
   return overall_status;
 }
 
 // TO DO: test lone if statements WITHOUT else
-// currently a problem where they don't parse properly
+// due to a shift-reduce conflict
 Status test_selection_statements(void) {
   strcpy(test_type, "Testing: If and Else statements");
   char* filename = "./tests/parser/selection.bminor";
@@ -207,10 +216,69 @@ Status test_selection_statements(void) {
   if (!(yyin && ifp)) { return file_error(test_type, filename); }
   Status status, overall_status = SUCCESS;
 
-  unsigned char expected[40] = { 0, 1, 0, 0, 0, 1, 0, 0, 1, 0,
+  unsigned char expected[50] = { 0, 1, 0, 0, 0, 1, 0, 0, 1, 0,
                                  1, 0, 0, 0, 0, 0, 0, 0, 1, 0,
                                  0, 1, 0, 1, 0, 1, 1, 1, 0, 1,
-                                 1, 1, 0, 1, 0, 0, 0, 1, 1, 1
+                                 1, 1, 0, 1, 0, 0, 0, 1, 1, 1,
+				 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+                               };
+
+  int expect, actual; yylineno = 0;
+  char line[MAX_BUFFER];
+  for(int i = 0; fgets(line, MAX_BUFFER, ifp); i++) {
+    actual = yyparse();
+    expect = (!expected[i]) ? PARSE_SUCCESS : PARSE_FAILURE;
+    status = test_parse(expect, actual);
+    if (status == FAILURE) {
+      print_error(test_type, line, yylineno, expect, actual);
+      overall_status = FAILURE;
+    }
+  }
+  fclose(yyin); fclose(ifp);
+  return overall_status;
+}
+
+
+// includes declaration + initialization combos
+Status test_declarations(void) {
+  strcpy(test_type, "Testing: Declarations (with optional initializations)");
+  char* filename = "./tests/parser/declaration.bminor";
+  yyrestart(yyin);
+  yyin = fopen(filename, "r"); ifp = fopen(filename, "r");
+  if (!(yyin && ifp)) { return file_error(test_type, filename); }
+  Status status, overall_status = SUCCESS;
+
+  unsigned char expected[30] = { 0, 0, 0, 1, 1, 0, 1, 1, 1, 1,
+                                 1, 1, 0, 0, 1, 1, 1, 1, 1, 1,
+                                 1, 1, 1, 0, 1, 1, 1, 1, 1, 1
+                               };
+
+  int expect, actual; yylineno = 0;
+  char line[MAX_BUFFER];
+  for(int i = 0; fgets(line, MAX_BUFFER, ifp); i++) {
+    actual = yyparse();
+    expect = (!expected[i]) ? PARSE_SUCCESS : PARSE_FAILURE;
+    status = test_parse(expect, actual);
+    if (status == FAILURE) {
+      print_error(test_type, line, yylineno, expect, actual);
+      overall_status = FAILURE;
+    }
+  }
+  fclose(yyin); fclose(ifp);
+  return overall_status;
+}
+
+Status test_initializations(void) {
+  strcpy(test_type, "Testing: Initializations");
+  char* filename = "./tests/parser/initialization.bminor";
+  yyrestart(yyin);
+  yyin = fopen(filename, "r"); ifp = fopen(filename, "r");
+  if (!(yyin && ifp)) { return file_error(test_type, filename); }
+  Status status, overall_status = SUCCESS;
+
+  unsigned char expected[30] = { 0, 0, 0, 1, 1, 0, 1, 1, 1, 1,
+                                 1, 1, 0, 0, 1, 1, 1, 1, 1, 1,
+                                 1, 1, 1, 0, 1, 1, 1, 1, 1, 1
                                };
 
   int expect, actual; yylineno = 0;

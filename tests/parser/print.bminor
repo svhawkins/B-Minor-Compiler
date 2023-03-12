@@ -1,20 +1,21 @@
-%% print x; // good
-%% print "this should work"; // good
-%% print "hello"; // good
-%% print "goodybe"; // good
-%% print "\n \r \t \0"; // good
-%% print x, y, "hello", true, false; // good
-%% print str, " str ", x, str2;  // good
-%% print; // bad
-%% print x; // good
-%% print ,x; // bad
-%% print x,; // bad
-%% print f, "hello world", x, y; // good
-%% print (y =='z');
-%% print (!((4*x^5 + 4) - 4 >= 1)); // good
-%% print (x; // bad
-%% print x); // bad
-%% print(); // bad
-%% printf; // good, this is an identifier. this a valid C statement.
-%% print x x "hello"; // bad
-//%% printf "hello world", x, y; // bad, x, y is valid expr for some reason
+%% print x; // good 0
+%% print "this should work"; // good 1
+%% print "hello"; // good 2
+%% print "goodybe"; // good 3
+%% print "\n \r \t \0"; // good 4
+%% print x, y, "hello", true, false; // good 5
+%% print str, " str ", x, str2;  // good 6
+%% print; // bad 7
+%% print x; // good 8
+%% print ,x; // bad 9 10
+%% print x,; // bad 11
+%% print f, "hello world", x, y; // good 12
+%% print (y =='z'); // good 13
+%% print (!((4*x^5 + 4) - 4 >= 1)); // good 14
+%% print (x; // bad 15
+%% print x); // bad 16 17
+%% print(); // bad 18 19
+%% printf; // good 20, this is an identifier. this a valid C statement.
+%% print x x "hello"; // bad 21 22 23
+%% printf "hello world", x, y; // bad 24 25 26 27
+%% print x; // good 28

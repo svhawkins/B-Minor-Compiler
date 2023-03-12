@@ -69,10 +69,10 @@
 
 program : decl { return 0; }
 	| cmpnd_stmt { return 0; }
-	| TOKEN_MOD TOKEN_MOD test_stmt
+	| TOKEN_MOD TOKEN_MOD test_program
 	;
 
-test_stmt: stmt { return 0; }
+test_program : stmt { return 0; }
 
 stmt : print_stmt TOKEN_SEMI
      | expr_stmt TOKEN_SEMI
@@ -187,10 +187,10 @@ for : TOKEN_SEMI TOKEN_SEMI
     | expr TOKEN_SEMI TOKEN_SEMI expr
     | expr TOKEN_SEMI expr TOKEN_SEMI
     | expr TOKEN_SEMI expr TOKEN_SEMI expr
-    | decl TOKEN_SEMI TOKEN_SEMI
-    | decl TOKEN_SEMI TOKEN_SEMI expr
-    | decl TOKEN_SEMI expr TOKEN_SEMI
-    | decl TOKEN_SEMI expr TOKEN_SEMI expr
+    | designator TOKEN_SEMI TOKEN_SEMI
+    | designator TOKEN_SEMI TOKEN_SEMI expr
+    | designator TOKEN_SEMI expr TOKEN_SEMI
+    | designator TOKEN_SEMI expr TOKEN_SEMI expr
     ;
 
 
