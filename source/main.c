@@ -12,16 +12,18 @@ extern void print_error_message();
 int main(int argc, const char* argv[]) {
   printf("%s\n", "Hello world! :(\n");
   if (argc > 1 && !strcmp(argv[1], "-t")) { yydebug = 1; }
-  int i = 0;
+  int i = 0, yystatus;
   do {
     printf("%d: ", i);
-    if (yyparse() == 0) {
+    yystatus = yyparse();
+    if (yystatus == 0) {
       printf("[Successful parse!]\n");
     } else {
       if (eof) { printf("EOF detected. Parsing complete.\n"); break; }
       else { printf("[Parse failure.]\n"); print_error_message(); }
     }
     i++;
-  } while (i < 100);
+  } while (i < 1);
+  printf("%d\n", yystatus);
   return 0;
 }

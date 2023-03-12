@@ -35,9 +35,9 @@ int main(int argc, const char* argv[]) {
     test_print_statements,
     test_jump_statements,
     test_iteration_statements,
-    test_selection_statements//,
-    //test_declarations,
-    //test_initializations
+    test_selection_statements,
+    test_declarations,
+    test_initializations
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -185,10 +185,10 @@ Status test_iteration_statements(void) {
   Status status, overall_status = SUCCESS;
 
   unsigned char expected[50] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-				 1, 0, 1, 0, 1, 0, 0, 0, 0, 1,
-				 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
-				 1, 0, 0, 1, 1, 0, 1, 1, 1, 1,
-				 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+				 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+				 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				 0, 1, 1, 1, 1, 1, 1, 0, 1, 1,
+				 0, 1, 1, 1, 1, 1, 1, 1, 1, 1
                                };
 
   int expect, actual; yylineno = 0;
@@ -218,8 +218,42 @@ Status test_selection_statements(void) {
 
   unsigned char expected[50] = { 0, 1, 0, 0, 0, 1, 0, 0, 1, 0,
                                  1, 0, 0, 0, 0, 0, 0, 0, 1, 0,
-                                 0, 1, 0, 1, 0, 1, 1, 1, 0, 1,
-                                 1, 1, 0, 1, 0, 0, 0, 1, 1, 1,
+                                 0, 1, 0, 1, 1, 0, 1, 1, 1, 1,
+                                 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+				 0, 1, 1, 1, 1, 1, 1, 1, 1, 1
+                               };
+
+  int expect, actual; yylineno = 0;
+  char line[MAX_BUFFER];
+  for(int i = 0; fgets(line, MAX_BUFFER, ifp); i++) {
+    actual = yyparse();
+    expect = (!expected[i]) ? PARSE_SUCCESS : PARSE_FAILURE;
+    status = test_parse(expect, actual);
+    if (status == FAILURE) {
+      print_error(test_type, line, yylineno, expect, actual);
+      overall_status = FAILURE;
+    }
+  }
+  fclose(yyin); fclose(ifp);
+  return overall_status;
+}
+
+
+// declarations without initializations only
+Status test_declarations(void) {
+  strcpy(test_type, "Testing: Declarations");
+  char* filename = "./tests/parser/declaration.bminor";
+  yyrestart(yyin);
+  yyin = fopen(filename, "r"); ifp = fopen(filename, "r");
+  if (!(yyin && ifp)) { return file_error(test_type, filename); }
+  Status status, overall_status = SUCCESS;
+
+  unsigned char expected[70] = { 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+				 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
+				 1, 1, 1, 1, 1, 1, 1, 1, 0, 1,
+				 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+				 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 				 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
                                };
 
@@ -239,35 +273,7 @@ Status test_selection_statements(void) {
 }
 
 
-// includes declaration + initialization combos
-Status test_declarations(void) {
-  strcpy(test_type, "Testing: Declarations (with optional initializations)");
-  char* filename = "./tests/parser/declaration.bminor";
-  yyrestart(yyin);
-  yyin = fopen(filename, "r"); ifp = fopen(filename, "r");
-  if (!(yyin && ifp)) { return file_error(test_type, filename); }
-  Status status, overall_status = SUCCESS;
-
-  unsigned char expected[30] = { 0, 0, 0, 1, 1, 0, 1, 1, 1, 1,
-                                 1, 1, 0, 0, 1, 1, 1, 1, 1, 1,
-                                 1, 1, 1, 0, 1, 1, 1, 1, 1, 1
-                               };
-
-  int expect, actual; yylineno = 0;
-  char line[MAX_BUFFER];
-  for(int i = 0; fgets(line, MAX_BUFFER, ifp); i++) {
-    actual = yyparse();
-    expect = (!expected[i]) ? PARSE_SUCCESS : PARSE_FAILURE;
-    status = test_parse(expect, actual);
-    if (status == FAILURE) {
-      print_error(test_type, line, yylineno, expect, actual);
-      overall_status = FAILURE;
-    }
-  }
-  fclose(yyin); fclose(ifp);
-  return overall_status;
-}
-
+// includes declaration + initialization combos, function definitions
 Status test_initializations(void) {
   strcpy(test_type, "Testing: Initializations");
   char* filename = "./tests/parser/initialization.bminor";
@@ -276,9 +282,9 @@ Status test_initializations(void) {
   if (!(yyin && ifp)) { return file_error(test_type, filename); }
   Status status, overall_status = SUCCESS;
 
-  unsigned char expected[30] = { 0, 0, 0, 1, 1, 0, 1, 1, 1, 1,
-                                 1, 1, 0, 0, 1, 1, 1, 1, 1, 1,
-                                 1, 1, 1, 0, 1, 1, 1, 1, 1, 1
+  unsigned char expected[30] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+				 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
                                };
 
   int expect, actual; yylineno = 0;
@@ -295,3 +301,4 @@ Status test_initializations(void) {
   fclose(yyin); fclose(ifp);
   return overall_status;
 }
+

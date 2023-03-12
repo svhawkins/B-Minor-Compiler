@@ -67,29 +67,40 @@
 
 %%
 
-program : decl { return 0; }
-	| cmpnd_stmt { return 0; }
-	| TOKEN_MOD TOKEN_MOD test_program
+program : ext_decl { return 0; }
+        | program ext_decl
+	| TOKEN_MOD TOKEN_MOD test_program { return 0; }
+	| %empty { return 0; }
 	;
 
-test_program : stmt { return 0; }
+test_program : stmt
+	     | ext_decl
+	     ;
 
-stmt : print_stmt TOKEN_SEMI
-     | expr_stmt TOKEN_SEMI
+non_init_decl : decltr TOKEN_COLON type TOKEN_SEMI
+              | decltr TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI
+              ;
+
+ext_decl : non_init_decl
+         | function_decl
+         ;
+
+stmt : print_stmt
+     | expr_stmt
      | select_stmt
      | iter_stmt
      | jump_stmt
      | cmpnd_stmt
      ;
 
-print_stmt : TOKEN_PRINT print_list
+print_stmt : TOKEN_PRINT print_list TOKEN_SEMI
 	   ;
 
 print_list : assign_expr TOKEN_COMMA print_list
 	   | assign_expr
 	   ;
 
-expr_stmt : expr
+expr_stmt : expr TOKEN_SEMI
 	  ;
 
 expr : assign_expr
@@ -181,16 +192,16 @@ iter_stmt : TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt
 
 for : TOKEN_SEMI TOKEN_SEMI
     | TOKEN_SEMI TOKEN_SEMI expr
-    | TOKEN_SEMI expr TOKEN_SEMI
-    | TOKEN_SEMI expr TOKEN_SEMI expr
-    | expr TOKEN_SEMI TOKEN_SEMI
-    | expr TOKEN_SEMI TOKEN_SEMI expr
-    | expr TOKEN_SEMI expr TOKEN_SEMI
-    | expr TOKEN_SEMI expr TOKEN_SEMI expr
-    | designator TOKEN_SEMI TOKEN_SEMI
-    | designator TOKEN_SEMI TOKEN_SEMI expr
-    | designator TOKEN_SEMI expr TOKEN_SEMI
-    | designator TOKEN_SEMI expr TOKEN_SEMI expr
+    | TOKEN_SEMI expr_stmt
+    | TOKEN_SEMI expr_stmt expr
+    | expr_stmt TOKEN_SEMI
+    | expr_stmt TOKEN_SEMI expr
+    | expr_stmt expr_stmt
+    | expr_stmt expr_stmt expr
+    | decl TOKEN_SEMI
+    | decl TOKEN_SEMI expr
+    | decl expr_stmt
+    | decl expr_stmt expr
     ;
 
 
@@ -210,11 +221,13 @@ block : decl
       | stmt
       ;
 
-decl : decltr TOKEN_COLON type TOKEN_SEMI
-     | decltr TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI
+decl : non_init_decl
      | designator TOKEN_ASSIGN init TOKEN_SEMI
      ;
 
+function_decl : decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_SEMI
+	      | decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_ASSIGN cmpnd_stmt
+	      ;
 
 decl_list : decltr TOKEN_COMMA decl_list
 	  | decltr
@@ -239,6 +252,11 @@ atomic_type : TOKEN_BOOLEAN
 	    | TOKEN_INTEGER
 	    | TOKEN_STRING
 	    ;
+
+ret_type : atomic_type
+	 | TOKEN_VOID
+	 | array_list atomic_type
+	 ;
 
 array_list : array
 	   | array_list array

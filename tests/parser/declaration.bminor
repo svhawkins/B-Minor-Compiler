@@ -1,0 +1,25 @@
+x:integer; // good 0
+x: char; // good 1
+x: boolean; // good 2
+x: string; // good 3
+43: integer; // bad 4 5 6 7
+'a': integer; // bad 8 9 10 11
+true: boolean; // bad 12 13 14 15
+"str" : string; // bad 16 17 18 19
+x[]: integer; // bad 20 21 22 23
+x: array[4] integer; // good 24
+x: array integer[4]; // bad 25 26 27 28 29
+x: integer [4]; // bad 30 31 32 33
+x : array[4]; // bad 34
+x: array [] integer; // bad 35 36 37
+((((((x)))))): integer; // good 38
+x: integer char; // bad 39 40
+x: array[!2^3] array[true && false || true <= 90 + 34 * 2^14 % 6] array[-2 < 0] array[true == false] array[3] integer; // good 41
+x: array[2] auto; // bad 42 43
+x; integer; // bad 44 45 46
+x: intger; // bad 47 48
+x: int; // bad 49 50
+x: character; // bad 50 51
+x : str; // bad 52 53
+x : bool; // bad 54 55
+//x: auto; // bad 44

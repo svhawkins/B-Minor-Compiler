@@ -1,13 +1,1 @@
-for (; ;) { } // good
-for (; ; i++) {} // good
-for (; i < 5 ; ) {} // good
-for (; i < 5; i++) {} // good
-for (i = 0; ;) {} // good
-for (i = 0; ; i++) {} // good
-for (i = 0; i < 5; ) {} // good
-for (i = 0; i < 5; i++) {} // good
-for (; ;) print f; // good
-for (;) {} // bad
-for () {} // bad
-for (i < 5) {} // bad
 

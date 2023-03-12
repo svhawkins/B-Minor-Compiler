@@ -12,20 +12,20 @@
 %% if (true) x = 2; else x = 3; else x = 4; // bad 17 18 19
 %% if (true) { if(true) { x = 4; } x = 2; } else { x = 5; } // good 20
 %% else x = 4; // bad 21 22
-%% else { x = 4; } // bad 23 24
-%% if (true); // bad 25
-%% if true) {} // bad 26 27 28
-%% if (true {} // bad 29 30
-%% if true {} // bad 31 32
-%% if (true) x = 4; else; // bad 33
+%% else { x = 4; } // bad 23 24 25 26
+%% if (true); // bad 27
+%% if true) {} // bad 28 29 30 31
+%% if (true {} // bad 32 33
+%% if true {} // bad 34 35 36
+%% if (true) x = 4; else; // bad 37
 %% if(true || false && true)
 {
   x = 6;		
-} else {} // good 34
+} else {} // good 38
 %% if(!((4*x^5 + 4) - 4 >= 1))
 {
  x = 6;		
-} else {}// good 35
+} else {}// good 39
 %% if( 4 < 5 )
   if( 10 < 20 )
     if (-1 < 0)
@@ -38,5 +38,5 @@
   else
     print "gooodbye";
 else
-  print "goooodbye"; // good 36
+  print "goooodbye"; // good 40
 //if (true) if (true) x = 4; x = 2; else x = 5; 
