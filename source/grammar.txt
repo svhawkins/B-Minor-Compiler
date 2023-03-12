@@ -1,6 +1,6 @@
 Nonterminals useless in grammar
 
-    decl_list
+    designator
 
 
 Terminals unused in grammar
@@ -11,170 +11,201 @@ Terminals unused in grammar
 
 Rules useless in grammar
 
-  112 decl_list: decltr TOKEN_COMMA decl_list
-  113          | decltr
+  129 designator: decltr subscript_list
 
 
 State 0 conflicts: 2 shift/reduce
-State 75 conflicts: 1 shift/reduce
-State 79 conflicts: 1 shift/reduce
-State 181 conflicts: 1 shift/reduce
+State 46 conflicts: 1 shift/reduce
+State 61 conflicts: 1 shift/reduce
+State 91 conflicts: 2 shift/reduce
+State 94 conflicts: 1 shift/reduce
+State 95 conflicts: 1 shift/reduce
+State 161 conflicts: 1 shift/reduce
+State 211 conflicts: 1 shift/reduce
+State 213 conflicts: 1 shift/reduce
 
 
 Grammar
 
     0 $accept: program $end
 
-    1 program: ext_decl
-    2        | program ext_decl
+    1 program: ext_decln
+    2        | program ext_decln
     3        | TOKEN_MOD TOKEN_MOD test_program
     4        | %empty
 
     5 test_program: stmt
-    6             | ext_decl
+    6             | ext_decln
 
-    7 non_init_decl: decltr TOKEN_COLON type TOKEN_SEMI
-    8              | decltr TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI
+    7 decl: decltr TOKEN_COLON type
 
-    9 ext_decl: non_init_decl
-   10         | function_decl
+    8 ext_decln: decln
+    9          | function_decln
 
-   11 stmt: print_stmt
-   12     | expr_stmt
-   13     | select_stmt
-   14     | iter_stmt
-   15     | jump_stmt
-   16     | cmpnd_stmt
+   10 stmt: print_stmt
+   11     | expr_stmt
+   12     | iter_stmt
+   13     | jump_stmt
+   14     | cmpnd_stmt
+   15     | select_stmt
 
-   17 print_stmt: TOKEN_PRINT print_list TOKEN_SEMI
+   16 print_stmt: TOKEN_PRINT print_list TOKEN_SEMI
 
-   18 print_list: assign_expr TOKEN_COMMA print_list
-   19           | assign_expr
+   17 print_list: assign_expr TOKEN_COMMA print_list
+   18           | assign_expr
 
-   20 expr_stmt: expr TOKEN_SEMI
+   19 expr_stmt: expr TOKEN_SEMI
 
-   21 expr: assign_expr
-   22     | expr TOKEN_COMMA assign_expr
+   20 expr: assign_expr
+   21     | expr TOKEN_COMMA assign_expr
 
-   23 assign_expr: lor_expr
-   24            | unary_expr TOKEN_ASSIGN assign_expr
+   22 assign_expr: lor_expr
+   23            | unary_expr TOKEN_ASSIGN assign_expr
 
-   25 unary_expr: postfix_expr
-   26           | TOKEN_ADD unary_expr
-   27           | TOKEN_NOT unary_expr
-   28           | TOKEN_SUB unary_expr
+   24 unary_expr: postfix_expr
+   25           | TOKEN_ADD unary_expr
+   26           | TOKEN_NOT unary_expr
+   27           | TOKEN_SUB unary_expr
 
-   29 postfix_expr: primary_expr
-   30             | postfix_expr TOKEN_LPAR expr TOKEN_RPAR
-   31             | postfix_expr TOKEN_INC
-   32             | postfix_expr TOKEN_DEC
+   28 postfix_expr: primary_expr
+   29             | postfix_expr TOKEN_LPAR expr TOKEN_RPAR
+   30             | postfix_expr TOKEN_INC
+   31             | postfix_expr TOKEN_DEC
 
-   33 primary_expr: TOKEN_BOOL
-   34             | TOKEN_CH
-   35             | TOKEN_NUMBER
-   36             | TOKEN_STR
-   37             | TOKEN_LPAR expr TOKEN_RPAR
-   38             | designator
+   32 primary_expr: primitive
+   33             | TOKEN_LPAR expr TOKEN_RPAR
+   34             | lvalue
 
-   39 designator: decltr subscript_list
-   40           | decltr
+   35 primitive: TOKEN_BOOL
+   36          | TOKEN_CH
+   37          | TOKEN_NUMBER
+   38          | TOKEN_STR
 
-   41 subscript_list: subscript
-   42               | subscript_list subscript
+   39 expr_list: expr
+   40          | expr_list TOKEN_COMMA expr
 
-   43 subscript: TOKEN_LBRACK assign_expr TOKEN_RBRACK
+   41 lvalue: decltr suffix
 
-   44 decltr: TOKEN_IDENT
-   45       | TOKEN_LPAR decltr TOKEN_RPAR
+   42 suffix: call_suffix
+   43       | subscript_list
+   44       | %empty
 
-   46 lor_expr: land_expr
-   47         | lor_expr TOKEN_OR land_expr
+   45 call_suffix: TOKEN_LPAR TOKEN_RPAR
+   46            | TOKEN_LPAR expr_list TOKEN_RPAR
 
-   48 land_expr: eq_expr
-   49          | land_expr TOKEN_AND eq_expr
+   47 subscript_list: subscript
+   48               | subscript_list subscript
 
-   50 eq_expr: rel_expr
-   51        | eq_expr TOKEN_EQ rel_expr
-   52        | eq_expr TOKEN_NEQ rel_expr
+   49 subscript: TOKEN_LBRACK assign_expr TOKEN_RBRACK
 
-   53 rel_expr: add_expr
-   54         | rel_expr TOKEN_LESS add_expr
-   55         | rel_expr TOKEN_GREAT add_expr
-   56         | rel_expr TOKEN_LEQ add_expr
-   57         | rel_expr TOKEN_GEQ add_expr
+   50 decltr: TOKEN_IDENT
+   51       | TOKEN_LPAR decltr TOKEN_RPAR
 
-   58 add_expr: mult_expr
-   59         | add_expr TOKEN_ADD mult_expr
-   60         | add_expr TOKEN_SUB mult_expr
+   52 lor_expr: land_expr
+   53         | lor_expr TOKEN_OR land_expr
 
-   61 mult_expr: exp_expr
-   62          | mult_expr TOKEN_MULT exp_expr
-   63          | mult_expr TOKEN_DIV exp_expr
-   64          | mult_expr TOKEN_MOD exp_expr
+   54 land_expr: eq_expr
+   55          | land_expr TOKEN_AND eq_expr
 
-   65 exp_expr: unary_expr
-   66         | exp_expr TOKEN_EXP unary_expr
+   56 eq_expr: rel_expr
+   57        | eq_expr TOKEN_EQ rel_expr
+   58        | eq_expr TOKEN_NEQ rel_expr
 
-   67 select_stmt: TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt
-   68            | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt
+   59 rel_expr: add_expr
+   60         | rel_expr TOKEN_LESS add_expr
+   61         | rel_expr TOKEN_GREAT add_expr
+   62         | rel_expr TOKEN_LEQ add_expr
+   63         | rel_expr TOKEN_GEQ add_expr
 
-   69 iter_stmt: TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt
-   70          | TOKEN_FOR TOKEN_LPAR for TOKEN_RPAR stmt
+   64 add_expr: mult_expr
+   65         | add_expr TOKEN_ADD mult_expr
+   66         | add_expr TOKEN_SUB mult_expr
 
-   71 for: TOKEN_SEMI TOKEN_SEMI
-   72    | TOKEN_SEMI TOKEN_SEMI expr
-   73    | TOKEN_SEMI expr_stmt
-   74    | TOKEN_SEMI expr_stmt expr
-   75    | expr_stmt TOKEN_SEMI
-   76    | expr_stmt TOKEN_SEMI expr
-   77    | expr_stmt expr_stmt
-   78    | expr_stmt expr_stmt expr
-   79    | decl TOKEN_SEMI
-   80    | decl TOKEN_SEMI expr
-   81    | decl expr_stmt
-   82    | decl expr_stmt expr
+   67 mult_expr: exp_expr
+   68          | mult_expr TOKEN_MULT exp_expr
+   69          | mult_expr TOKEN_DIV exp_expr
+   70          | mult_expr TOKEN_MOD exp_expr
 
-   83 jump_stmt: TOKEN_RETURN TOKEN_SEMI
-   84          | TOKEN_RETURN expr TOKEN_SEMI
+   71 exp_expr: unary_expr
+   72         | exp_expr TOKEN_EXP unary_expr
 
-   85 cmpnd_stmt: TOKEN_LCURL TOKEN_RCURL
-   86           | TOKEN_LCURL block_list TOKEN_RCURL
+   73 select_stmt: TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt
+   74            | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt
 
-   87 block_list: block
-   88           | block_list block
+   75 iter_stmt: TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt
+   76          | TOKEN_FOR TOKEN_LPAR for TOKEN_RPAR stmt
 
-   89 block: decl
-   90      | stmt
+   77 for: TOKEN_SEMI TOKEN_SEMI
+   78    | TOKEN_SEMI TOKEN_SEMI expr
+   79    | TOKEN_SEMI expr_stmt
+   80    | TOKEN_SEMI expr_stmt expr
+   81    | expr_stmt TOKEN_SEMI
+   82    | expr_stmt TOKEN_SEMI expr
+   83    | expr_stmt expr_stmt
+   84    | expr_stmt expr_stmt expr
+   85    | decln TOKEN_SEMI
+   86    | decln TOKEN_SEMI expr
+   87    | decln expr_stmt
+   88    | decln expr_stmt expr
 
-   91 decl: non_init_decl
-   92     | designator TOKEN_ASSIGN init TOKEN_SEMI
+   89 jump_stmt: TOKEN_RETURN TOKEN_SEMI
+   90          | TOKEN_RETURN expr TOKEN_SEMI
 
-   93 function_decl: decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_SEMI
-   94              | decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_ASSIGN cmpnd_stmt
+   91 cmpnd_stmt: TOKEN_LCURL TOKEN_RCURL
+   92           | TOKEN_LCURL block_list TOKEN_RCURL
 
-   95 init: TOKEN_LCURL init_list TOKEN_RCURL
-   96     | assign_expr
+   93 block_list: block
+   94           | block_list block
 
-   97 init_list: init
-   98          | init_list TOKEN_COMMA init
+   95 block: int_decln
+   96      | stmt
 
-   99 type: atomic_type
-  100     | TOKEN_AUTO
-  101     | array_list atomic_type
+   97 int_decln: decln
+   98          | lvalue initialization
 
-  102 atomic_type: TOKEN_BOOLEAN
-  103            | TOKEN_CHAR
-  104            | TOKEN_INTEGER
-  105            | TOKEN_STRING
+   99 initialization: TOKEN_ASSIGN init TOKEN_SEMI
 
-  106 ret_type: atomic_type
-  107         | TOKEN_VOID
-  108         | array_list atomic_type
+  100 decln: decl TOKEN_SEMI
+  101      | decl initialization
 
-  109 array_list: array
-  110           | array_list array
+  102 function_decl: decltr TOKEN_COLON TOKEN_FUNCTION ret_type
 
-  111 array: TOKEN_ARRAY TOKEN_LBRACK assign_expr TOKEN_RBRACK
+  103 function_suffix: TOKEN_SEMI
+  104                | TOKEN_ASSIGN cmpnd_stmt
+
+  105 function_decln: function_decl TOKEN_LPAR TOKEN_RPAR function_suffix
+  106               | function_decl TOKEN_LPAR TOKEN_VOID TOKEN_RPAR function_suffix
+  107               | function_decl TOKEN_LPAR param_list TOKEN_RPAR function_suffix
+
+  108 param_list: decl_list
+
+  109 decl_list: decl TOKEN_COMMA decl_list
+  110          | decl
+
+  111 init: TOKEN_LCURL init_list TOKEN_RCURL
+  112     | assign_expr
+
+  113 init_list: init
+  114          | init_list TOKEN_COMMA init
+
+  115 type: atomic_type
+  116     | TOKEN_AUTO
+  117     | array_list atomic_type
+
+  118 atomic_type: TOKEN_BOOLEAN
+  119            | TOKEN_CHAR
+  120            | TOKEN_INTEGER
+  121            | TOKEN_STRING
+
+  122 ret_type: atomic_type
+  123         | TOKEN_VOID
+  124         | array_list atomic_type
+
+  125 array_list: array
+  126           | array_list array
+
+  127 array: TOKEN_ARRAY TOKEN_LBRACK assign_expr TOKEN_RBRACK
+  128      | TOKEN_ARRAY TOKEN_LBRACK TOKEN_RBRACK
 
 
 Terminals, with rules where they appear
@@ -183,52 +214,52 @@ Terminals, with rules where they appear
     error (256)
     TOKEN_ERROR (258)
     TOKEN_EOF (259)
-    TOKEN_ARRAY (260) 111
-    TOKEN_AUTO (261) 100
-    TOKEN_BOOLEAN (262) 102
-    TOKEN_CHAR (263) 103
-    TOKEN_ELSE (264) 68
-    TOKEN_FOR (265) 70
-    TOKEN_FUNCTION (266) 93 94
-    TOKEN_IF (267) 67 68
-    TOKEN_INTEGER (268) 104
-    TOKEN_PRINT (269) 17
-    TOKEN_RETURN (270) 83 84
-    TOKEN_STRING (271) 105
-    TOKEN_VOID (272) 107
-    TOKEN_WHILE (273) 69
-    TOKEN_IDENT (274) 44
-    TOKEN_BOOL (275) 33
-    TOKEN_NUMBER (276) 35
-    TOKEN_STR (277) 36
-    TOKEN_CH (278) 34
-    TOKEN_INC (279) 31
-    TOKEN_DEC (280) 32
-    TOKEN_SUB (281) 28 60
-    TOKEN_EXP (282) 66
-    TOKEN_NOT (283) 27
-    TOKEN_MULT (284) 62
-    TOKEN_DIV (285) 63
-    TOKEN_MOD (286) 3 64
-    TOKEN_ADD (287) 26 59
-    TOKEN_LEQ (288) 56
-    TOKEN_LESS (289) 54
-    TOKEN_GEQ (290) 57
-    TOKEN_GREAT (291) 55
-    TOKEN_EQ (292) 51
-    TOKEN_NEQ (293) 52
-    TOKEN_AND (294) 49
-    TOKEN_OR (295) 47
-    TOKEN_ASSIGN (296) 8 24 92 94
-    TOKEN_LBRACK (297) 43 111
-    TOKEN_RBRACK (298) 43 111
-    TOKEN_LPAR (299) 30 37 45 67 68 69 70 93 94
-    TOKEN_RPAR (300) 30 37 45 67 68 69 70 93 94
-    TOKEN_LCURL (301) 85 86 95
-    TOKEN_RCURL (302) 85 86 95
-    TOKEN_COLON (303) 7 8 93 94
-    TOKEN_SEMI (304) 7 8 17 20 71 72 73 74 75 76 79 80 83 84 92 93
-    TOKEN_COMMA (305) 18 22 98
+    TOKEN_ARRAY (260) 127 128
+    TOKEN_AUTO (261) 116
+    TOKEN_BOOLEAN (262) 118
+    TOKEN_CHAR (263) 119
+    TOKEN_ELSE (264) 74
+    TOKEN_FOR (265) 76
+    TOKEN_FUNCTION (266) 102
+    TOKEN_IF (267) 73 74
+    TOKEN_INTEGER (268) 120
+    TOKEN_PRINT (269) 16
+    TOKEN_RETURN (270) 89 90
+    TOKEN_STRING (271) 121
+    TOKEN_VOID (272) 106 123
+    TOKEN_WHILE (273) 75
+    TOKEN_IDENT (274) 50
+    TOKEN_BOOL (275) 35
+    TOKEN_NUMBER (276) 37
+    TOKEN_STR (277) 38
+    TOKEN_CH (278) 36
+    TOKEN_INC (279) 30
+    TOKEN_DEC (280) 31
+    TOKEN_SUB (281) 27 66
+    TOKEN_EXP (282) 72
+    TOKEN_NOT (283) 26
+    TOKEN_MULT (284) 68
+    TOKEN_DIV (285) 69
+    TOKEN_MOD (286) 3 70
+    TOKEN_ADD (287) 25 65
+    TOKEN_LEQ (288) 62
+    TOKEN_LESS (289) 60
+    TOKEN_GEQ (290) 63
+    TOKEN_GREAT (291) 61
+    TOKEN_EQ (292) 57
+    TOKEN_NEQ (293) 58
+    TOKEN_AND (294) 55
+    TOKEN_OR (295) 53
+    TOKEN_ASSIGN (296) 23 99 104
+    TOKEN_LBRACK (297) 49 127 128
+    TOKEN_RBRACK (298) 49 127 128
+    TOKEN_LPAR (299) 29 33 45 46 51 73 74 75 76 105 106 107
+    TOKEN_RPAR (300) 29 33 45 46 51 73 74 75 76 105 106 107
+    TOKEN_LCURL (301) 91 92 111
+    TOKEN_RCURL (302) 91 92 111
+    TOKEN_COLON (303) 7 102
+    TOKEN_SEMI (304) 16 19 77 78 79 80 81 82 85 86 89 90 99 100 103
+    TOKEN_COMMA (305) 17 21 40 109 114
 
 
 Nonterminals, with rules where they appear
@@ -241,120 +272,150 @@ Nonterminals, with rules where they appear
     test_program (53)
         on left: 5 6
         on right: 3
-    non_init_decl (54)
-        on left: 7 8
-        on right: 9 91
-    ext_decl (55)
-        on left: 9 10
+    decl (54)
+        on left: 7
+        on right: 100 101 109 110
+    ext_decln (55)
+        on left: 8 9
         on right: 1 2 6
     stmt (56)
-        on left: 11 12 13 14 15 16
-        on right: 5 67 68 69 70 90
+        on left: 10 11 12 13 14 15
+        on right: 5 73 74 75 76 96
     print_stmt (57)
-        on left: 17
-        on right: 11
-    print_list (58)
-        on left: 18 19
-        on right: 17 18
-    expr_stmt (59)
-        on left: 20
-        on right: 12 73 74 75 76 77 78 81 82
-    expr (60)
-        on left: 21 22
-        on right: 20 22 30 37 67 68 69 72 74 76 78 80 82 84
-    assign_expr (61)
-        on left: 23 24
-        on right: 18 19 21 22 24 43 96 111
-    unary_expr (62)
-        on left: 25 26 27 28
-        on right: 24 26 27 28 65 66
-    postfix_expr (63)
-        on left: 29 30 31 32
-        on right: 25 30 31 32
-    primary_expr (64)
-        on left: 33 34 35 36 37 38
-        on right: 29
-    designator (65)
-        on left: 39 40
-        on right: 38 92
-    subscript_list (66)
-        on left: 41 42
-        on right: 39 42
-    subscript (67)
-        on left: 43
-        on right: 41 42
-    decltr (68)
-        on left: 44 45
-        on right: 7 8 39 40 45 93 94
-    lor_expr (69)
-        on left: 46 47
-        on right: 23 47
-    land_expr (70)
-        on left: 48 49
-        on right: 46 47 49
-    eq_expr (71)
-        on left: 50 51 52
-        on right: 48 49 51 52
-    rel_expr (72)
-        on left: 53 54 55 56 57
-        on right: 50 51 52 54 55 56 57
-    add_expr (73)
-        on left: 58 59 60
-        on right: 53 54 55 56 57 59 60
-    mult_expr (74)
-        on left: 61 62 63 64
-        on right: 58 59 60 62 63 64
-    exp_expr (75)
-        on left: 65 66
-        on right: 61 62 63 64 66
-    select_stmt (76)
-        on left: 67 68
-        on right: 13
-    iter_stmt (77)
-        on left: 69 70
-        on right: 14
-    for (78)
-        on left: 71 72 73 74 75 76 77 78 79 80 81 82
-        on right: 70
-    jump_stmt (79)
-        on left: 83 84
-        on right: 15
-    cmpnd_stmt (80)
-        on left: 85 86
-        on right: 16 94
-    block_list (81)
-        on left: 87 88
-        on right: 86 88
-    block (82)
-        on left: 89 90
-        on right: 87 88
-    decl (83)
-        on left: 91 92
-        on right: 79 80 81 82 89
-    function_decl (84)
-        on left: 93 94
+        on left: 16
         on right: 10
-    init (85)
+    print_list (58)
+        on left: 17 18
+        on right: 16 17
+    expr_stmt (59)
+        on left: 19
+        on right: 11 79 80 81 82 83 84 87 88
+    expr (60)
+        on left: 20 21
+        on right: 19 21 29 33 39 40 73 74 75 78 80 82 84 86 88 90
+    assign_expr (61)
+        on left: 22 23
+        on right: 17 18 20 21 23 49 112 127
+    unary_expr (62)
+        on left: 24 25 26 27
+        on right: 23 25 26 27 71 72
+    postfix_expr (63)
+        on left: 28 29 30 31
+        on right: 24 29 30 31
+    primary_expr (64)
+        on left: 32 33 34
+        on right: 28
+    primitive (65)
+        on left: 35 36 37 38
+        on right: 32
+    expr_list (66)
+        on left: 39 40
+        on right: 40 46
+    lvalue (67)
+        on left: 41
+        on right: 34 98
+    suffix (68)
+        on left: 42 43 44
+        on right: 41
+    call_suffix (69)
+        on left: 45 46
+        on right: 42
+    subscript_list (70)
+        on left: 47 48
+        on right: 43 48
+    subscript (71)
+        on left: 49
+        on right: 47 48
+    decltr (72)
+        on left: 50 51
+        on right: 7 41 51 102
+    lor_expr (73)
+        on left: 52 53
+        on right: 22 53
+    land_expr (74)
+        on left: 54 55
+        on right: 52 53 55
+    eq_expr (75)
+        on left: 56 57 58
+        on right: 54 55 57 58
+    rel_expr (76)
+        on left: 59 60 61 62 63
+        on right: 56 57 58 60 61 62 63
+    add_expr (77)
+        on left: 64 65 66
+        on right: 59 60 61 62 63 65 66
+    mult_expr (78)
+        on left: 67 68 69 70
+        on right: 64 65 66 68 69 70
+    exp_expr (79)
+        on left: 71 72
+        on right: 67 68 69 70 72
+    select_stmt (80)
+        on left: 73 74
+        on right: 15
+    iter_stmt (81)
+        on left: 75 76
+        on right: 12
+    for (82)
+        on left: 77 78 79 80 81 82 83 84 85 86 87 88
+        on right: 76
+    jump_stmt (83)
+        on left: 89 90
+        on right: 13
+    cmpnd_stmt (84)
+        on left: 91 92
+        on right: 14 104
+    block_list (85)
+        on left: 93 94
+        on right: 92 94
+    block (86)
         on left: 95 96
-        on right: 8 92 97 98
-    init_list (86)
-        on left: 97 98
-        on right: 95 98
-    type (87)
-        on left: 99 100 101
-        on right: 7 8
-    atomic_type (88)
-        on left: 102 103 104 105
-        on right: 99 101 106 108
-    ret_type (89)
-        on left: 106 107 108
         on right: 93 94
-    array_list (90)
+    int_decln (87)
+        on left: 97 98
+        on right: 95
+    initialization (88)
+        on left: 99
+        on right: 98 101
+    decln (89)
+        on left: 100 101
+        on right: 8 85 86 87 88 97
+    function_decl (90)
+        on left: 102
+        on right: 105 106 107
+    function_suffix (91)
+        on left: 103 104
+        on right: 105 106 107
+    function_decln (92)
+        on left: 105 106 107
+        on right: 9
+    param_list (93)
+        on left: 108
+        on right: 107
+    decl_list (94)
         on left: 109 110
-        on right: 101 108 110
-    array (91)
-        on left: 111
-        on right: 109 110
+        on right: 108 109
+    init (95)
+        on left: 111 112
+        on right: 99 113 114
+    init_list (96)
+        on left: 113 114
+        on right: 111 114
+    type (97)
+        on left: 115 116 117
+        on right: 7
+    atomic_type (98)
+        on left: 118 119 120 121
+        on right: 115 117 122 124
+    ret_type (99)
+        on left: 122 123 124
+        on right: 102
+    array_list (100)
+        on left: 125 126
+        on right: 117 124 126
+    array (101)
+        on left: 127 128
+        on right: 125 126
 
 
 State 0
@@ -369,2780 +430,3076 @@ State 0
     TOKEN_LPAR   [reduce using rule 4 (program)]
     $default     reduce using rule 4 (program)
 
-    program        go to state 4
-    non_init_decl  go to state 5
-    ext_decl       go to state 6
-    decltr         go to state 7
-    function_decl  go to state 8
+    program         go to state 4
+    decl            go to state 5
+    ext_decln       go to state 6
+    decltr          go to state 7
+    decln           go to state 8
+    function_decl   go to state 9
+    function_decln  go to state 10
 
 
 State 1
 
-   44 decltr: TOKEN_IDENT .
+   50 decltr: TOKEN_IDENT .
 
-    $default  reduce using rule 44 (decltr)
+    $default  reduce using rule 50 (decltr)
 
 
 State 2
 
     3 program: TOKEN_MOD . TOKEN_MOD test_program
 
-    TOKEN_MOD  shift, and go to state 9
+    TOKEN_MOD  shift, and go to state 11
 
 
 State 3
 
-   45 decltr: TOKEN_LPAR . decltr TOKEN_RPAR
+   51 decltr: TOKEN_LPAR . decltr TOKEN_RPAR
 
     TOKEN_IDENT  shift, and go to state 1
     TOKEN_LPAR   shift, and go to state 3
 
-    decltr  go to state 10
+    decltr  go to state 12
 
 
 State 4
 
     0 $accept: program . $end
-    2 program: program . ext_decl
+    2 program: program . ext_decln
 
-    $end         shift, and go to state 11
+    $end         shift, and go to state 13
     TOKEN_IDENT  shift, and go to state 1
     TOKEN_LPAR   shift, and go to state 3
 
-    non_init_decl  go to state 5
-    ext_decl       go to state 12
-    decltr         go to state 7
-    function_decl  go to state 8
+    decl            go to state 5
+    ext_decln       go to state 14
+    decltr          go to state 7
+    decln           go to state 8
+    function_decl   go to state 9
+    function_decln  go to state 10
 
 
 State 5
 
-    9 ext_decl: non_init_decl .
+  100 decln: decl . TOKEN_SEMI
+  101      | decl . initialization
 
-    $default  reduce using rule 9 (ext_decl)
+    TOKEN_ASSIGN  shift, and go to state 15
+    TOKEN_SEMI    shift, and go to state 16
+
+    initialization  go to state 17
 
 
 State 6
 
-    1 program: ext_decl .
+    1 program: ext_decln .
 
     $default  reduce using rule 1 (program)
 
 
 State 7
 
-    7 non_init_decl: decltr . TOKEN_COLON type TOKEN_SEMI
-    8              | decltr . TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI
-   93 function_decl: decltr . TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_SEMI
-   94              | decltr . TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_ASSIGN cmpnd_stmt
+    7 decl: decltr . TOKEN_COLON type
+  102 function_decl: decltr . TOKEN_COLON TOKEN_FUNCTION ret_type
 
-    TOKEN_COLON  shift, and go to state 13
+    TOKEN_COLON  shift, and go to state 18
 
 
 State 8
 
-   10 ext_decl: function_decl .
+    8 ext_decln: decln .
 
-    $default  reduce using rule 10 (ext_decl)
+    $default  reduce using rule 8 (ext_decln)
 
 
 State 9
 
-    3 program: TOKEN_MOD TOKEN_MOD . test_program
+  105 function_decln: function_decl . TOKEN_LPAR TOKEN_RPAR function_suffix
+  106               | function_decl . TOKEN_LPAR TOKEN_VOID TOKEN_RPAR function_suffix
+  107               | function_decl . TOKEN_LPAR param_list TOKEN_RPAR function_suffix
 
-    TOKEN_FOR     shift, and go to state 14
-    TOKEN_IF      shift, and go to state 15
-    TOKEN_PRINT   shift, and go to state 16
-    TOKEN_RETURN  shift, and go to state 17
-    TOKEN_WHILE   shift, and go to state 18
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_LCURL   shift, and go to state 27
-
-    test_program   go to state 28
-    non_init_decl  go to state 5
-    ext_decl       go to state 29
-    stmt           go to state 30
-    print_stmt     go to state 31
-    expr_stmt      go to state 32
-    expr           go to state 33
-    assign_expr    go to state 34
-    unary_expr     go to state 35
-    postfix_expr   go to state 36
-    primary_expr   go to state 37
-    designator     go to state 38
-    decltr         go to state 39
-    lor_expr       go to state 40
-    land_expr      go to state 41
-    eq_expr        go to state 42
-    rel_expr       go to state 43
-    add_expr       go to state 44
-    mult_expr      go to state 45
-    exp_expr       go to state 46
-    select_stmt    go to state 47
-    iter_stmt      go to state 48
-    jump_stmt      go to state 49
-    cmpnd_stmt     go to state 50
-    function_decl  go to state 8
+    TOKEN_LPAR  shift, and go to state 19
 
 
 State 10
 
-   45 decltr: TOKEN_LPAR decltr . TOKEN_RPAR
+    9 ext_decln: function_decln .
 
-    TOKEN_RPAR  shift, and go to state 51
+    $default  reduce using rule 9 (ext_decln)
 
 
 State 11
+
+    3 program: TOKEN_MOD TOKEN_MOD . test_program
+
+    TOKEN_FOR     shift, and go to state 20
+    TOKEN_IF      shift, and go to state 21
+    TOKEN_PRINT   shift, and go to state 22
+    TOKEN_RETURN  shift, and go to state 23
+    TOKEN_WHILE   shift, and go to state 24
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_LCURL   shift, and go to state 33
+
+    test_program    go to state 34
+    decl            go to state 5
+    ext_decln       go to state 35
+    stmt            go to state 36
+    print_stmt      go to state 37
+    expr_stmt       go to state 38
+    expr            go to state 39
+    assign_expr     go to state 40
+    unary_expr      go to state 41
+    postfix_expr    go to state 42
+    primary_expr    go to state 43
+    primitive       go to state 44
+    lvalue          go to state 45
+    decltr          go to state 46
+    lor_expr        go to state 47
+    land_expr       go to state 48
+    eq_expr         go to state 49
+    rel_expr        go to state 50
+    add_expr        go to state 51
+    mult_expr       go to state 52
+    exp_expr        go to state 53
+    select_stmt     go to state 54
+    iter_stmt       go to state 55
+    jump_stmt       go to state 56
+    cmpnd_stmt      go to state 57
+    decln           go to state 8
+    function_decl   go to state 9
+    function_decln  go to state 10
+
+
+State 12
+
+   51 decltr: TOKEN_LPAR decltr . TOKEN_RPAR
+
+    TOKEN_RPAR  shift, and go to state 58
+
+
+State 13
 
     0 $accept: program $end .
 
     $default  accept
 
 
-State 12
+State 14
 
-    2 program: program ext_decl .
+    2 program: program ext_decln .
 
     $default  reduce using rule 2 (program)
 
 
-State 13
-
-    7 non_init_decl: decltr TOKEN_COLON . type TOKEN_SEMI
-    8              | decltr TOKEN_COLON . type TOKEN_ASSIGN init TOKEN_SEMI
-   93 function_decl: decltr TOKEN_COLON . TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_SEMI
-   94              | decltr TOKEN_COLON . TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_ASSIGN cmpnd_stmt
-
-    TOKEN_ARRAY     shift, and go to state 52
-    TOKEN_AUTO      shift, and go to state 53
-    TOKEN_BOOLEAN   shift, and go to state 54
-    TOKEN_CHAR      shift, and go to state 55
-    TOKEN_FUNCTION  shift, and go to state 56
-    TOKEN_INTEGER   shift, and go to state 57
-    TOKEN_STRING    shift, and go to state 58
-
-    type         go to state 59
-    atomic_type  go to state 60
-    array_list   go to state 61
-    array        go to state 62
-
-
-State 14
-
-   70 iter_stmt: TOKEN_FOR . TOKEN_LPAR for TOKEN_RPAR stmt
-
-    TOKEN_LPAR  shift, and go to state 63
-
-
 State 15
 
-   67 select_stmt: TOKEN_IF . TOKEN_LPAR expr TOKEN_RPAR stmt
-   68            | TOKEN_IF . TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt
+   99 initialization: TOKEN_ASSIGN . init TOKEN_SEMI
 
-    TOKEN_LPAR  shift, and go to state 64
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_LCURL   shift, and go to state 59
+
+    assign_expr   go to state 60
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+    init          go to state 62
 
 
 State 16
 
-   17 print_stmt: TOKEN_PRINT . print_list TOKEN_SEMI
+  100 decln: decl TOKEN_SEMI .
 
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    print_list    go to state 65
-    assign_expr   go to state 66
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
+    $default  reduce using rule 100 (decln)
 
 
 State 17
 
-   83 jump_stmt: TOKEN_RETURN . TOKEN_SEMI
-   84          | TOKEN_RETURN . expr TOKEN_SEMI
+  101 decln: decl initialization .
 
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_SEMI    shift, and go to state 68
-
-    expr          go to state 69
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
+    $default  reduce using rule 101 (decln)
 
 
 State 18
 
-   69 iter_stmt: TOKEN_WHILE . TOKEN_LPAR expr TOKEN_RPAR stmt
+    7 decl: decltr TOKEN_COLON . type
+  102 function_decl: decltr TOKEN_COLON . TOKEN_FUNCTION ret_type
 
-    TOKEN_LPAR  shift, and go to state 70
+    TOKEN_ARRAY     shift, and go to state 63
+    TOKEN_AUTO      shift, and go to state 64
+    TOKEN_BOOLEAN   shift, and go to state 65
+    TOKEN_CHAR      shift, and go to state 66
+    TOKEN_FUNCTION  shift, and go to state 67
+    TOKEN_INTEGER   shift, and go to state 68
+    TOKEN_STRING    shift, and go to state 69
+
+    type         go to state 70
+    atomic_type  go to state 71
+    array_list   go to state 72
+    array        go to state 73
 
 
 State 19
 
-   33 primary_expr: TOKEN_BOOL .
+  105 function_decln: function_decl TOKEN_LPAR . TOKEN_RPAR function_suffix
+  106               | function_decl TOKEN_LPAR . TOKEN_VOID TOKEN_RPAR function_suffix
+  107               | function_decl TOKEN_LPAR . param_list TOKEN_RPAR function_suffix
 
-    $default  reduce using rule 33 (primary_expr)
+    TOKEN_VOID   shift, and go to state 74
+    TOKEN_IDENT  shift, and go to state 1
+    TOKEN_LPAR   shift, and go to state 3
+    TOKEN_RPAR   shift, and go to state 75
+
+    decl        go to state 76
+    decltr      go to state 77
+    param_list  go to state 78
+    decl_list   go to state 79
 
 
 State 20
 
-   35 primary_expr: TOKEN_NUMBER .
+   76 iter_stmt: TOKEN_FOR . TOKEN_LPAR for TOKEN_RPAR stmt
 
-    $default  reduce using rule 35 (primary_expr)
+    TOKEN_LPAR  shift, and go to state 80
 
 
 State 21
 
-   36 primary_expr: TOKEN_STR .
+   73 select_stmt: TOKEN_IF . TOKEN_LPAR expr TOKEN_RPAR stmt
+   74            | TOKEN_IF . TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt
 
-    $default  reduce using rule 36 (primary_expr)
+    TOKEN_LPAR  shift, and go to state 81
 
 
 State 22
 
-   34 primary_expr: TOKEN_CH .
+   16 print_stmt: TOKEN_PRINT . print_list TOKEN_SEMI
 
-    $default  reduce using rule 34 (primary_expr)
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    print_list    go to state 82
+    assign_expr   go to state 83
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
 
 
 State 23
 
-   28 unary_expr: TOKEN_SUB . unary_expr
+   89 jump_stmt: TOKEN_RETURN . TOKEN_SEMI
+   90          | TOKEN_RETURN . expr TOKEN_SEMI
 
     TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_SEMI    shift, and go to state 84
 
-    unary_expr    go to state 71
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
+    expr          go to state 85
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
 
 
 State 24
 
-   27 unary_expr: TOKEN_NOT . unary_expr
+   75 iter_stmt: TOKEN_WHILE . TOKEN_LPAR expr TOKEN_RPAR stmt
 
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 72
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
+    TOKEN_LPAR  shift, and go to state 86
 
 
 State 25
 
-   26 unary_expr: TOKEN_ADD . unary_expr
+   35 primitive: TOKEN_BOOL .
 
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 73
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
+    $default  reduce using rule 35 (primitive)
 
 
 State 26
 
-   37 primary_expr: TOKEN_LPAR . expr TOKEN_RPAR
-   45 decltr: TOKEN_LPAR . decltr TOKEN_RPAR
+   37 primitive: TOKEN_NUMBER .
 
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    expr          go to state 74
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 75
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
+    $default  reduce using rule 37 (primitive)
 
 
 State 27
 
-   85 cmpnd_stmt: TOKEN_LCURL . TOKEN_RCURL
-   86           | TOKEN_LCURL . block_list TOKEN_RCURL
+   38 primitive: TOKEN_STR .
 
-    TOKEN_FOR     shift, and go to state 14
-    TOKEN_IF      shift, and go to state 15
-    TOKEN_PRINT   shift, and go to state 16
-    TOKEN_RETURN  shift, and go to state 17
-    TOKEN_WHILE   shift, and go to state 18
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_LCURL   shift, and go to state 27
-    TOKEN_RCURL   shift, and go to state 76
-
-    non_init_decl  go to state 77
-    stmt           go to state 78
-    print_stmt     go to state 31
-    expr_stmt      go to state 32
-    expr           go to state 33
-    assign_expr    go to state 34
-    unary_expr     go to state 35
-    postfix_expr   go to state 36
-    primary_expr   go to state 37
-    designator     go to state 79
-    decltr         go to state 80
-    lor_expr       go to state 40
-    land_expr      go to state 41
-    eq_expr        go to state 42
-    rel_expr       go to state 43
-    add_expr       go to state 44
-    mult_expr      go to state 45
-    exp_expr       go to state 46
-    select_stmt    go to state 47
-    iter_stmt      go to state 48
-    jump_stmt      go to state 49
-    cmpnd_stmt     go to state 50
-    block_list     go to state 81
-    block          go to state 82
-    decl           go to state 83
+    $default  reduce using rule 38 (primitive)
 
 
 State 28
+
+   36 primitive: TOKEN_CH .
+
+    $default  reduce using rule 36 (primitive)
+
+
+State 29
+
+   27 unary_expr: TOKEN_SUB . unary_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 87
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+
+
+State 30
+
+   26 unary_expr: TOKEN_NOT . unary_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 88
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+
+
+State 31
+
+   25 unary_expr: TOKEN_ADD . unary_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 89
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+
+
+State 32
+
+   33 primary_expr: TOKEN_LPAR . expr TOKEN_RPAR
+   51 decltr: TOKEN_LPAR . decltr TOKEN_RPAR
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    expr          go to state 90
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 91
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 33
+
+   91 cmpnd_stmt: TOKEN_LCURL . TOKEN_RCURL
+   92           | TOKEN_LCURL . block_list TOKEN_RCURL
+
+    TOKEN_FOR     shift, and go to state 20
+    TOKEN_IF      shift, and go to state 21
+    TOKEN_PRINT   shift, and go to state 22
+    TOKEN_RETURN  shift, and go to state 23
+    TOKEN_WHILE   shift, and go to state 24
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_LCURL   shift, and go to state 33
+    TOKEN_RCURL   shift, and go to state 92
+
+    decl          go to state 5
+    stmt          go to state 93
+    print_stmt    go to state 37
+    expr_stmt     go to state 38
+    expr          go to state 39
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 94
+    decltr        go to state 95
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+    select_stmt   go to state 54
+    iter_stmt     go to state 55
+    jump_stmt     go to state 56
+    cmpnd_stmt    go to state 57
+    block_list    go to state 96
+    block         go to state 97
+    int_decln     go to state 98
+    decln         go to state 99
+
+
+State 34
 
     3 program: TOKEN_MOD TOKEN_MOD test_program .
 
     $default  reduce using rule 3 (program)
 
 
-State 29
+State 35
 
-    6 test_program: ext_decl .
+    6 test_program: ext_decln .
 
     $default  reduce using rule 6 (test_program)
 
 
-State 30
+State 36
 
     5 test_program: stmt .
 
     $default  reduce using rule 5 (test_program)
 
 
-State 31
-
-   11 stmt: print_stmt .
-
-    $default  reduce using rule 11 (stmt)
-
-
-State 32
-
-   12 stmt: expr_stmt .
-
-    $default  reduce using rule 12 (stmt)
-
-
-State 33
-
-   20 expr_stmt: expr . TOKEN_SEMI
-   22 expr: expr . TOKEN_COMMA assign_expr
-
-    TOKEN_SEMI   shift, and go to state 84
-    TOKEN_COMMA  shift, and go to state 85
-
-
-State 34
-
-   21 expr: assign_expr .
-
-    $default  reduce using rule 21 (expr)
-
-
-State 35
-
-   24 assign_expr: unary_expr . TOKEN_ASSIGN assign_expr
-   65 exp_expr: unary_expr .
-
-    TOKEN_ASSIGN  shift, and go to state 86
-
-    $default  reduce using rule 65 (exp_expr)
-
-
-State 36
-
-   25 unary_expr: postfix_expr .
-   30 postfix_expr: postfix_expr . TOKEN_LPAR expr TOKEN_RPAR
-   31             | postfix_expr . TOKEN_INC
-   32             | postfix_expr . TOKEN_DEC
-
-    TOKEN_INC   shift, and go to state 87
-    TOKEN_DEC   shift, and go to state 88
-    TOKEN_LPAR  shift, and go to state 89
-
-    $default  reduce using rule 25 (unary_expr)
-
-
 State 37
 
-   29 postfix_expr: primary_expr .
+   10 stmt: print_stmt .
 
-    $default  reduce using rule 29 (postfix_expr)
+    $default  reduce using rule 10 (stmt)
 
 
 State 38
 
-   38 primary_expr: designator .
+   11 stmt: expr_stmt .
 
-    $default  reduce using rule 38 (primary_expr)
+    $default  reduce using rule 11 (stmt)
 
 
 State 39
 
-    7 non_init_decl: decltr . TOKEN_COLON type TOKEN_SEMI
-    8              | decltr . TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI
-   39 designator: decltr . subscript_list
-   40           | decltr .
-   93 function_decl: decltr . TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_SEMI
-   94              | decltr . TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_ASSIGN cmpnd_stmt
+   19 expr_stmt: expr . TOKEN_SEMI
+   21 expr: expr . TOKEN_COMMA assign_expr
 
-    TOKEN_LBRACK  shift, and go to state 90
-    TOKEN_COLON   shift, and go to state 13
-
-    $default  reduce using rule 40 (designator)
-
-    subscript_list  go to state 91
-    subscript       go to state 92
+    TOKEN_SEMI   shift, and go to state 100
+    TOKEN_COMMA  shift, and go to state 101
 
 
 State 40
 
-   23 assign_expr: lor_expr .
-   47 lor_expr: lor_expr . TOKEN_OR land_expr
+   20 expr: assign_expr .
 
-    TOKEN_OR  shift, and go to state 93
-
-    $default  reduce using rule 23 (assign_expr)
+    $default  reduce using rule 20 (expr)
 
 
 State 41
 
-   46 lor_expr: land_expr .
-   49 land_expr: land_expr . TOKEN_AND eq_expr
+   23 assign_expr: unary_expr . TOKEN_ASSIGN assign_expr
+   71 exp_expr: unary_expr .
 
-    TOKEN_AND  shift, and go to state 94
+    TOKEN_ASSIGN  shift, and go to state 102
 
-    $default  reduce using rule 46 (lor_expr)
+    $default  reduce using rule 71 (exp_expr)
 
 
 State 42
 
-   48 land_expr: eq_expr .
-   51 eq_expr: eq_expr . TOKEN_EQ rel_expr
-   52        | eq_expr . TOKEN_NEQ rel_expr
+   24 unary_expr: postfix_expr .
+   29 postfix_expr: postfix_expr . TOKEN_LPAR expr TOKEN_RPAR
+   30             | postfix_expr . TOKEN_INC
+   31             | postfix_expr . TOKEN_DEC
 
-    TOKEN_EQ   shift, and go to state 95
-    TOKEN_NEQ  shift, and go to state 96
+    TOKEN_INC   shift, and go to state 103
+    TOKEN_DEC   shift, and go to state 104
+    TOKEN_LPAR  shift, and go to state 105
 
-    $default  reduce using rule 48 (land_expr)
+    $default  reduce using rule 24 (unary_expr)
 
 
 State 43
 
-   50 eq_expr: rel_expr .
-   54 rel_expr: rel_expr . TOKEN_LESS add_expr
-   55         | rel_expr . TOKEN_GREAT add_expr
-   56         | rel_expr . TOKEN_LEQ add_expr
-   57         | rel_expr . TOKEN_GEQ add_expr
+   28 postfix_expr: primary_expr .
 
-    TOKEN_LEQ    shift, and go to state 97
-    TOKEN_LESS   shift, and go to state 98
-    TOKEN_GEQ    shift, and go to state 99
-    TOKEN_GREAT  shift, and go to state 100
-
-    $default  reduce using rule 50 (eq_expr)
+    $default  reduce using rule 28 (postfix_expr)
 
 
 State 44
 
-   53 rel_expr: add_expr .
-   59 add_expr: add_expr . TOKEN_ADD mult_expr
-   60         | add_expr . TOKEN_SUB mult_expr
+   32 primary_expr: primitive .
 
-    TOKEN_SUB  shift, and go to state 101
-    TOKEN_ADD  shift, and go to state 102
-
-    $default  reduce using rule 53 (rel_expr)
+    $default  reduce using rule 32 (primary_expr)
 
 
 State 45
 
-   58 add_expr: mult_expr .
-   62 mult_expr: mult_expr . TOKEN_MULT exp_expr
-   63          | mult_expr . TOKEN_DIV exp_expr
-   64          | mult_expr . TOKEN_MOD exp_expr
+   34 primary_expr: lvalue .
 
-    TOKEN_MULT  shift, and go to state 103
-    TOKEN_DIV   shift, and go to state 104
-    TOKEN_MOD   shift, and go to state 105
-
-    $default  reduce using rule 58 (add_expr)
+    $default  reduce using rule 34 (primary_expr)
 
 
 State 46
 
-   61 mult_expr: exp_expr .
-   66 exp_expr: exp_expr . TOKEN_EXP unary_expr
+    7 decl: decltr . TOKEN_COLON type
+   41 lvalue: decltr . suffix
+  102 function_decl: decltr . TOKEN_COLON TOKEN_FUNCTION ret_type
 
-    TOKEN_EXP  shift, and go to state 106
+    TOKEN_LBRACK  shift, and go to state 106
+    TOKEN_LPAR    shift, and go to state 107
+    TOKEN_COLON   shift, and go to state 18
 
-    $default  reduce using rule 61 (mult_expr)
+    TOKEN_LPAR  [reduce using rule 44 (suffix)]
+    $default    reduce using rule 44 (suffix)
+
+    suffix          go to state 108
+    call_suffix     go to state 109
+    subscript_list  go to state 110
+    subscript       go to state 111
 
 
 State 47
 
-   13 stmt: select_stmt .
+   22 assign_expr: lor_expr .
+   53 lor_expr: lor_expr . TOKEN_OR land_expr
 
-    $default  reduce using rule 13 (stmt)
+    TOKEN_OR  shift, and go to state 112
+
+    $default  reduce using rule 22 (assign_expr)
 
 
 State 48
 
-   14 stmt: iter_stmt .
+   52 lor_expr: land_expr .
+   55 land_expr: land_expr . TOKEN_AND eq_expr
 
-    $default  reduce using rule 14 (stmt)
+    TOKEN_AND  shift, and go to state 113
+
+    $default  reduce using rule 52 (lor_expr)
 
 
 State 49
 
-   15 stmt: jump_stmt .
+   54 land_expr: eq_expr .
+   57 eq_expr: eq_expr . TOKEN_EQ rel_expr
+   58        | eq_expr . TOKEN_NEQ rel_expr
 
-    $default  reduce using rule 15 (stmt)
+    TOKEN_EQ   shift, and go to state 114
+    TOKEN_NEQ  shift, and go to state 115
+
+    $default  reduce using rule 54 (land_expr)
 
 
 State 50
 
-   16 stmt: cmpnd_stmt .
+   56 eq_expr: rel_expr .
+   60 rel_expr: rel_expr . TOKEN_LESS add_expr
+   61         | rel_expr . TOKEN_GREAT add_expr
+   62         | rel_expr . TOKEN_LEQ add_expr
+   63         | rel_expr . TOKEN_GEQ add_expr
 
-    $default  reduce using rule 16 (stmt)
+    TOKEN_LEQ    shift, and go to state 116
+    TOKEN_LESS   shift, and go to state 117
+    TOKEN_GEQ    shift, and go to state 118
+    TOKEN_GREAT  shift, and go to state 119
+
+    $default  reduce using rule 56 (eq_expr)
 
 
 State 51
 
-   45 decltr: TOKEN_LPAR decltr TOKEN_RPAR .
+   59 rel_expr: add_expr .
+   65 add_expr: add_expr . TOKEN_ADD mult_expr
+   66         | add_expr . TOKEN_SUB mult_expr
 
-    $default  reduce using rule 45 (decltr)
+    TOKEN_SUB  shift, and go to state 120
+    TOKEN_ADD  shift, and go to state 121
+
+    $default  reduce using rule 59 (rel_expr)
 
 
 State 52
 
-  111 array: TOKEN_ARRAY . TOKEN_LBRACK assign_expr TOKEN_RBRACK
+   64 add_expr: mult_expr .
+   68 mult_expr: mult_expr . TOKEN_MULT exp_expr
+   69          | mult_expr . TOKEN_DIV exp_expr
+   70          | mult_expr . TOKEN_MOD exp_expr
 
-    TOKEN_LBRACK  shift, and go to state 107
+    TOKEN_MULT  shift, and go to state 122
+    TOKEN_DIV   shift, and go to state 123
+    TOKEN_MOD   shift, and go to state 124
+
+    $default  reduce using rule 64 (add_expr)
 
 
 State 53
 
-  100 type: TOKEN_AUTO .
+   67 mult_expr: exp_expr .
+   72 exp_expr: exp_expr . TOKEN_EXP unary_expr
 
-    $default  reduce using rule 100 (type)
+    TOKEN_EXP  shift, and go to state 125
+
+    $default  reduce using rule 67 (mult_expr)
 
 
 State 54
 
-  102 atomic_type: TOKEN_BOOLEAN .
+   15 stmt: select_stmt .
 
-    $default  reduce using rule 102 (atomic_type)
+    $default  reduce using rule 15 (stmt)
 
 
 State 55
 
-  103 atomic_type: TOKEN_CHAR .
+   12 stmt: iter_stmt .
 
-    $default  reduce using rule 103 (atomic_type)
+    $default  reduce using rule 12 (stmt)
 
 
 State 56
 
-   93 function_decl: decltr TOKEN_COLON TOKEN_FUNCTION . ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_SEMI
-   94              | decltr TOKEN_COLON TOKEN_FUNCTION . ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_ASSIGN cmpnd_stmt
+   13 stmt: jump_stmt .
 
-    TOKEN_ARRAY    shift, and go to state 52
-    TOKEN_BOOLEAN  shift, and go to state 54
-    TOKEN_CHAR     shift, and go to state 55
-    TOKEN_INTEGER  shift, and go to state 57
-    TOKEN_STRING   shift, and go to state 58
-    TOKEN_VOID     shift, and go to state 108
-
-    atomic_type  go to state 109
-    ret_type     go to state 110
-    array_list   go to state 111
-    array        go to state 62
+    $default  reduce using rule 13 (stmt)
 
 
 State 57
 
-  104 atomic_type: TOKEN_INTEGER .
+   14 stmt: cmpnd_stmt .
 
-    $default  reduce using rule 104 (atomic_type)
+    $default  reduce using rule 14 (stmt)
 
 
 State 58
 
-  105 atomic_type: TOKEN_STRING .
+   51 decltr: TOKEN_LPAR decltr TOKEN_RPAR .
 
-    $default  reduce using rule 105 (atomic_type)
+    $default  reduce using rule 51 (decltr)
 
 
 State 59
 
-    7 non_init_decl: decltr TOKEN_COLON type . TOKEN_SEMI
-    8              | decltr TOKEN_COLON type . TOKEN_ASSIGN init TOKEN_SEMI
+  111 init: TOKEN_LCURL . init_list TOKEN_RCURL
 
-    TOKEN_ASSIGN  shift, and go to state 112
-    TOKEN_SEMI    shift, and go to state 113
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_LCURL   shift, and go to state 59
+
+    assign_expr   go to state 60
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+    init          go to state 126
+    init_list     go to state 127
 
 
 State 60
 
-   99 type: atomic_type .
+  112 init: assign_expr .
 
-    $default  reduce using rule 99 (type)
+    $default  reduce using rule 112 (init)
 
 
 State 61
 
-  101 type: array_list . atomic_type
-  110 array_list: array_list . array
+   41 lvalue: decltr . suffix
 
-    TOKEN_ARRAY    shift, and go to state 52
-    TOKEN_BOOLEAN  shift, and go to state 54
-    TOKEN_CHAR     shift, and go to state 55
-    TOKEN_INTEGER  shift, and go to state 57
-    TOKEN_STRING   shift, and go to state 58
+    TOKEN_LBRACK  shift, and go to state 106
+    TOKEN_LPAR    shift, and go to state 107
 
-    atomic_type  go to state 114
-    array        go to state 115
+    TOKEN_LPAR  [reduce using rule 44 (suffix)]
+    $default    reduce using rule 44 (suffix)
+
+    suffix          go to state 108
+    call_suffix     go to state 109
+    subscript_list  go to state 110
+    subscript       go to state 111
 
 
 State 62
 
-  109 array_list: array .
+   99 initialization: TOKEN_ASSIGN init . TOKEN_SEMI
 
-    $default  reduce using rule 109 (array_list)
+    TOKEN_SEMI  shift, and go to state 128
 
 
 State 63
 
-   70 iter_stmt: TOKEN_FOR TOKEN_LPAR . for TOKEN_RPAR stmt
+  127 array: TOKEN_ARRAY . TOKEN_LBRACK assign_expr TOKEN_RBRACK
+  128      | TOKEN_ARRAY . TOKEN_LBRACK TOKEN_RBRACK
 
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_SEMI    shift, and go to state 116
-
-    non_init_decl  go to state 77
-    expr_stmt      go to state 117
-    expr           go to state 33
-    assign_expr    go to state 34
-    unary_expr     go to state 35
-    postfix_expr   go to state 36
-    primary_expr   go to state 37
-    designator     go to state 79
-    decltr         go to state 80
-    lor_expr       go to state 40
-    land_expr      go to state 41
-    eq_expr        go to state 42
-    rel_expr       go to state 43
-    add_expr       go to state 44
-    mult_expr      go to state 45
-    exp_expr       go to state 46
-    for            go to state 118
-    decl           go to state 119
+    TOKEN_LBRACK  shift, and go to state 129
 
 
 State 64
 
-   67 select_stmt: TOKEN_IF TOKEN_LPAR . expr TOKEN_RPAR stmt
-   68            | TOKEN_IF TOKEN_LPAR . expr TOKEN_RPAR stmt TOKEN_ELSE stmt
+  116 type: TOKEN_AUTO .
 
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    expr          go to state 120
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
+    $default  reduce using rule 116 (type)
 
 
 State 65
 
-   17 print_stmt: TOKEN_PRINT print_list . TOKEN_SEMI
+  118 atomic_type: TOKEN_BOOLEAN .
 
-    TOKEN_SEMI  shift, and go to state 121
+    $default  reduce using rule 118 (atomic_type)
 
 
 State 66
 
-   18 print_list: assign_expr . TOKEN_COMMA print_list
-   19           | assign_expr .
+  119 atomic_type: TOKEN_CHAR .
 
-    TOKEN_COMMA  shift, and go to state 122
-
-    $default  reduce using rule 19 (print_list)
+    $default  reduce using rule 119 (atomic_type)
 
 
 State 67
 
-   39 designator: decltr . subscript_list
-   40           | decltr .
+  102 function_decl: decltr TOKEN_COLON TOKEN_FUNCTION . ret_type
 
-    TOKEN_LBRACK  shift, and go to state 90
+    TOKEN_ARRAY    shift, and go to state 63
+    TOKEN_BOOLEAN  shift, and go to state 65
+    TOKEN_CHAR     shift, and go to state 66
+    TOKEN_INTEGER  shift, and go to state 68
+    TOKEN_STRING   shift, and go to state 69
+    TOKEN_VOID     shift, and go to state 130
 
-    $default  reduce using rule 40 (designator)
-
-    subscript_list  go to state 91
-    subscript       go to state 92
+    atomic_type  go to state 131
+    ret_type     go to state 132
+    array_list   go to state 133
+    array        go to state 73
 
 
 State 68
 
-   83 jump_stmt: TOKEN_RETURN TOKEN_SEMI .
+  120 atomic_type: TOKEN_INTEGER .
 
-    $default  reduce using rule 83 (jump_stmt)
+    $default  reduce using rule 120 (atomic_type)
 
 
 State 69
 
-   22 expr: expr . TOKEN_COMMA assign_expr
-   84 jump_stmt: TOKEN_RETURN expr . TOKEN_SEMI
+  121 atomic_type: TOKEN_STRING .
 
-    TOKEN_SEMI   shift, and go to state 123
-    TOKEN_COMMA  shift, and go to state 85
+    $default  reduce using rule 121 (atomic_type)
 
 
 State 70
 
-   69 iter_stmt: TOKEN_WHILE TOKEN_LPAR . expr TOKEN_RPAR stmt
+    7 decl: decltr TOKEN_COLON type .
 
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    expr          go to state 124
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
+    $default  reduce using rule 7 (decl)
 
 
 State 71
 
-   28 unary_expr: TOKEN_SUB unary_expr .
+  115 type: atomic_type .
 
-    $default  reduce using rule 28 (unary_expr)
+    $default  reduce using rule 115 (type)
 
 
 State 72
 
-   27 unary_expr: TOKEN_NOT unary_expr .
+  117 type: array_list . atomic_type
+  126 array_list: array_list . array
 
-    $default  reduce using rule 27 (unary_expr)
+    TOKEN_ARRAY    shift, and go to state 63
+    TOKEN_BOOLEAN  shift, and go to state 65
+    TOKEN_CHAR     shift, and go to state 66
+    TOKEN_INTEGER  shift, and go to state 68
+    TOKEN_STRING   shift, and go to state 69
+
+    atomic_type  go to state 134
+    array        go to state 135
 
 
 State 73
 
-   26 unary_expr: TOKEN_ADD unary_expr .
+  125 array_list: array .
 
-    $default  reduce using rule 26 (unary_expr)
+    $default  reduce using rule 125 (array_list)
 
 
 State 74
 
-   22 expr: expr . TOKEN_COMMA assign_expr
-   37 primary_expr: TOKEN_LPAR expr . TOKEN_RPAR
+  106 function_decln: function_decl TOKEN_LPAR TOKEN_VOID . TOKEN_RPAR function_suffix
 
-    TOKEN_RPAR   shift, and go to state 125
-    TOKEN_COMMA  shift, and go to state 85
+    TOKEN_RPAR  shift, and go to state 136
 
 
 State 75
 
-   39 designator: decltr . subscript_list
-   40           | decltr .
-   45 decltr: TOKEN_LPAR decltr . TOKEN_RPAR
+  105 function_decln: function_decl TOKEN_LPAR TOKEN_RPAR . function_suffix
 
-    TOKEN_LBRACK  shift, and go to state 90
-    TOKEN_RPAR    shift, and go to state 51
+    TOKEN_ASSIGN  shift, and go to state 137
+    TOKEN_SEMI    shift, and go to state 138
 
-    TOKEN_RPAR  [reduce using rule 40 (designator)]
-    $default    reduce using rule 40 (designator)
-
-    subscript_list  go to state 91
-    subscript       go to state 92
+    function_suffix  go to state 139
 
 
 State 76
 
-   85 cmpnd_stmt: TOKEN_LCURL TOKEN_RCURL .
+  109 decl_list: decl . TOKEN_COMMA decl_list
+  110          | decl .
 
-    $default  reduce using rule 85 (cmpnd_stmt)
+    TOKEN_COMMA  shift, and go to state 140
+
+    $default  reduce using rule 110 (decl_list)
 
 
 State 77
 
-   91 decl: non_init_decl .
+    7 decl: decltr . TOKEN_COLON type
 
-    $default  reduce using rule 91 (decl)
+    TOKEN_COLON  shift, and go to state 141
 
 
 State 78
 
-   90 block: stmt .
+  107 function_decln: function_decl TOKEN_LPAR param_list . TOKEN_RPAR function_suffix
 
-    $default  reduce using rule 90 (block)
+    TOKEN_RPAR  shift, and go to state 142
 
 
 State 79
 
-   38 primary_expr: designator .
-   92 decl: designator . TOKEN_ASSIGN init TOKEN_SEMI
+  108 param_list: decl_list .
 
-    TOKEN_ASSIGN  shift, and go to state 126
-
-    TOKEN_ASSIGN  [reduce using rule 38 (primary_expr)]
-    $default      reduce using rule 38 (primary_expr)
+    $default  reduce using rule 108 (param_list)
 
 
 State 80
 
-    7 non_init_decl: decltr . TOKEN_COLON type TOKEN_SEMI
-    8              | decltr . TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI
-   39 designator: decltr . subscript_list
-   40           | decltr .
+   76 iter_stmt: TOKEN_FOR TOKEN_LPAR . for TOKEN_RPAR stmt
 
-    TOKEN_LBRACK  shift, and go to state 90
-    TOKEN_COLON   shift, and go to state 127
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_SEMI    shift, and go to state 143
 
-    $default  reduce using rule 40 (designator)
-
-    subscript_list  go to state 91
-    subscript       go to state 92
+    decl          go to state 5
+    expr_stmt     go to state 144
+    expr          go to state 39
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 95
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+    for           go to state 145
+    decln         go to state 146
 
 
 State 81
 
-   86 cmpnd_stmt: TOKEN_LCURL block_list . TOKEN_RCURL
-   88 block_list: block_list . block
+   73 select_stmt: TOKEN_IF TOKEN_LPAR . expr TOKEN_RPAR stmt
+   74            | TOKEN_IF TOKEN_LPAR . expr TOKEN_RPAR stmt TOKEN_ELSE stmt
 
-    TOKEN_FOR     shift, and go to state 14
-    TOKEN_IF      shift, and go to state 15
-    TOKEN_PRINT   shift, and go to state 16
-    TOKEN_RETURN  shift, and go to state 17
-    TOKEN_WHILE   shift, and go to state 18
     TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_LCURL   shift, and go to state 27
-    TOKEN_RCURL   shift, and go to state 128
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
 
-    non_init_decl  go to state 77
-    stmt           go to state 78
-    print_stmt     go to state 31
-    expr_stmt      go to state 32
-    expr           go to state 33
-    assign_expr    go to state 34
-    unary_expr     go to state 35
-    postfix_expr   go to state 36
-    primary_expr   go to state 37
-    designator     go to state 79
-    decltr         go to state 80
-    lor_expr       go to state 40
-    land_expr      go to state 41
-    eq_expr        go to state 42
-    rel_expr       go to state 43
-    add_expr       go to state 44
-    mult_expr      go to state 45
-    exp_expr       go to state 46
-    select_stmt    go to state 47
-    iter_stmt      go to state 48
-    jump_stmt      go to state 49
-    cmpnd_stmt     go to state 50
-    block          go to state 129
-    decl           go to state 83
+    expr          go to state 147
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
 
 
 State 82
 
-   87 block_list: block .
+   16 print_stmt: TOKEN_PRINT print_list . TOKEN_SEMI
 
-    $default  reduce using rule 87 (block_list)
+    TOKEN_SEMI  shift, and go to state 148
 
 
 State 83
 
-   89 block: decl .
+   17 print_list: assign_expr . TOKEN_COMMA print_list
+   18           | assign_expr .
 
-    $default  reduce using rule 89 (block)
-
-
-State 84
-
-   20 expr_stmt: expr TOKEN_SEMI .
-
-    $default  reduce using rule 20 (expr_stmt)
-
-
-State 85
-
-   22 expr: expr TOKEN_COMMA . assign_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    assign_expr   go to state 130
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 86
-
-   24 assign_expr: unary_expr TOKEN_ASSIGN . assign_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    assign_expr   go to state 131
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 87
-
-   31 postfix_expr: postfix_expr TOKEN_INC .
-
-    $default  reduce using rule 31 (postfix_expr)
-
-
-State 88
-
-   32 postfix_expr: postfix_expr TOKEN_DEC .
-
-    $default  reduce using rule 32 (postfix_expr)
-
-
-State 89
-
-   30 postfix_expr: postfix_expr TOKEN_LPAR . expr TOKEN_RPAR
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    expr          go to state 132
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 90
-
-   43 subscript: TOKEN_LBRACK . assign_expr TOKEN_RBRACK
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    assign_expr   go to state 133
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 91
-
-   39 designator: decltr subscript_list .
-   42 subscript_list: subscript_list . subscript
-
-    TOKEN_LBRACK  shift, and go to state 90
-
-    $default  reduce using rule 39 (designator)
-
-    subscript  go to state 134
-
-
-State 92
-
-   41 subscript_list: subscript .
-
-    $default  reduce using rule 41 (subscript_list)
-
-
-State 93
-
-   47 lor_expr: lor_expr TOKEN_OR . land_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    land_expr     go to state 136
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 94
-
-   49 land_expr: land_expr TOKEN_AND . eq_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    eq_expr       go to state 137
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 95
-
-   51 eq_expr: eq_expr TOKEN_EQ . rel_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    rel_expr      go to state 138
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 96
-
-   52 eq_expr: eq_expr TOKEN_NEQ . rel_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    rel_expr      go to state 139
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 97
-
-   56 rel_expr: rel_expr TOKEN_LEQ . add_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    add_expr      go to state 140
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 98
-
-   54 rel_expr: rel_expr TOKEN_LESS . add_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    add_expr      go to state 141
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 99
-
-   57 rel_expr: rel_expr TOKEN_GEQ . add_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    add_expr      go to state 142
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 100
-
-   55 rel_expr: rel_expr TOKEN_GREAT . add_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    add_expr      go to state 143
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 101
-
-   60 add_expr: add_expr TOKEN_SUB . mult_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    mult_expr     go to state 144
-    exp_expr      go to state 46
-
-
-State 102
-
-   59 add_expr: add_expr TOKEN_ADD . mult_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    mult_expr     go to state 145
-    exp_expr      go to state 46
-
-
-State 103
-
-   62 mult_expr: mult_expr TOKEN_MULT . exp_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    exp_expr      go to state 146
-
-
-State 104
-
-   63 mult_expr: mult_expr TOKEN_DIV . exp_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    exp_expr      go to state 147
-
-
-State 105
-
-   64 mult_expr: mult_expr TOKEN_MOD . exp_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 135
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    exp_expr      go to state 148
-
-
-State 106
-
-   66 exp_expr: exp_expr TOKEN_EXP . unary_expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    unary_expr    go to state 149
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-
-
-State 107
-
-  111 array: TOKEN_ARRAY TOKEN_LBRACK . assign_expr TOKEN_RBRACK
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    assign_expr   go to state 150
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 108
-
-  107 ret_type: TOKEN_VOID .
-
-    $default  reduce using rule 107 (ret_type)
-
-
-State 109
-
-  106 ret_type: atomic_type .
-
-    $default  reduce using rule 106 (ret_type)
-
-
-State 110
-
-   93 function_decl: decltr TOKEN_COLON TOKEN_FUNCTION ret_type . TOKEN_LPAR TOKEN_RPAR TOKEN_SEMI
-   94              | decltr TOKEN_COLON TOKEN_FUNCTION ret_type . TOKEN_LPAR TOKEN_RPAR TOKEN_ASSIGN cmpnd_stmt
-
-    TOKEN_LPAR  shift, and go to state 151
-
-
-State 111
-
-  108 ret_type: array_list . atomic_type
-  110 array_list: array_list . array
-
-    TOKEN_ARRAY    shift, and go to state 52
-    TOKEN_BOOLEAN  shift, and go to state 54
-    TOKEN_CHAR     shift, and go to state 55
-    TOKEN_INTEGER  shift, and go to state 57
-    TOKEN_STRING   shift, and go to state 58
-
-    atomic_type  go to state 152
-    array        go to state 115
-
-
-State 112
-
-    8 non_init_decl: decltr TOKEN_COLON type TOKEN_ASSIGN . init TOKEN_SEMI
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_LCURL   shift, and go to state 153
-
-    assign_expr   go to state 154
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-    init          go to state 155
-
-
-State 113
-
-    7 non_init_decl: decltr TOKEN_COLON type TOKEN_SEMI .
-
-    $default  reduce using rule 7 (non_init_decl)
-
-
-State 114
-
-  101 type: array_list atomic_type .
-
-    $default  reduce using rule 101 (type)
-
-
-State 115
-
-  110 array_list: array_list array .
-
-    $default  reduce using rule 110 (array_list)
-
-
-State 116
-
-   71 for: TOKEN_SEMI . TOKEN_SEMI
-   72    | TOKEN_SEMI . TOKEN_SEMI expr
-   73    | TOKEN_SEMI . expr_stmt
-   74    | TOKEN_SEMI . expr_stmt expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_SEMI    shift, and go to state 156
-
-    expr_stmt     go to state 157
-    expr          go to state 33
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 117
-
-   75 for: expr_stmt . TOKEN_SEMI
-   76    | expr_stmt . TOKEN_SEMI expr
-   77    | expr_stmt . expr_stmt
-   78    | expr_stmt . expr_stmt expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_SEMI    shift, and go to state 158
-
-    expr_stmt     go to state 159
-    expr          go to state 33
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 118
-
-   70 iter_stmt: TOKEN_FOR TOKEN_LPAR for . TOKEN_RPAR stmt
-
-    TOKEN_RPAR  shift, and go to state 160
-
-
-State 119
-
-   79 for: decl . TOKEN_SEMI
-   80    | decl . TOKEN_SEMI expr
-   81    | decl . expr_stmt
-   82    | decl . expr_stmt expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_SEMI    shift, and go to state 161
-
-    expr_stmt     go to state 162
-    expr          go to state 33
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 120
-
-   22 expr: expr . TOKEN_COMMA assign_expr
-   67 select_stmt: TOKEN_IF TOKEN_LPAR expr . TOKEN_RPAR stmt
-   68            | TOKEN_IF TOKEN_LPAR expr . TOKEN_RPAR stmt TOKEN_ELSE stmt
-
-    TOKEN_RPAR   shift, and go to state 163
-    TOKEN_COMMA  shift, and go to state 85
-
-
-State 121
-
-   17 print_stmt: TOKEN_PRINT print_list TOKEN_SEMI .
-
-    $default  reduce using rule 17 (print_stmt)
-
-
-State 122
-
-   18 print_list: assign_expr TOKEN_COMMA . print_list
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    print_list    go to state 164
-    assign_expr   go to state 66
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 123
-
-   84 jump_stmt: TOKEN_RETURN expr TOKEN_SEMI .
-
-    $default  reduce using rule 84 (jump_stmt)
-
-
-State 124
-
-   22 expr: expr . TOKEN_COMMA assign_expr
-   69 iter_stmt: TOKEN_WHILE TOKEN_LPAR expr . TOKEN_RPAR stmt
-
-    TOKEN_RPAR   shift, and go to state 165
-    TOKEN_COMMA  shift, and go to state 85
-
-
-State 125
-
-   37 primary_expr: TOKEN_LPAR expr TOKEN_RPAR .
-
-    $default  reduce using rule 37 (primary_expr)
-
-
-State 126
-
-   92 decl: designator TOKEN_ASSIGN . init TOKEN_SEMI
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_LCURL   shift, and go to state 153
-
-    assign_expr   go to state 154
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-    init          go to state 166
-
-
-State 127
-
-    7 non_init_decl: decltr TOKEN_COLON . type TOKEN_SEMI
-    8              | decltr TOKEN_COLON . type TOKEN_ASSIGN init TOKEN_SEMI
-
-    TOKEN_ARRAY    shift, and go to state 52
-    TOKEN_AUTO     shift, and go to state 53
-    TOKEN_BOOLEAN  shift, and go to state 54
-    TOKEN_CHAR     shift, and go to state 55
-    TOKEN_INTEGER  shift, and go to state 57
-    TOKEN_STRING   shift, and go to state 58
-
-    type         go to state 59
-    atomic_type  go to state 60
-    array_list   go to state 61
-    array        go to state 62
-
-
-State 128
-
-   86 cmpnd_stmt: TOKEN_LCURL block_list TOKEN_RCURL .
-
-    $default  reduce using rule 86 (cmpnd_stmt)
-
-
-State 129
-
-   88 block_list: block_list block .
-
-    $default  reduce using rule 88 (block_list)
-
-
-State 130
-
-   22 expr: expr TOKEN_COMMA assign_expr .
-
-    $default  reduce using rule 22 (expr)
-
-
-State 131
-
-   24 assign_expr: unary_expr TOKEN_ASSIGN assign_expr .
-
-    $default  reduce using rule 24 (assign_expr)
-
-
-State 132
-
-   22 expr: expr . TOKEN_COMMA assign_expr
-   30 postfix_expr: postfix_expr TOKEN_LPAR expr . TOKEN_RPAR
-
-    TOKEN_RPAR   shift, and go to state 167
-    TOKEN_COMMA  shift, and go to state 85
-
-
-State 133
-
-   43 subscript: TOKEN_LBRACK assign_expr . TOKEN_RBRACK
-
-    TOKEN_RBRACK  shift, and go to state 168
-
-
-State 134
-
-   42 subscript_list: subscript_list subscript .
-
-    $default  reduce using rule 42 (subscript_list)
-
-
-State 135
-
-   65 exp_expr: unary_expr .
-
-    $default  reduce using rule 65 (exp_expr)
-
-
-State 136
-
-   47 lor_expr: lor_expr TOKEN_OR land_expr .
-   49 land_expr: land_expr . TOKEN_AND eq_expr
-
-    TOKEN_AND  shift, and go to state 94
-
-    $default  reduce using rule 47 (lor_expr)
-
-
-State 137
-
-   49 land_expr: land_expr TOKEN_AND eq_expr .
-   51 eq_expr: eq_expr . TOKEN_EQ rel_expr
-   52        | eq_expr . TOKEN_NEQ rel_expr
-
-    TOKEN_EQ   shift, and go to state 95
-    TOKEN_NEQ  shift, and go to state 96
-
-    $default  reduce using rule 49 (land_expr)
-
-
-State 138
-
-   51 eq_expr: eq_expr TOKEN_EQ rel_expr .
-   54 rel_expr: rel_expr . TOKEN_LESS add_expr
-   55         | rel_expr . TOKEN_GREAT add_expr
-   56         | rel_expr . TOKEN_LEQ add_expr
-   57         | rel_expr . TOKEN_GEQ add_expr
-
-    TOKEN_LEQ    shift, and go to state 97
-    TOKEN_LESS   shift, and go to state 98
-    TOKEN_GEQ    shift, and go to state 99
-    TOKEN_GREAT  shift, and go to state 100
-
-    $default  reduce using rule 51 (eq_expr)
-
-
-State 139
-
-   52 eq_expr: eq_expr TOKEN_NEQ rel_expr .
-   54 rel_expr: rel_expr . TOKEN_LESS add_expr
-   55         | rel_expr . TOKEN_GREAT add_expr
-   56         | rel_expr . TOKEN_LEQ add_expr
-   57         | rel_expr . TOKEN_GEQ add_expr
-
-    TOKEN_LEQ    shift, and go to state 97
-    TOKEN_LESS   shift, and go to state 98
-    TOKEN_GEQ    shift, and go to state 99
-    TOKEN_GREAT  shift, and go to state 100
-
-    $default  reduce using rule 52 (eq_expr)
-
-
-State 140
-
-   56 rel_expr: rel_expr TOKEN_LEQ add_expr .
-   59 add_expr: add_expr . TOKEN_ADD mult_expr
-   60         | add_expr . TOKEN_SUB mult_expr
-
-    TOKEN_SUB  shift, and go to state 101
-    TOKEN_ADD  shift, and go to state 102
-
-    $default  reduce using rule 56 (rel_expr)
-
-
-State 141
-
-   54 rel_expr: rel_expr TOKEN_LESS add_expr .
-   59 add_expr: add_expr . TOKEN_ADD mult_expr
-   60         | add_expr . TOKEN_SUB mult_expr
-
-    TOKEN_SUB  shift, and go to state 101
-    TOKEN_ADD  shift, and go to state 102
-
-    $default  reduce using rule 54 (rel_expr)
-
-
-State 142
-
-   57 rel_expr: rel_expr TOKEN_GEQ add_expr .
-   59 add_expr: add_expr . TOKEN_ADD mult_expr
-   60         | add_expr . TOKEN_SUB mult_expr
-
-    TOKEN_SUB  shift, and go to state 101
-    TOKEN_ADD  shift, and go to state 102
-
-    $default  reduce using rule 57 (rel_expr)
-
-
-State 143
-
-   55 rel_expr: rel_expr TOKEN_GREAT add_expr .
-   59 add_expr: add_expr . TOKEN_ADD mult_expr
-   60         | add_expr . TOKEN_SUB mult_expr
-
-    TOKEN_SUB  shift, and go to state 101
-    TOKEN_ADD  shift, and go to state 102
-
-    $default  reduce using rule 55 (rel_expr)
-
-
-State 144
-
-   60 add_expr: add_expr TOKEN_SUB mult_expr .
-   62 mult_expr: mult_expr . TOKEN_MULT exp_expr
-   63          | mult_expr . TOKEN_DIV exp_expr
-   64          | mult_expr . TOKEN_MOD exp_expr
-
-    TOKEN_MULT  shift, and go to state 103
-    TOKEN_DIV   shift, and go to state 104
-    TOKEN_MOD   shift, and go to state 105
-
-    $default  reduce using rule 60 (add_expr)
-
-
-State 145
-
-   59 add_expr: add_expr TOKEN_ADD mult_expr .
-   62 mult_expr: mult_expr . TOKEN_MULT exp_expr
-   63          | mult_expr . TOKEN_DIV exp_expr
-   64          | mult_expr . TOKEN_MOD exp_expr
-
-    TOKEN_MULT  shift, and go to state 103
-    TOKEN_DIV   shift, and go to state 104
-    TOKEN_MOD   shift, and go to state 105
-
-    $default  reduce using rule 59 (add_expr)
-
-
-State 146
-
-   62 mult_expr: mult_expr TOKEN_MULT exp_expr .
-   66 exp_expr: exp_expr . TOKEN_EXP unary_expr
-
-    TOKEN_EXP  shift, and go to state 106
-
-    $default  reduce using rule 62 (mult_expr)
-
-
-State 147
-
-   63 mult_expr: mult_expr TOKEN_DIV exp_expr .
-   66 exp_expr: exp_expr . TOKEN_EXP unary_expr
-
-    TOKEN_EXP  shift, and go to state 106
-
-    $default  reduce using rule 63 (mult_expr)
-
-
-State 148
-
-   64 mult_expr: mult_expr TOKEN_MOD exp_expr .
-   66 exp_expr: exp_expr . TOKEN_EXP unary_expr
-
-    TOKEN_EXP  shift, and go to state 106
-
-    $default  reduce using rule 64 (mult_expr)
-
-
-State 149
-
-   66 exp_expr: exp_expr TOKEN_EXP unary_expr .
-
-    $default  reduce using rule 66 (exp_expr)
-
-
-State 150
-
-  111 array: TOKEN_ARRAY TOKEN_LBRACK assign_expr . TOKEN_RBRACK
-
-    TOKEN_RBRACK  shift, and go to state 169
-
-
-State 151
-
-   93 function_decl: decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR . TOKEN_RPAR TOKEN_SEMI
-   94              | decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR . TOKEN_RPAR TOKEN_ASSIGN cmpnd_stmt
-
-    TOKEN_RPAR  shift, and go to state 170
-
-
-State 152
-
-  108 ret_type: array_list atomic_type .
-
-    $default  reduce using rule 108 (ret_type)
-
-
-State 153
-
-   95 init: TOKEN_LCURL . init_list TOKEN_RCURL
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_LCURL   shift, and go to state 153
-
-    assign_expr   go to state 154
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-    init          go to state 171
-    init_list     go to state 172
-
-
-State 154
-
-   96 init: assign_expr .
-
-    $default  reduce using rule 96 (init)
-
-
-State 155
-
-    8 non_init_decl: decltr TOKEN_COLON type TOKEN_ASSIGN init . TOKEN_SEMI
-
-    TOKEN_SEMI  shift, and go to state 173
-
-
-State 156
-
-   71 for: TOKEN_SEMI TOKEN_SEMI .
-   72    | TOKEN_SEMI TOKEN_SEMI . expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    $default  reduce using rule 71 (for)
-
-    expr          go to state 174
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 157
-
-   73 for: TOKEN_SEMI expr_stmt .
-   74    | TOKEN_SEMI expr_stmt . expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    $default  reduce using rule 73 (for)
-
-    expr          go to state 175
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 158
-
-   75 for: expr_stmt TOKEN_SEMI .
-   76    | expr_stmt TOKEN_SEMI . expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    $default  reduce using rule 75 (for)
-
-    expr          go to state 176
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 159
-
-   77 for: expr_stmt expr_stmt .
-   78    | expr_stmt expr_stmt . expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    $default  reduce using rule 77 (for)
-
-    expr          go to state 177
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 160
-
-   70 iter_stmt: TOKEN_FOR TOKEN_LPAR for TOKEN_RPAR . stmt
-
-    TOKEN_FOR     shift, and go to state 14
-    TOKEN_IF      shift, and go to state 15
-    TOKEN_PRINT   shift, and go to state 16
-    TOKEN_RETURN  shift, and go to state 17
-    TOKEN_WHILE   shift, and go to state 18
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_LCURL   shift, and go to state 27
-
-    stmt          go to state 178
-    print_stmt    go to state 31
-    expr_stmt     go to state 32
-    expr          go to state 33
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-    select_stmt   go to state 47
-    iter_stmt     go to state 48
-    jump_stmt     go to state 49
-    cmpnd_stmt    go to state 50
-
-
-State 161
-
-   79 for: decl TOKEN_SEMI .
-   80    | decl TOKEN_SEMI . expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    $default  reduce using rule 79 (for)
-
-    expr          go to state 179
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 162
-
-   81 for: decl expr_stmt .
-   82    | decl expr_stmt . expr
-
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-
-    $default  reduce using rule 81 (for)
-
-    expr          go to state 180
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-
-
-State 163
-
-   67 select_stmt: TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR . stmt
-   68            | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR . stmt TOKEN_ELSE stmt
-
-    TOKEN_FOR     shift, and go to state 14
-    TOKEN_IF      shift, and go to state 15
-    TOKEN_PRINT   shift, and go to state 16
-    TOKEN_RETURN  shift, and go to state 17
-    TOKEN_WHILE   shift, and go to state 18
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_LCURL   shift, and go to state 27
-
-    stmt          go to state 181
-    print_stmt    go to state 31
-    expr_stmt     go to state 32
-    expr          go to state 33
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-    select_stmt   go to state 47
-    iter_stmt     go to state 48
-    jump_stmt     go to state 49
-    cmpnd_stmt    go to state 50
-
-
-State 164
-
-   18 print_list: assign_expr TOKEN_COMMA print_list .
+    TOKEN_COMMA  shift, and go to state 149
 
     $default  reduce using rule 18 (print_list)
 
 
-State 165
+State 84
 
-   69 iter_stmt: TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR . stmt
+   89 jump_stmt: TOKEN_RETURN TOKEN_SEMI .
 
-    TOKEN_FOR     shift, and go to state 14
-    TOKEN_IF      shift, and go to state 15
-    TOKEN_PRINT   shift, and go to state 16
-    TOKEN_RETURN  shift, and go to state 17
-    TOKEN_WHILE   shift, and go to state 18
+    $default  reduce using rule 89 (jump_stmt)
+
+
+State 85
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   90 jump_stmt: TOKEN_RETURN expr . TOKEN_SEMI
+
+    TOKEN_SEMI   shift, and go to state 150
+    TOKEN_COMMA  shift, and go to state 101
+
+
+State 86
+
+   75 iter_stmt: TOKEN_WHILE TOKEN_LPAR . expr TOKEN_RPAR stmt
+
     TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_LCURL   shift, and go to state 27
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
 
-    stmt          go to state 182
-    print_stmt    go to state 31
-    expr_stmt     go to state 32
-    expr          go to state 33
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-    select_stmt   go to state 47
-    iter_stmt     go to state 48
-    jump_stmt     go to state 49
-    cmpnd_stmt    go to state 50
+    expr          go to state 151
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
 
 
-State 166
+State 87
 
-   92 decl: designator TOKEN_ASSIGN init . TOKEN_SEMI
+   27 unary_expr: TOKEN_SUB unary_expr .
 
-    TOKEN_SEMI  shift, and go to state 183
+    $default  reduce using rule 27 (unary_expr)
 
 
-State 167
+State 88
 
-   30 postfix_expr: postfix_expr TOKEN_LPAR expr TOKEN_RPAR .
+   26 unary_expr: TOKEN_NOT unary_expr .
+
+    $default  reduce using rule 26 (unary_expr)
+
+
+State 89
+
+   25 unary_expr: TOKEN_ADD unary_expr .
+
+    $default  reduce using rule 25 (unary_expr)
+
+
+State 90
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   33 primary_expr: TOKEN_LPAR expr . TOKEN_RPAR
+
+    TOKEN_RPAR   shift, and go to state 152
+    TOKEN_COMMA  shift, and go to state 101
+
+
+State 91
+
+   41 lvalue: decltr . suffix
+   51 decltr: TOKEN_LPAR decltr . TOKEN_RPAR
+
+    TOKEN_LBRACK  shift, and go to state 106
+    TOKEN_LPAR    shift, and go to state 107
+    TOKEN_RPAR    shift, and go to state 58
+
+    TOKEN_LPAR  [reduce using rule 44 (suffix)]
+    TOKEN_RPAR  [reduce using rule 44 (suffix)]
+    $default    reduce using rule 44 (suffix)
+
+    suffix          go to state 108
+    call_suffix     go to state 109
+    subscript_list  go to state 110
+    subscript       go to state 111
+
+
+State 92
+
+   91 cmpnd_stmt: TOKEN_LCURL TOKEN_RCURL .
+
+    $default  reduce using rule 91 (cmpnd_stmt)
+
+
+State 93
+
+   96 block: stmt .
+
+    $default  reduce using rule 96 (block)
+
+
+State 94
+
+   34 primary_expr: lvalue .
+   98 int_decln: lvalue . initialization
+
+    TOKEN_ASSIGN  shift, and go to state 15
+
+    TOKEN_ASSIGN  [reduce using rule 34 (primary_expr)]
+    $default      reduce using rule 34 (primary_expr)
+
+    initialization  go to state 153
+
+
+State 95
+
+    7 decl: decltr . TOKEN_COLON type
+   41 lvalue: decltr . suffix
+
+    TOKEN_LBRACK  shift, and go to state 106
+    TOKEN_LPAR    shift, and go to state 107
+    TOKEN_COLON   shift, and go to state 141
+
+    TOKEN_LPAR  [reduce using rule 44 (suffix)]
+    $default    reduce using rule 44 (suffix)
+
+    suffix          go to state 108
+    call_suffix     go to state 109
+    subscript_list  go to state 110
+    subscript       go to state 111
+
+
+State 96
+
+   92 cmpnd_stmt: TOKEN_LCURL block_list . TOKEN_RCURL
+   94 block_list: block_list . block
+
+    TOKEN_FOR     shift, and go to state 20
+    TOKEN_IF      shift, and go to state 21
+    TOKEN_PRINT   shift, and go to state 22
+    TOKEN_RETURN  shift, and go to state 23
+    TOKEN_WHILE   shift, and go to state 24
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_LCURL   shift, and go to state 33
+    TOKEN_RCURL   shift, and go to state 154
+
+    decl          go to state 5
+    stmt          go to state 93
+    print_stmt    go to state 37
+    expr_stmt     go to state 38
+    expr          go to state 39
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 94
+    decltr        go to state 95
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+    select_stmt   go to state 54
+    iter_stmt     go to state 55
+    jump_stmt     go to state 56
+    cmpnd_stmt    go to state 57
+    block         go to state 155
+    int_decln     go to state 98
+    decln         go to state 99
+
+
+State 97
+
+   93 block_list: block .
+
+    $default  reduce using rule 93 (block_list)
+
+
+State 98
+
+   95 block: int_decln .
+
+    $default  reduce using rule 95 (block)
+
+
+State 99
+
+   97 int_decln: decln .
+
+    $default  reduce using rule 97 (int_decln)
+
+
+State 100
+
+   19 expr_stmt: expr TOKEN_SEMI .
+
+    $default  reduce using rule 19 (expr_stmt)
+
+
+State 101
+
+   21 expr: expr TOKEN_COMMA . assign_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    assign_expr   go to state 156
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 102
+
+   23 assign_expr: unary_expr TOKEN_ASSIGN . assign_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    assign_expr   go to state 157
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 103
+
+   30 postfix_expr: postfix_expr TOKEN_INC .
 
     $default  reduce using rule 30 (postfix_expr)
 
 
+State 104
+
+   31 postfix_expr: postfix_expr TOKEN_DEC .
+
+    $default  reduce using rule 31 (postfix_expr)
+
+
+State 105
+
+   29 postfix_expr: postfix_expr TOKEN_LPAR . expr TOKEN_RPAR
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    expr          go to state 158
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 106
+
+   49 subscript: TOKEN_LBRACK . assign_expr TOKEN_RBRACK
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    assign_expr   go to state 159
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 107
+
+   45 call_suffix: TOKEN_LPAR . TOKEN_RPAR
+   46            | TOKEN_LPAR . expr_list TOKEN_RPAR
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_RPAR    shift, and go to state 160
+
+    expr          go to state 161
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    expr_list     go to state 162
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 108
+
+   41 lvalue: decltr suffix .
+
+    $default  reduce using rule 41 (lvalue)
+
+
+State 109
+
+   42 suffix: call_suffix .
+
+    $default  reduce using rule 42 (suffix)
+
+
+State 110
+
+   43 suffix: subscript_list .
+   48 subscript_list: subscript_list . subscript
+
+    TOKEN_LBRACK  shift, and go to state 106
+
+    $default  reduce using rule 43 (suffix)
+
+    subscript  go to state 163
+
+
+State 111
+
+   47 subscript_list: subscript .
+
+    $default  reduce using rule 47 (subscript_list)
+
+
+State 112
+
+   53 lor_expr: lor_expr TOKEN_OR . land_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    land_expr     go to state 165
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 113
+
+   55 land_expr: land_expr TOKEN_AND . eq_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    eq_expr       go to state 166
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 114
+
+   57 eq_expr: eq_expr TOKEN_EQ . rel_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    rel_expr      go to state 167
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 115
+
+   58 eq_expr: eq_expr TOKEN_NEQ . rel_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    rel_expr      go to state 168
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 116
+
+   62 rel_expr: rel_expr TOKEN_LEQ . add_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    add_expr      go to state 169
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 117
+
+   60 rel_expr: rel_expr TOKEN_LESS . add_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    add_expr      go to state 170
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 118
+
+   63 rel_expr: rel_expr TOKEN_GEQ . add_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    add_expr      go to state 171
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 119
+
+   61 rel_expr: rel_expr TOKEN_GREAT . add_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    add_expr      go to state 172
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 120
+
+   66 add_expr: add_expr TOKEN_SUB . mult_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    mult_expr     go to state 173
+    exp_expr      go to state 53
+
+
+State 121
+
+   65 add_expr: add_expr TOKEN_ADD . mult_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    mult_expr     go to state 174
+    exp_expr      go to state 53
+
+
+State 122
+
+   68 mult_expr: mult_expr TOKEN_MULT . exp_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    exp_expr      go to state 175
+
+
+State 123
+
+   69 mult_expr: mult_expr TOKEN_DIV . exp_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    exp_expr      go to state 176
+
+
+State 124
+
+   70 mult_expr: mult_expr TOKEN_MOD . exp_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 164
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    exp_expr      go to state 177
+
+
+State 125
+
+   72 exp_expr: exp_expr TOKEN_EXP . unary_expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    unary_expr    go to state 178
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+
+
+State 126
+
+  113 init_list: init .
+
+    $default  reduce using rule 113 (init_list)
+
+
+State 127
+
+  111 init: TOKEN_LCURL init_list . TOKEN_RCURL
+  114 init_list: init_list . TOKEN_COMMA init
+
+    TOKEN_RCURL  shift, and go to state 179
+    TOKEN_COMMA  shift, and go to state 180
+
+
+State 128
+
+   99 initialization: TOKEN_ASSIGN init TOKEN_SEMI .
+
+    $default  reduce using rule 99 (initialization)
+
+
+State 129
+
+  127 array: TOKEN_ARRAY TOKEN_LBRACK . assign_expr TOKEN_RBRACK
+  128      | TOKEN_ARRAY TOKEN_LBRACK . TOKEN_RBRACK
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_RBRACK  shift, and go to state 181
+    TOKEN_LPAR    shift, and go to state 32
+
+    assign_expr   go to state 182
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 130
+
+  123 ret_type: TOKEN_VOID .
+
+    $default  reduce using rule 123 (ret_type)
+
+
+State 131
+
+  122 ret_type: atomic_type .
+
+    $default  reduce using rule 122 (ret_type)
+
+
+State 132
+
+  102 function_decl: decltr TOKEN_COLON TOKEN_FUNCTION ret_type .
+
+    $default  reduce using rule 102 (function_decl)
+
+
+State 133
+
+  124 ret_type: array_list . atomic_type
+  126 array_list: array_list . array
+
+    TOKEN_ARRAY    shift, and go to state 63
+    TOKEN_BOOLEAN  shift, and go to state 65
+    TOKEN_CHAR     shift, and go to state 66
+    TOKEN_INTEGER  shift, and go to state 68
+    TOKEN_STRING   shift, and go to state 69
+
+    atomic_type  go to state 183
+    array        go to state 135
+
+
+State 134
+
+  117 type: array_list atomic_type .
+
+    $default  reduce using rule 117 (type)
+
+
+State 135
+
+  126 array_list: array_list array .
+
+    $default  reduce using rule 126 (array_list)
+
+
+State 136
+
+  106 function_decln: function_decl TOKEN_LPAR TOKEN_VOID TOKEN_RPAR . function_suffix
+
+    TOKEN_ASSIGN  shift, and go to state 137
+    TOKEN_SEMI    shift, and go to state 138
+
+    function_suffix  go to state 184
+
+
+State 137
+
+  104 function_suffix: TOKEN_ASSIGN . cmpnd_stmt
+
+    TOKEN_LCURL  shift, and go to state 33
+
+    cmpnd_stmt  go to state 185
+
+
+State 138
+
+  103 function_suffix: TOKEN_SEMI .
+
+    $default  reduce using rule 103 (function_suffix)
+
+
+State 139
+
+  105 function_decln: function_decl TOKEN_LPAR TOKEN_RPAR function_suffix .
+
+    $default  reduce using rule 105 (function_decln)
+
+
+State 140
+
+  109 decl_list: decl TOKEN_COMMA . decl_list
+
+    TOKEN_IDENT  shift, and go to state 1
+    TOKEN_LPAR   shift, and go to state 3
+
+    decl       go to state 76
+    decltr     go to state 77
+    decl_list  go to state 186
+
+
+State 141
+
+    7 decl: decltr TOKEN_COLON . type
+
+    TOKEN_ARRAY    shift, and go to state 63
+    TOKEN_AUTO     shift, and go to state 64
+    TOKEN_BOOLEAN  shift, and go to state 65
+    TOKEN_CHAR     shift, and go to state 66
+    TOKEN_INTEGER  shift, and go to state 68
+    TOKEN_STRING   shift, and go to state 69
+
+    type         go to state 70
+    atomic_type  go to state 71
+    array_list   go to state 72
+    array        go to state 73
+
+
+State 142
+
+  107 function_decln: function_decl TOKEN_LPAR param_list TOKEN_RPAR . function_suffix
+
+    TOKEN_ASSIGN  shift, and go to state 137
+    TOKEN_SEMI    shift, and go to state 138
+
+    function_suffix  go to state 187
+
+
+State 143
+
+   77 for: TOKEN_SEMI . TOKEN_SEMI
+   78    | TOKEN_SEMI . TOKEN_SEMI expr
+   79    | TOKEN_SEMI . expr_stmt
+   80    | TOKEN_SEMI . expr_stmt expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_SEMI    shift, and go to state 188
+
+    expr_stmt     go to state 189
+    expr          go to state 39
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 144
+
+   81 for: expr_stmt . TOKEN_SEMI
+   82    | expr_stmt . TOKEN_SEMI expr
+   83    | expr_stmt . expr_stmt
+   84    | expr_stmt . expr_stmt expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_SEMI    shift, and go to state 190
+
+    expr_stmt     go to state 191
+    expr          go to state 39
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 145
+
+   76 iter_stmt: TOKEN_FOR TOKEN_LPAR for . TOKEN_RPAR stmt
+
+    TOKEN_RPAR  shift, and go to state 192
+
+
+State 146
+
+   85 for: decln . TOKEN_SEMI
+   86    | decln . TOKEN_SEMI expr
+   87    | decln . expr_stmt
+   88    | decln . expr_stmt expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_SEMI    shift, and go to state 193
+
+    expr_stmt     go to state 194
+    expr          go to state 39
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 147
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   73 select_stmt: TOKEN_IF TOKEN_LPAR expr . TOKEN_RPAR stmt
+   74            | TOKEN_IF TOKEN_LPAR expr . TOKEN_RPAR stmt TOKEN_ELSE stmt
+
+    TOKEN_RPAR   shift, and go to state 195
+    TOKEN_COMMA  shift, and go to state 101
+
+
+State 148
+
+   16 print_stmt: TOKEN_PRINT print_list TOKEN_SEMI .
+
+    $default  reduce using rule 16 (print_stmt)
+
+
+State 149
+
+   17 print_list: assign_expr TOKEN_COMMA . print_list
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    print_list    go to state 196
+    assign_expr   go to state 83
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 150
+
+   90 jump_stmt: TOKEN_RETURN expr TOKEN_SEMI .
+
+    $default  reduce using rule 90 (jump_stmt)
+
+
+State 151
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   75 iter_stmt: TOKEN_WHILE TOKEN_LPAR expr . TOKEN_RPAR stmt
+
+    TOKEN_RPAR   shift, and go to state 197
+    TOKEN_COMMA  shift, and go to state 101
+
+
+State 152
+
+   33 primary_expr: TOKEN_LPAR expr TOKEN_RPAR .
+
+    $default  reduce using rule 33 (primary_expr)
+
+
+State 153
+
+   98 int_decln: lvalue initialization .
+
+    $default  reduce using rule 98 (int_decln)
+
+
+State 154
+
+   92 cmpnd_stmt: TOKEN_LCURL block_list TOKEN_RCURL .
+
+    $default  reduce using rule 92 (cmpnd_stmt)
+
+
+State 155
+
+   94 block_list: block_list block .
+
+    $default  reduce using rule 94 (block_list)
+
+
+State 156
+
+   21 expr: expr TOKEN_COMMA assign_expr .
+
+    $default  reduce using rule 21 (expr)
+
+
+State 157
+
+   23 assign_expr: unary_expr TOKEN_ASSIGN assign_expr .
+
+    $default  reduce using rule 23 (assign_expr)
+
+
+State 158
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   29 postfix_expr: postfix_expr TOKEN_LPAR expr . TOKEN_RPAR
+
+    TOKEN_RPAR   shift, and go to state 198
+    TOKEN_COMMA  shift, and go to state 101
+
+
+State 159
+
+   49 subscript: TOKEN_LBRACK assign_expr . TOKEN_RBRACK
+
+    TOKEN_RBRACK  shift, and go to state 199
+
+
+State 160
+
+   45 call_suffix: TOKEN_LPAR TOKEN_RPAR .
+
+    $default  reduce using rule 45 (call_suffix)
+
+
+State 161
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   39 expr_list: expr .
+
+    TOKEN_COMMA  shift, and go to state 101
+
+    TOKEN_COMMA  [reduce using rule 39 (expr_list)]
+    $default     reduce using rule 39 (expr_list)
+
+
+State 162
+
+   40 expr_list: expr_list . TOKEN_COMMA expr
+   46 call_suffix: TOKEN_LPAR expr_list . TOKEN_RPAR
+
+    TOKEN_RPAR   shift, and go to state 200
+    TOKEN_COMMA  shift, and go to state 201
+
+
+State 163
+
+   48 subscript_list: subscript_list subscript .
+
+    $default  reduce using rule 48 (subscript_list)
+
+
+State 164
+
+   71 exp_expr: unary_expr .
+
+    $default  reduce using rule 71 (exp_expr)
+
+
+State 165
+
+   53 lor_expr: lor_expr TOKEN_OR land_expr .
+   55 land_expr: land_expr . TOKEN_AND eq_expr
+
+    TOKEN_AND  shift, and go to state 113
+
+    $default  reduce using rule 53 (lor_expr)
+
+
+State 166
+
+   55 land_expr: land_expr TOKEN_AND eq_expr .
+   57 eq_expr: eq_expr . TOKEN_EQ rel_expr
+   58        | eq_expr . TOKEN_NEQ rel_expr
+
+    TOKEN_EQ   shift, and go to state 114
+    TOKEN_NEQ  shift, and go to state 115
+
+    $default  reduce using rule 55 (land_expr)
+
+
+State 167
+
+   57 eq_expr: eq_expr TOKEN_EQ rel_expr .
+   60 rel_expr: rel_expr . TOKEN_LESS add_expr
+   61         | rel_expr . TOKEN_GREAT add_expr
+   62         | rel_expr . TOKEN_LEQ add_expr
+   63         | rel_expr . TOKEN_GEQ add_expr
+
+    TOKEN_LEQ    shift, and go to state 116
+    TOKEN_LESS   shift, and go to state 117
+    TOKEN_GEQ    shift, and go to state 118
+    TOKEN_GREAT  shift, and go to state 119
+
+    $default  reduce using rule 57 (eq_expr)
+
+
 State 168
 
-   43 subscript: TOKEN_LBRACK assign_expr TOKEN_RBRACK .
+   58 eq_expr: eq_expr TOKEN_NEQ rel_expr .
+   60 rel_expr: rel_expr . TOKEN_LESS add_expr
+   61         | rel_expr . TOKEN_GREAT add_expr
+   62         | rel_expr . TOKEN_LEQ add_expr
+   63         | rel_expr . TOKEN_GEQ add_expr
 
-    $default  reduce using rule 43 (subscript)
+    TOKEN_LEQ    shift, and go to state 116
+    TOKEN_LESS   shift, and go to state 117
+    TOKEN_GEQ    shift, and go to state 118
+    TOKEN_GREAT  shift, and go to state 119
+
+    $default  reduce using rule 58 (eq_expr)
 
 
 State 169
 
-  111 array: TOKEN_ARRAY TOKEN_LBRACK assign_expr TOKEN_RBRACK .
+   62 rel_expr: rel_expr TOKEN_LEQ add_expr .
+   65 add_expr: add_expr . TOKEN_ADD mult_expr
+   66         | add_expr . TOKEN_SUB mult_expr
 
-    $default  reduce using rule 111 (array)
+    TOKEN_SUB  shift, and go to state 120
+    TOKEN_ADD  shift, and go to state 121
+
+    $default  reduce using rule 62 (rel_expr)
 
 
 State 170
 
-   93 function_decl: decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR . TOKEN_SEMI
-   94              | decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR . TOKEN_ASSIGN cmpnd_stmt
+   60 rel_expr: rel_expr TOKEN_LESS add_expr .
+   65 add_expr: add_expr . TOKEN_ADD mult_expr
+   66         | add_expr . TOKEN_SUB mult_expr
 
-    TOKEN_ASSIGN  shift, and go to state 184
-    TOKEN_SEMI    shift, and go to state 185
+    TOKEN_SUB  shift, and go to state 120
+    TOKEN_ADD  shift, and go to state 121
+
+    $default  reduce using rule 60 (rel_expr)
 
 
 State 171
 
-   97 init_list: init .
+   63 rel_expr: rel_expr TOKEN_GEQ add_expr .
+   65 add_expr: add_expr . TOKEN_ADD mult_expr
+   66         | add_expr . TOKEN_SUB mult_expr
 
-    $default  reduce using rule 97 (init_list)
+    TOKEN_SUB  shift, and go to state 120
+    TOKEN_ADD  shift, and go to state 121
+
+    $default  reduce using rule 63 (rel_expr)
 
 
 State 172
 
-   95 init: TOKEN_LCURL init_list . TOKEN_RCURL
-   98 init_list: init_list . TOKEN_COMMA init
+   61 rel_expr: rel_expr TOKEN_GREAT add_expr .
+   65 add_expr: add_expr . TOKEN_ADD mult_expr
+   66         | add_expr . TOKEN_SUB mult_expr
 
-    TOKEN_RCURL  shift, and go to state 186
-    TOKEN_COMMA  shift, and go to state 187
+    TOKEN_SUB  shift, and go to state 120
+    TOKEN_ADD  shift, and go to state 121
+
+    $default  reduce using rule 61 (rel_expr)
 
 
 State 173
 
-    8 non_init_decl: decltr TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI .
+   66 add_expr: add_expr TOKEN_SUB mult_expr .
+   68 mult_expr: mult_expr . TOKEN_MULT exp_expr
+   69          | mult_expr . TOKEN_DIV exp_expr
+   70          | mult_expr . TOKEN_MOD exp_expr
 
-    $default  reduce using rule 8 (non_init_decl)
+    TOKEN_MULT  shift, and go to state 122
+    TOKEN_DIV   shift, and go to state 123
+    TOKEN_MOD   shift, and go to state 124
+
+    $default  reduce using rule 66 (add_expr)
 
 
 State 174
 
-   22 expr: expr . TOKEN_COMMA assign_expr
-   72 for: TOKEN_SEMI TOKEN_SEMI expr .
+   65 add_expr: add_expr TOKEN_ADD mult_expr .
+   68 mult_expr: mult_expr . TOKEN_MULT exp_expr
+   69          | mult_expr . TOKEN_DIV exp_expr
+   70          | mult_expr . TOKEN_MOD exp_expr
 
-    TOKEN_COMMA  shift, and go to state 85
+    TOKEN_MULT  shift, and go to state 122
+    TOKEN_DIV   shift, and go to state 123
+    TOKEN_MOD   shift, and go to state 124
 
-    $default  reduce using rule 72 (for)
+    $default  reduce using rule 65 (add_expr)
 
 
 State 175
 
-   22 expr: expr . TOKEN_COMMA assign_expr
-   74 for: TOKEN_SEMI expr_stmt expr .
+   68 mult_expr: mult_expr TOKEN_MULT exp_expr .
+   72 exp_expr: exp_expr . TOKEN_EXP unary_expr
 
-    TOKEN_COMMA  shift, and go to state 85
+    TOKEN_EXP  shift, and go to state 125
 
-    $default  reduce using rule 74 (for)
+    $default  reduce using rule 68 (mult_expr)
 
 
 State 176
 
-   22 expr: expr . TOKEN_COMMA assign_expr
-   76 for: expr_stmt TOKEN_SEMI expr .
+   69 mult_expr: mult_expr TOKEN_DIV exp_expr .
+   72 exp_expr: exp_expr . TOKEN_EXP unary_expr
 
-    TOKEN_COMMA  shift, and go to state 85
+    TOKEN_EXP  shift, and go to state 125
 
-    $default  reduce using rule 76 (for)
+    $default  reduce using rule 69 (mult_expr)
 
 
 State 177
 
-   22 expr: expr . TOKEN_COMMA assign_expr
-   78 for: expr_stmt expr_stmt expr .
+   70 mult_expr: mult_expr TOKEN_MOD exp_expr .
+   72 exp_expr: exp_expr . TOKEN_EXP unary_expr
 
-    TOKEN_COMMA  shift, and go to state 85
+    TOKEN_EXP  shift, and go to state 125
 
-    $default  reduce using rule 78 (for)
+    $default  reduce using rule 70 (mult_expr)
 
 
 State 178
 
-   70 iter_stmt: TOKEN_FOR TOKEN_LPAR for TOKEN_RPAR stmt .
+   72 exp_expr: exp_expr TOKEN_EXP unary_expr .
 
-    $default  reduce using rule 70 (iter_stmt)
+    $default  reduce using rule 72 (exp_expr)
 
 
 State 179
 
-   22 expr: expr . TOKEN_COMMA assign_expr
-   80 for: decl TOKEN_SEMI expr .
+  111 init: TOKEN_LCURL init_list TOKEN_RCURL .
 
-    TOKEN_COMMA  shift, and go to state 85
-
-    $default  reduce using rule 80 (for)
+    $default  reduce using rule 111 (init)
 
 
 State 180
 
-   22 expr: expr . TOKEN_COMMA assign_expr
-   82 for: decl expr_stmt expr .
+  114 init_list: init_list TOKEN_COMMA . init
 
-    TOKEN_COMMA  shift, and go to state 85
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_LCURL   shift, and go to state 59
 
-    $default  reduce using rule 82 (for)
+    assign_expr   go to state 60
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+    init          go to state 202
 
 
 State 181
 
-   67 select_stmt: TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt .
-   68            | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt . TOKEN_ELSE stmt
+  128 array: TOKEN_ARRAY TOKEN_LBRACK TOKEN_RBRACK .
 
-    TOKEN_ELSE  shift, and go to state 188
-
-    TOKEN_ELSE  [reduce using rule 67 (select_stmt)]
-    $default    reduce using rule 67 (select_stmt)
+    $default  reduce using rule 128 (array)
 
 
 State 182
 
-   69 iter_stmt: TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt .
+  127 array: TOKEN_ARRAY TOKEN_LBRACK assign_expr . TOKEN_RBRACK
 
-    $default  reduce using rule 69 (iter_stmt)
+    TOKEN_RBRACK  shift, and go to state 203
 
 
 State 183
 
-   92 decl: designator TOKEN_ASSIGN init TOKEN_SEMI .
+  124 ret_type: array_list atomic_type .
 
-    $default  reduce using rule 92 (decl)
+    $default  reduce using rule 124 (ret_type)
 
 
 State 184
 
-   94 function_decl: decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_ASSIGN . cmpnd_stmt
+  106 function_decln: function_decl TOKEN_LPAR TOKEN_VOID TOKEN_RPAR function_suffix .
 
-    TOKEN_LCURL  shift, and go to state 27
-
-    cmpnd_stmt  go to state 189
+    $default  reduce using rule 106 (function_decln)
 
 
 State 185
 
-   93 function_decl: decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_SEMI .
+  104 function_suffix: TOKEN_ASSIGN cmpnd_stmt .
 
-    $default  reduce using rule 93 (function_decl)
+    $default  reduce using rule 104 (function_suffix)
 
 
 State 186
 
-   95 init: TOKEN_LCURL init_list TOKEN_RCURL .
+  109 decl_list: decl TOKEN_COMMA decl_list .
 
-    $default  reduce using rule 95 (init)
+    $default  reduce using rule 109 (decl_list)
 
 
 State 187
 
-   98 init_list: init_list TOKEN_COMMA . init
+  107 function_decln: function_decl TOKEN_LPAR param_list TOKEN_RPAR function_suffix .
 
-    TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_LCURL   shift, and go to state 153
-
-    assign_expr   go to state 154
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-    init          go to state 190
+    $default  reduce using rule 107 (function_decln)
 
 
 State 188
 
-   68 select_stmt: TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE . stmt
+   77 for: TOKEN_SEMI TOKEN_SEMI .
+   78    | TOKEN_SEMI TOKEN_SEMI . expr
 
-    TOKEN_FOR     shift, and go to state 14
-    TOKEN_IF      shift, and go to state 15
-    TOKEN_PRINT   shift, and go to state 16
-    TOKEN_RETURN  shift, and go to state 17
-    TOKEN_WHILE   shift, and go to state 18
     TOKEN_IDENT   shift, and go to state 1
-    TOKEN_BOOL    shift, and go to state 19
-    TOKEN_NUMBER  shift, and go to state 20
-    TOKEN_STR     shift, and go to state 21
-    TOKEN_CH      shift, and go to state 22
-    TOKEN_SUB     shift, and go to state 23
-    TOKEN_NOT     shift, and go to state 24
-    TOKEN_ADD     shift, and go to state 25
-    TOKEN_LPAR    shift, and go to state 26
-    TOKEN_LCURL   shift, and go to state 27
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
 
-    stmt          go to state 191
-    print_stmt    go to state 31
-    expr_stmt     go to state 32
-    expr          go to state 33
-    assign_expr   go to state 34
-    unary_expr    go to state 35
-    postfix_expr  go to state 36
-    primary_expr  go to state 37
-    designator    go to state 38
-    decltr        go to state 67
-    lor_expr      go to state 40
-    land_expr     go to state 41
-    eq_expr       go to state 42
-    rel_expr      go to state 43
-    add_expr      go to state 44
-    mult_expr     go to state 45
-    exp_expr      go to state 46
-    select_stmt   go to state 47
-    iter_stmt     go to state 48
-    jump_stmt     go to state 49
-    cmpnd_stmt    go to state 50
+    $default  reduce using rule 77 (for)
+
+    expr          go to state 204
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
 
 
 State 189
 
-   94 function_decl: decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_ASSIGN cmpnd_stmt .
+   79 for: TOKEN_SEMI expr_stmt .
+   80    | TOKEN_SEMI expr_stmt . expr
 
-    $default  reduce using rule 94 (function_decl)
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    $default  reduce using rule 79 (for)
+
+    expr          go to state 205
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
 
 
 State 190
 
-   98 init_list: init_list TOKEN_COMMA init .
+   81 for: expr_stmt TOKEN_SEMI .
+   82    | expr_stmt TOKEN_SEMI . expr
 
-    $default  reduce using rule 98 (init_list)
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    $default  reduce using rule 81 (for)
+
+    expr          go to state 206
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
 
 
 State 191
 
-   68 select_stmt: TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt .
+   83 for: expr_stmt expr_stmt .
+   84    | expr_stmt expr_stmt . expr
 
-    $default  reduce using rule 68 (select_stmt)
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    $default  reduce using rule 83 (for)
+
+    expr          go to state 207
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 192
+
+   76 iter_stmt: TOKEN_FOR TOKEN_LPAR for TOKEN_RPAR . stmt
+
+    TOKEN_FOR     shift, and go to state 20
+    TOKEN_IF      shift, and go to state 21
+    TOKEN_PRINT   shift, and go to state 22
+    TOKEN_RETURN  shift, and go to state 23
+    TOKEN_WHILE   shift, and go to state 24
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_LCURL   shift, and go to state 33
+
+    stmt          go to state 208
+    print_stmt    go to state 37
+    expr_stmt     go to state 38
+    expr          go to state 39
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+    select_stmt   go to state 54
+    iter_stmt     go to state 55
+    jump_stmt     go to state 56
+    cmpnd_stmt    go to state 57
+
+
+State 193
+
+   85 for: decln TOKEN_SEMI .
+   86    | decln TOKEN_SEMI . expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    $default  reduce using rule 85 (for)
+
+    expr          go to state 209
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 194
+
+   87 for: decln expr_stmt .
+   88    | decln expr_stmt . expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    $default  reduce using rule 87 (for)
+
+    expr          go to state 210
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 195
+
+   73 select_stmt: TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR . stmt
+   74            | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR . stmt TOKEN_ELSE stmt
+
+    TOKEN_FOR     shift, and go to state 20
+    TOKEN_IF      shift, and go to state 21
+    TOKEN_PRINT   shift, and go to state 22
+    TOKEN_RETURN  shift, and go to state 23
+    TOKEN_WHILE   shift, and go to state 24
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_LCURL   shift, and go to state 33
+
+    stmt          go to state 211
+    print_stmt    go to state 37
+    expr_stmt     go to state 38
+    expr          go to state 39
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+    select_stmt   go to state 54
+    iter_stmt     go to state 55
+    jump_stmt     go to state 56
+    cmpnd_stmt    go to state 57
+
+
+State 196
+
+   17 print_list: assign_expr TOKEN_COMMA print_list .
+
+    $default  reduce using rule 17 (print_list)
+
+
+State 197
+
+   75 iter_stmt: TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR . stmt
+
+    TOKEN_FOR     shift, and go to state 20
+    TOKEN_IF      shift, and go to state 21
+    TOKEN_PRINT   shift, and go to state 22
+    TOKEN_RETURN  shift, and go to state 23
+    TOKEN_WHILE   shift, and go to state 24
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_LCURL   shift, and go to state 33
+
+    stmt          go to state 212
+    print_stmt    go to state 37
+    expr_stmt     go to state 38
+    expr          go to state 39
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+    select_stmt   go to state 54
+    iter_stmt     go to state 55
+    jump_stmt     go to state 56
+    cmpnd_stmt    go to state 57
+
+
+State 198
+
+   29 postfix_expr: postfix_expr TOKEN_LPAR expr TOKEN_RPAR .
+
+    $default  reduce using rule 29 (postfix_expr)
+
+
+State 199
+
+   49 subscript: TOKEN_LBRACK assign_expr TOKEN_RBRACK .
+
+    $default  reduce using rule 49 (subscript)
+
+
+State 200
+
+   46 call_suffix: TOKEN_LPAR expr_list TOKEN_RPAR .
+
+    $default  reduce using rule 46 (call_suffix)
+
+
+State 201
+
+   40 expr_list: expr_list TOKEN_COMMA . expr
+
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+
+    expr          go to state 213
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+
+
+State 202
+
+  114 init_list: init_list TOKEN_COMMA init .
+
+    $default  reduce using rule 114 (init_list)
+
+
+State 203
+
+  127 array: TOKEN_ARRAY TOKEN_LBRACK assign_expr TOKEN_RBRACK .
+
+    $default  reduce using rule 127 (array)
+
+
+State 204
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   78 for: TOKEN_SEMI TOKEN_SEMI expr .
+
+    TOKEN_COMMA  shift, and go to state 101
+
+    $default  reduce using rule 78 (for)
+
+
+State 205
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   80 for: TOKEN_SEMI expr_stmt expr .
+
+    TOKEN_COMMA  shift, and go to state 101
+
+    $default  reduce using rule 80 (for)
+
+
+State 206
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   82 for: expr_stmt TOKEN_SEMI expr .
+
+    TOKEN_COMMA  shift, and go to state 101
+
+    $default  reduce using rule 82 (for)
+
+
+State 207
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   84 for: expr_stmt expr_stmt expr .
+
+    TOKEN_COMMA  shift, and go to state 101
+
+    $default  reduce using rule 84 (for)
+
+
+State 208
+
+   76 iter_stmt: TOKEN_FOR TOKEN_LPAR for TOKEN_RPAR stmt .
+
+    $default  reduce using rule 76 (iter_stmt)
+
+
+State 209
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   86 for: decln TOKEN_SEMI expr .
+
+    TOKEN_COMMA  shift, and go to state 101
+
+    $default  reduce using rule 86 (for)
+
+
+State 210
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   88 for: decln expr_stmt expr .
+
+    TOKEN_COMMA  shift, and go to state 101
+
+    $default  reduce using rule 88 (for)
+
+
+State 211
+
+   73 select_stmt: TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt .
+   74            | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt . TOKEN_ELSE stmt
+
+    TOKEN_ELSE  shift, and go to state 214
+
+    TOKEN_ELSE  [reduce using rule 73 (select_stmt)]
+    $default    reduce using rule 73 (select_stmt)
+
+
+State 212
+
+   75 iter_stmt: TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt .
+
+    $default  reduce using rule 75 (iter_stmt)
+
+
+State 213
+
+   21 expr: expr . TOKEN_COMMA assign_expr
+   40 expr_list: expr_list TOKEN_COMMA expr .
+
+    TOKEN_COMMA  shift, and go to state 101
+
+    TOKEN_COMMA  [reduce using rule 40 (expr_list)]
+    $default     reduce using rule 40 (expr_list)
+
+
+State 214
+
+   74 select_stmt: TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE . stmt
+
+    TOKEN_FOR     shift, and go to state 20
+    TOKEN_IF      shift, and go to state 21
+    TOKEN_PRINT   shift, and go to state 22
+    TOKEN_RETURN  shift, and go to state 23
+    TOKEN_WHILE   shift, and go to state 24
+    TOKEN_IDENT   shift, and go to state 1
+    TOKEN_BOOL    shift, and go to state 25
+    TOKEN_NUMBER  shift, and go to state 26
+    TOKEN_STR     shift, and go to state 27
+    TOKEN_CH      shift, and go to state 28
+    TOKEN_SUB     shift, and go to state 29
+    TOKEN_NOT     shift, and go to state 30
+    TOKEN_ADD     shift, and go to state 31
+    TOKEN_LPAR    shift, and go to state 32
+    TOKEN_LCURL   shift, and go to state 33
+
+    stmt          go to state 215
+    print_stmt    go to state 37
+    expr_stmt     go to state 38
+    expr          go to state 39
+    assign_expr   go to state 40
+    unary_expr    go to state 41
+    postfix_expr  go to state 42
+    primary_expr  go to state 43
+    primitive     go to state 44
+    lvalue        go to state 45
+    decltr        go to state 61
+    lor_expr      go to state 47
+    land_expr     go to state 48
+    eq_expr       go to state 49
+    rel_expr      go to state 50
+    add_expr      go to state 51
+    mult_expr     go to state 52
+    exp_expr      go to state 53
+    select_stmt   go to state 54
+    iter_stmt     go to state 55
+    jump_stmt     go to state 56
+    cmpnd_stmt    go to state 57
+
+
+State 215
+
+   74 select_stmt: TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt .
+
+    $default  reduce using rule 74 (select_stmt)

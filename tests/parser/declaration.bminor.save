@@ -1,0 +1,63 @@
+x:integer; // good 0
+x: character; // good 1
+x: boolean; // good 2
+x: string; // good 3
+43: integer; // bad 4 5 6 7
+'a': integer; // bad 8 9 10 11x:integer = 5 * 5;
+X:array integer[4] = {1, 2, 3, 4};
+x:array integer = {1, 2,3,4};
+x: integer [4] = {1, 2, 3, 4};
+id_matrix : array[3] array[3] integer = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+arr : arr[2] auto = {'0', '1'};
+str: string = "hello world";
+c:char = str[0];
+iarr: array [4] integer = {1,2,3,4};
+carr:array [4] char = {'a', 'b', 'c', 'd'};
+barr:array [4] boolean = {true, false, true, true};
+iaar: array [4] array [4] integer = {iarr, iarr, iarr, iarr};
+z:boolean  = true || -(4*x^5) + (4 - 4) >= 16 - 6 * 3 + x && y^2 == 16;x:integer = 5 * 5;
+X:array integer[4] = {1, 2, 3, 4};
+x:array integer = {1, 2,3,4};
+x: integer [4] = {1, 2, 3, 4};
+id_matrix : array[3] array[3] integer = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+arr : arr[2] auto = {'0', '1'};
+str: string = "hello world";
+c:char = str[0];
+iarr: array [4] integer = {1,2,3,4};
+carr:array [4] char = {'a', 'b', 'c', 'd'};
+barr:array [4] boolean = {true, false, true, true};
+iaar: array [4] array [4] integer = {iarr, iarr, iarr, iarr};
+z:boolean  = true || -(4*x^5) + (4 - 4) >= 16 - 6 * 3 + x && y^2 == 16;
+true: boolean; // bad
+"str" : string; // bad
+x[]: integer; // bad
+x: array integer[4]; // good
+x: integer [4]; // bad
+x : array[4]; // bad
+x: array integer []; // bad
+((((((x)))))): integer; // good
+x: integer character; // bad
+x: array[!2^3] array[true && false || true <= 90 + 34 * 2^14 % 6] array[-2 < 0] array[true == false] array[3] integer; // good
+x: array[2] auto; // bad
+x: auto; // bad
+x; integer; // bad
+x: intger; // bad
+x: int; // bad
+x: char; // bad
+x : str; // bad
+x : bool; // bad
+arr[3][2] = 5; // good
+x = arr[2][3]; // good
+x:integer = 5 * 5; // good
+x:array integer[4] = {1, 2, 3, 4}; // good
+x:array integer = {1, 2,3,4}; // bad
+x: integer [4] = {1, 2, 3, 4}; // bad
+id_matrix : array[3] array[3] integer = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}; // good
+arr : arr[2] auto = {'0', '1'}; // bad
+str: string = "hello world"; // good
+c:char = str[0]; // good
+iarr: array [4] integer = {1,2,3,4}; // good
+carr:array [4] char = {'a', 'b', 'c', 'd'}; // good
+barr:array [4] boolean = {true, false, true, true}; // good
+iaar: array [4] array [4] integer = {iarr, iarr, iarr, iarr}; // good
+z:boolean  = true || -(4*x^5) + (4 - 4) >= 16 - 6 * 3 + x && y^2 == 16; // good

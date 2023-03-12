@@ -1,0 +1,26 @@
+main: function void(argc : integer, argv: array [] string);
+main: function void() = {}
+x:function void(y:integer);
+main:function void(hello:string, )= { print hello; }
+main:function void(,hello:string)= { print hello; }
+main:function void(y, x:integer) = { print x; }
+func1: function integer (x:integer, y:char) = { print x; return 1; }
+func2: function integer (y:char) = { print x; return 2; }
+func3: function integer (x:integer, y:char, z:string) = { print z; return 4; }
+fxn: function integer (x:integer) = { return x++; }
+fxn2: function char (x:integer, y:char, z:boolean) = { if(y=='z') return 'Z'; else return 'z'; }
+fxn3: function char (x: array [] integer, y:char, z: array [] array [] boolean) = { if(y=='z') return 'Z'; else return 'z'; }
+foo: function auto();
+foo: function void();
+foo: function integer();
+foo: function char();
+foo: function string();
+foo: function boolean();
+foo: function void void();
+foo: function();
+foo: function void() = }
+foo: function void(void);
+foo: function void;
+foo: function void() {}
+foo: function void(n: void);
+foo: function void(n: auto);

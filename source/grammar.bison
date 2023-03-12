@@ -67,30 +67,29 @@
 
 %%
 
-program : ext_decl { return 0; }
-        | program ext_decl
+program : ext_decln { eof = 1; return 0; }
+	| program ext_decln
 	| TOKEN_MOD TOKEN_MOD test_program { return 0; }
 	| %empty { return 0; }
 	;
 
 test_program : stmt
-	     | ext_decl
+	     | ext_decln
 	     ;
 
-non_init_decl : decltr TOKEN_COLON type TOKEN_SEMI
-              | decltr TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI
-              ;
+decl : decltr TOKEN_COLON type
+     ;
 
-ext_decl : non_init_decl
-         | function_decl
-         ;
+ext_decln : decln
+          | function_decln
+          ;
 
 stmt : print_stmt
      | expr_stmt
-     | select_stmt
      | iter_stmt
      | jump_stmt
      | cmpnd_stmt
+     | select_stmt
      ;
 
 print_stmt : TOKEN_PRINT print_list TOKEN_SEMI
@@ -123,17 +122,21 @@ postfix_expr : primary_expr
 	     | postfix_expr TOKEN_DEC
 	     ;
 
-primary_expr : TOKEN_BOOL
-	     | TOKEN_CH
-	     | TOKEN_NUMBER
-	     | TOKEN_STR
+primary_expr : primitive
 	     | TOKEN_LPAR expr TOKEN_RPAR
-	     | designator
+	     | lvalue
 	     ;
 
-designator : decltr subscript_list
-	   | decltr
-	   ;
+primitive : TOKEN_BOOL | TOKEN_CH | TOKEN_NUMBER | TOKEN_STR ;
+
+expr_list : expr 
+	  | expr_list TOKEN_COMMA expr
+	  ;
+
+lvalue : decltr suffix ;
+suffix : call_suffix | subscript_list | %empty ;
+designator : decltr subscript_list ;
+call_suffix : TOKEN_LPAR TOKEN_RPAR | TOKEN_LPAR expr_list TOKEN_RPAR ;
 
 subscript_list : subscript
 	       | subscript_list subscript
@@ -181,10 +184,9 @@ exp_expr : unary_expr
 	 | exp_expr TOKEN_EXP unary_expr
 	 ;
 
-
-select_stmt : TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt
-	    | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt
-	    ;
+select_stmt  : TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt
+	     | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt
+	     ;
 
 iter_stmt : TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt
 	  | TOKEN_FOR TOKEN_LPAR for TOKEN_RPAR stmt
@@ -198,10 +200,10 @@ for : TOKEN_SEMI TOKEN_SEMI
     | expr_stmt TOKEN_SEMI expr
     | expr_stmt expr_stmt
     | expr_stmt expr_stmt expr
-    | decl TOKEN_SEMI
-    | decl TOKEN_SEMI expr
-    | decl expr_stmt
-    | decl expr_stmt expr
+    | decln TOKEN_SEMI
+    | decln TOKEN_SEMI expr
+    | decln expr_stmt
+    | decln expr_stmt expr
     ;
 
 
@@ -217,20 +219,36 @@ block_list : block
            | block_list block
            ;
 
-block : decl
+block : int_decln
       | stmt
       ;
 
-decl : non_init_decl
-     | designator TOKEN_ASSIGN init TOKEN_SEMI
-     ;
+int_decln : decln | lvalue initialization ;
 
-function_decl : decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_SEMI
-	      | decltr TOKEN_COLON TOKEN_FUNCTION ret_type TOKEN_LPAR TOKEN_RPAR TOKEN_ASSIGN cmpnd_stmt
+initialization : TOKEN_ASSIGN init TOKEN_SEMI ;
+
+decln : decl TOKEN_SEMI
+      | decl initialization
+      ;
+
+
+function_decl : decltr TOKEN_COLON TOKEN_FUNCTION ret_type
 	      ;
 
-decl_list : decltr TOKEN_COMMA decl_list
-	  | decltr
+function_suffix : TOKEN_SEMI
+		| TOKEN_ASSIGN cmpnd_stmt
+		;
+
+function_decln : function_decl TOKEN_LPAR TOKEN_RPAR function_suffix
+	       | function_decl TOKEN_LPAR TOKEN_VOID TOKEN_RPAR function_suffix
+	       | function_decl TOKEN_LPAR param_list TOKEN_RPAR function_suffix
+	       ;
+
+param_list : decl_list
+	   ;
+
+decl_list : decl TOKEN_COMMA decl_list
+	  | decl
 	  ;
 
 init : TOKEN_LCURL init_list TOKEN_RCURL
@@ -263,18 +281,15 @@ array_list : array
 	   ;
 
 array : TOKEN_ARRAY TOKEN_LBRACK assign_expr TOKEN_RBRACK
+      | TOKEN_ARRAY TOKEN_LBRACK TOKEN_RBRACK
       ;
 
 %%
 int yyerror(const char* str) {
-  // TO DO: custom error message function that returns an EOF flag based on error_text contents
-
   fflush(stdout);
-
-  if (!strcmp(str, "syntax error, unexpected $end")) { eof = 1; }
   if (!eof) { sprintf(error_text, "%s", str); eof = 0; }
   return 0;
 }
 
-/* prints error messages that are NOT eof errors */
+/* prints error messages that are NOT eof */
 void print_error_message(void) { fprintf(stderr, "%s\n", error_text); }

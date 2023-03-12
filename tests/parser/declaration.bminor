@@ -11,7 +11,7 @@ x: array[4] integer; // good 24
 x: array integer[4]; // bad 25 26 27 28 29
 x: integer [4]; // bad 30 31 32 33
 x : array[4]; // bad 34
-x: array [] integer; // bad 35 36 37
+x: array [] integer; // good
 ((((((x)))))): integer; // good 38
 x: integer char; // bad 39 40
 x: array[!2^3] array[true && false || true <= 90 + 34 * 2^14 % 6] array[-2 < 0] array[true == false] array[3] integer; // good 41

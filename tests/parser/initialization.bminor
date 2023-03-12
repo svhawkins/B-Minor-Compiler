@@ -1,5 +1,3 @@
-%% arr[3][2] = 5; // good 0
-%% x = arr[2][3]; // good 1
 x:integer = 5 * 5; // good 2
 x:array[4] integer = {1, 2, 3, 4}; // good 3
 id_matrix : array[3] array[3] integer = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
