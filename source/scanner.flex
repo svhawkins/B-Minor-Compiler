@@ -114,6 +114,7 @@ true|false		{ return check_token(TOKEN_BOOL); }
 :			{ return check_token(TOKEN_COLON); }
 ;			{ return check_token(TOKEN_SEMI); }
 ,			{ return check_token(TOKEN_COMMA); }
+<<EOF>>			{ return TOKEN_EOF; }
 .			{ 
 			  error_message(STRAY, TOKEN_ERROR);
 			  return TOKEN_ERROR;

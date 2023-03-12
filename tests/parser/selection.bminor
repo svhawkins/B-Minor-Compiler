@@ -1,31 +1,30 @@
 %% if (true) x = 2; else {} // good 0
-%% if (true) { x = 2; else x = 4; // bad 1 2
-%% if (true) { x = 2; } else {} // good 3
-%% if (true) x = 2; } else x = 4; // bad 4 5 6
-%% if (true) { x = 2; }} else x = 4; // bad 7 8 9
-%% if (true) {{ x = 2; } else x = 4; // bad 10 11
-%% if (true) {{ x = 2; }} else x = 4; // good 12
-%% if (true) x = 2; else x = 3; // good 13
-%% if (true) { x = 2; } else x = 3; // good 14
-%% if (true) x = 2; else { x = 3; } // good 15
-%% if (true) { x = 2; } else { x = 3; } // good 16
-%% if (true) x = 2; else x = 3; else x = 4; // bad 17 18 19
-%% if (true) { if(true) { x = 4; } x = 2; } else { x = 5; } // good 20
-%% else x = 4; // bad 21 22
-%% else { x = 4; } // bad 23 24 25 26
-%% if (true); // bad 27
-%% if true) {} // bad 28 29 30 31
-%% if (true {} // bad 32 33
-%% if true {} // bad 34 35 36
-%% if (true) x = 4; else; // bad 37
+%% if (true) { x = 2; else x = 4; // bad 1 2 3 4
+%% if (true) { x = 2; } else {} // good 5
+%% if (true) x = 2; } else x = 4; // bad 7 8 9 10
+%% if (true) {{ x = 2; } else x = 4; // bad 11 12 13 14
+%% if (true) {{ x = 2; }} else x = 4; // good 15
+%% if (true) x = 2; else x = 3; // good 16
+%% if (true) { x = 2; } else x = 3; // good 17
+%% if (true) x = 2; else { x = 3; } // good 18
+%% if (true) { x = 2; } else { x = 3; } // good 19
+%% if (true) x = 2; else x = 3; else x = 4; // good-bad 20 21 22 23
+%% if (true) { if(true) { x = 4; } x = 2; } else { x = 5; } // good 24
+%% else x = 4; // bad 25 26 27 28
+%% else { x = 4; } // bad 29 30 31 32 33 34
+%% if (true); // bad 35
+%% if true) {} // bad 36 37 38 39
+%% if (true {} // bad 40 41
+%% if true {} // bad 42 43 44
+%% if (true) x = 4; else; // bad 45
 %% if(true || false && true)
 {
   x = 6;		
-} else {} // good 38
+} else {} // good 47
 %% if(!((4*x^5 + 4) - 4 >= 1))
 {
  x = 6;		
-} else {}// good 39
+} else {}// good 48
 %% if( 4 < 5 )
   if( 10 < 20 )
     if (-1 < 0)
@@ -38,5 +37,5 @@
   else
     print "gooodbye";
 else
-  print "goooodbye"; // good 40
-//if (true) if (true) x = 4; x = 2; else x = 5; 
+  print "goooodbye"; // good 49
+//if (true) if (true) x = 4; else x = 5; 

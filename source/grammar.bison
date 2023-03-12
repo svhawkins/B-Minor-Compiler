@@ -66,11 +66,10 @@
 %token TOKEN_COMMA
 
 %%
-
-program : ext_decln { eof = 1; return 0; }
+program : ext_decln { return 0; }
 	| program ext_decln
 	| TOKEN_MOD TOKEN_MOD test_program { return 0; }
-	| %empty { return 0; }
+	| TOKEN_EOF { eof = 1; return 0; }
 	;
 
 test_program : stmt

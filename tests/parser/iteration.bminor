@@ -6,23 +6,27 @@
 %% for (i = 0; ; i++) {} // good 5
 %% for (i = 0; i < 5; ) {} // good 6
 %% for (i = 0; i < 5; i++) {} // good 7
-%% for (; ;) print f; // good 8
-%% for (; ;); // bad 9
-%% for (;) {} // bad 10 11 12
-%% for () {} // bad 13 14 15
-%% for (i < 5) {} // bad 16 17 18
-%% for(i: integer; ;) {}
-%% for(i: integer; ; i++) {}
-%% for(i: integer; i < 5;){}
-%% for(i: integer; i < 5; i++) {}
-%% while (i < 12) {} // good 19
-%% while (i < 12) {{ print f; }} // good 20
-%% while (i < 12); // bad 21
-%% while (i < 12 {} // bad 22 23
-%% while i < 12) {} // bad 24 25 26 27 28 29
-%% while (i < 12) {} } // good-bad 30 31
-%% while i < 12 { } // bad 32 33 34 35 36
-%% wjile(i < 12); // good 37, this is a function call.
-%% wjile (i < 12) {} // bad 38 39
-%% while (1 < 12) x; // good 40
+%% for(i: integer; ;) {} // good 8
+%% for(i: integer; ; i++) {} // good 9
+%% for(i: integer; i < 5;){} // good 10
+%% for(i: integer; i < 5; i++) {} // good 11
+%% for(i: integer = 0; ;) {} // good 12
+%% for(i: integer = 0; ;i++) {} // good 13
+%% for(i: integer = 0; i < 5;) {} // good 14
+%% for(i: integer = 0; i < 5; i++) {} // good 15
+%% for (; ;) print f; // good 16
+%% for (; ;); // bad 17
+%% for (;) {} // bad 18 19 20
+%% for () {} // bad 21 22 23
+%% for (i < 5) {} // bad 24 25 26
+%% while (i < 12) {} // good 27
+%% while (i < 12) {{ print f; }} // good 28
+%% while (i < 12); // bad 29
+%% while (i < 12 {} // bad 30 31
+%% while i < 12) {} // bad 32 33 34 35 36 37
+%% while (i < 12) {} } // good-bad 38 39
+%% while i < 12 { } // bad 40 41 42 43 44
+%% wjile(i < 12); // good 45, this is a function call.
+%% wjile (i < 12) {} // bad 46 47
+%% while (1 < 12) x; // good 48
 //while (i < 12) { x = 12; // bad 10
