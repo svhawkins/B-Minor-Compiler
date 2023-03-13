@@ -32,8 +32,7 @@ int main(int argc, const char* argv[]) {
       execlp(path[i], name[i], NULL);
     }
   }
-   // debugging
-  //printf("[%d] [%d] out of loop\n", getppid(), getpid());
+  // debugging
   waitpid(0, NULL, 0);
 
   // print total passes and runs here

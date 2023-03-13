@@ -128,14 +128,9 @@ primary_expr : primitive
 
 primitive : TOKEN_BOOL | TOKEN_CH | TOKEN_NUMBER | TOKEN_STR ;
 
-expr_list : expr 
-	  | expr_list TOKEN_COMMA expr
-	  ;
-
 lvalue : decltr suffix ;
 suffix : call_suffix | subscript_list | %empty ;
-designator : decltr subscript_list ;
-call_suffix : TOKEN_LPAR TOKEN_RPAR | TOKEN_LPAR expr_list TOKEN_RPAR ;
+call_suffix : TOKEN_LPAR TOKEN_RPAR | TOKEN_LPAR expr TOKEN_RPAR ;
 
 subscript_list : subscript
 	       | subscript_list subscript

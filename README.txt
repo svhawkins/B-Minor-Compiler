@@ -11,7 +11,7 @@ Completion rate: 97% (unresolved shift-reduce conflicts)
 
 *******************************************************************************************
 FILES (there are a lot of files, half of them are just .bminor test files)
-4 directories, 37 files (after a [make] or [make all], it grows to 42)
+4 directories, 37 files
 
 Directories:
 	source: holds the source code for the validator and scanner
@@ -170,21 +170,30 @@ CAVEATS:
 *****************************************************************************************
 SHIFT-REDUCE CONFLICTS
 
-My grammar has 9. As of now, I am not sure how to resolve them/there have been a few
-attempts but it didn't change anything. The full detail of what they are can be read
-in grammar.txt.
+There are 7 shift-reduce conflicts (the full detail of which
+can be read in grammar.txt)
 
-
-// STATE NUMBERS WILL CHANGE AFTER USELESS RULE REMOVAL
 State 47 conflicts: 1 shift/reduce
 State 62 conflicts: 1 shift/reduce
 State 92 conflicts: 2 shift/reduce
 State 95 conflicts: 1 shift/reduce
 State 96 conflicts: 1 shift/reduce
-State 162 conflicts: 1 shift/reduce
-State 212 conflicts: 1 shift/reduce
-State 214 conflicts: 1 shift/reduce
+State 210 conflicts: 1 shift/reduce
 
+
+States 47, 62, 92, and 96 involves the non-terminals decltr and lvalue.
+there is a conflict because an lvalue can be a decltr all on its own,
+or it can have a 'suffix' (array subscripting or function call).
+A decltr can also just have nested parentheses for no apparent reason
+(like in C).
+
+State 95 concerns non-terminal lvalue, where it can be reduced to
+a primary_expr just as is, OR it can be an int_decln if it has an
+additional initialization.
+
+State 210 is from if and if-else statements.
+
+For the moment these conflicts are not resolved.
 
 *************************************************************************************
 DIFFICULTIES:

@@ -10,7 +10,6 @@ extern unsigned char eof;
 extern void print_error_message();
 
 int main(int argc, const char* argv[]) {
-  printf("%s\n", "Hello world! :(\n");
   if (argc > 1 && !strcmp(argv[1], "-t")) { yydebug = 1; }
   for (int i = 0; !eof; i++) {
     printf("%d: ", i);

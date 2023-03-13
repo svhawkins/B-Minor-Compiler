@@ -15,21 +15,21 @@ char test_type[MAX_BUFFER];
 FILE* ifp;
 char lines[MAX_BUFFER][MAX_BUFFER];
 
-int get_lines(char v[][MAX_BUFFER], char* filename);
-Status file_error(char* test_type, char* filename);
-void print_error(char* test_type, int case_no, int expect, int actual);
-Status test_parse(int expect, int actual);
+int get_lines(char v[][MAX_BUFFER], char* filename); // stores file contents
+Status file_error(char* test_type, char* filename); // error messsage when opening file
+void print_error(char* test_type, int case_no, int expect, int actual); // error message for test failures
+Status test_parse(int expect, int actual); // tests parse status
 
-Status test_expressions(void);
-Status test_print_statements(void);
-Status test_jump_statements(void);
-Status test_iteration_statements(void);
-Status test_selection_statements(void);
-Status test_declarations(void);
-Status test_initializations(void);
-Status test_functions(void);
-Status test_code(void);
-Status test_empty(void);
+Status test_expressions(void); // tests B-Minor operators and expressions
+Status test_print_statements(void); // tests print statements
+Status test_jump_statements(void); // tests return statements
+Status test_iteration_statements(void); // tests for and while loops
+Status test_selection_statements(void); // tests if and if-else statements
+Status test_declarations(void); // tests variable declarations
+Status test_initializations(void); // tests variable declarations with initializations
+Status test_functions(void); // tests function declarations and definitions
+Status test_code(void); // tests a valid program
+Status test_empty(void); // tests an empty program
 
 int main(int argc, const char* argv[]) {
   Status (*tests[])(void) = {
@@ -202,8 +202,7 @@ Status test_iteration_statements(void) {
   return overall_status;
 }
 
-// TO DO: test lone if statements WITHOUT else
-// due to a shift-reduce conflict
+// Lone if statements are not tested
 Status test_selection_statements(void) {
   strcpy(test_type, "Testing: If and Else statements");
   char* filename = "./tests/parser/selection.bminor";
