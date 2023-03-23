@@ -9,16 +9,17 @@
 int main(int argc, const char* argv[]) {
 
   // executables list
-  int n_exec = 2;
+  int n_exec = 3;
   char* path[] = {
     "tests/test_scan",
-    "tests/test_parse"
+    "tests/test_parse",
+    "tests/test_ast"
   };
-  char* name[] = { "test_scan", "test_parse"};
+  char* name[] = { "test_scan", "test_parse", "test_ast"};
 
   // what to print per pre-execution
   char* header = "TESTING: ";
-  char* tests[] = {"SCANNER", "PARSER"};
+  char* tests[] = {"SCANNER", "PARSER", "ABSTRACT SYNTAX TREE"};
 
   // executions
   int pid = 0;
