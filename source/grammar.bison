@@ -2,6 +2,12 @@
   #include <stdio.h>
   #include <stdlib.h>
   #include <string.h>
+  #include "decl.h"
+  #include "expr.h"
+  #include "param_list.h"
+  #include "stmt.h"
+  #include "symbol.h"
+  #include "type.h"
   #define YYLMAX 256
   extern char* yytext;
   extern int yylex();
@@ -9,6 +15,7 @@
   char error_text[YYLMAX];
   unsigned char eof = 0;
   void print_error_message(void);
+  struct decl * parser_result = NULL;
 %}
 %define parse.error verbose
 
@@ -66,36 +73,45 @@
 %token TOKEN_COMMA
 
 %%
-program : ext_decln { return 0; }
-	| program ext_decln
+program : ext_decl { return 0; }
+	| program ext_decl
 	| TOKEN_MOD TOKEN_MOD test_program { return 0; }
 	| TOKEN_EOF { eof = 1; return 0; }
 	;
 
 test_program : stmt
-	     | ext_decln
+	     | ext_decl
 	     ;
 
-decl : decltr TOKEN_COLON type
+decl : name TOKEN_COLON type TOKEN_SEMI
+     | name TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI
      ;
 
-ext_decln : decln
-          | function_decln
+init : TOKEN_LCURL init_list TOKEN_RCURL
+     | expr
+     ;
+
+init_list : init
+          | init_list TOKEN_COMMA init
           ;
+ 
+name : TOKEN_IDENT
+     | TOKEN_LPAR name TOKEN_RPAR
+     ;
+
+ext_decl : decl
+         | function_decl
+         ;
 
 stmt : print_stmt
      | expr_stmt
      | iter_stmt
      | jump_stmt
-     | cmpnd_stmt
+     | block_stmt
      | select_stmt
      ;
 
-print_stmt : TOKEN_PRINT print_list TOKEN_SEMI
-	   ;
-
-print_list : assign_expr TOKEN_COMMA print_list
-	   | assign_expr
+print_stmt : TOKEN_PRINT expr TOKEN_SEMI
 	   ;
 
 expr_stmt : expr TOKEN_SEMI
@@ -128,7 +144,7 @@ primary_expr : primitive
 
 primitive : TOKEN_BOOL | TOKEN_CH | TOKEN_NUMBER | TOKEN_STR ;
 
-lvalue : decltr suffix ;
+lvalue : name suffix ;
 suffix : call_suffix | subscript_list | %empty ;
 call_suffix : TOKEN_LPAR TOKEN_RPAR | TOKEN_LPAR expr TOKEN_RPAR ;
 
@@ -138,10 +154,6 @@ subscript_list : subscript
 
 subscript : TOKEN_LBRACK assign_expr TOKEN_RBRACK
 	  ;
-
-decltr : TOKEN_IDENT
-       | TOKEN_LPAR decltr TOKEN_RPAR
-       ;
 
 lor_expr : land_expr
 	 | lor_expr TOKEN_OR land_expr
@@ -194,10 +206,10 @@ for : TOKEN_SEMI TOKEN_SEMI
     | expr_stmt TOKEN_SEMI expr
     | expr_stmt expr_stmt
     | expr_stmt expr_stmt expr
-    | decln TOKEN_SEMI
-    | decln TOKEN_SEMI expr
-    | decln expr_stmt
-    | decln expr_stmt expr
+    | decl TOKEN_SEMI
+    | decl TOKEN_SEMI expr
+    | decl expr_stmt
+    | decl expr_stmt expr
     ;
 
 
@@ -205,7 +217,7 @@ jump_stmt : TOKEN_RETURN TOKEN_SEMI
 	  | TOKEN_RETURN expr TOKEN_SEMI
 	  ;
 
-cmpnd_stmt : TOKEN_LCURL TOKEN_RCURL
+block_stmt : TOKEN_LCURL TOKEN_RCURL
            | TOKEN_LCURL block_list TOKEN_RCURL
            ;
 
@@ -213,61 +225,53 @@ block_list : block
            | block_list block
            ;
 
-block : int_decln
+block : decl
       | stmt
       ;
 
-int_decln : decln | lvalue initialization ;
 
-initialization : TOKEN_ASSIGN init TOKEN_SEMI ;
-
-decln : decl TOKEN_SEMI
-      | decl initialization
-      ;
-
-
-function_decl : decltr TOKEN_COLON TOKEN_FUNCTION ret_type
+function_decl : name TOKEN_COLON ret_type TOKEN_LPAR param_list TOKEN_RPAR TOKEN_SEMI
+	      | name TOKEN_COLON ret_type TOKEN_LPAR param_list TOKEN_RPAR TOKEN_ASSIGN block_stmt
 	      ;
 
-function_suffix : TOKEN_SEMI
-		| TOKEN_ASSIGN cmpnd_stmt
-		;
-
-function_decln : function_decl TOKEN_LPAR TOKEN_RPAR function_suffix
-	       | function_decl TOKEN_LPAR TOKEN_VOID TOKEN_RPAR function_suffix
-	       | function_decl TOKEN_LPAR param_list TOKEN_RPAR function_suffix
-	       ;
-
-param_list : decl_list
+param_list : params
+	   | TOKEN_VOID
+	   | %empty
 	   ;
 
-decl_list : decl TOKEN_COMMA decl_list
-	  | decl
-	  ;
+params : param TOKEN_COMMA params
+       | param
+       ;
 
-init : TOKEN_LCURL init_list TOKEN_RCURL
-     | assign_expr
-     ;
+param : name TOKEN_COLON param_type
+      ;
 
-init_list : init
-	  | init_list TOKEN_COMMA init
-	  ;
+param_type : type
+	   | function_type
+	   ;
 
-
-type : atomic_type
+type : primitive_type
      | TOKEN_AUTO
-     | array_list atomic_type
+     | array_list array_type
      ;
 
-atomic_type : TOKEN_BOOLEAN
+function_type : TOKEN_FUNCTION ret_type
+	      ;
+
+array_type : primitive_type
+	   | function_type
+	   ;
+
+primitive_type : TOKEN_BOOLEAN
 	    | TOKEN_CHAR
 	    | TOKEN_INTEGER
 	    | TOKEN_STRING
 	    ;
 
-ret_type : atomic_type
+ret_type : primitive_type
 	 | TOKEN_VOID
-	 | array_list atomic_type
+	 | array_list array_type
+	 | function_type
 	 ;
 
 array_list : array
