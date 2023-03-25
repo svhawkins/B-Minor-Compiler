@@ -10,7 +10,7 @@ GEN = source/scanner.c source/parser.c
 all: $(EXEC)
 
 ## compiles all test targets
-test_all: $(TESTS) test
+tests: $(TESTS) test
 
 ## test targets
 test: tests/test.c
