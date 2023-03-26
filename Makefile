@@ -5,6 +5,7 @@ TESTS = tests/test_scan tests/test_parse tests/test_ast
 EXEC = $(TESTS) test scan parse
 OBJECTS = tests/scanner/*.o tests/parser/*.o tests/ast/*.o source/*.o
 GEN = source/scanner.c source/parser.c
+INCLUDES = source/decl.o source/expr.o source/param_list.o source/stmt.o source/symbol.o source/type.o
 
 ## compiles all targets
 all: $(EXEC)
@@ -19,7 +20,7 @@ tests/test_scan: tests/scanner/test_scanner.o source/scanner.o
 	gcc -o $@ $^
 tests/test_parse: tests/parser/test_parser.o source/scanner.o source/parser.o
 	gcc -o $@ $^
-tests/test_ast: tests/ast/test_ast.o source/scanner.o source/parser.o
+tests/test_ast: tests/ast/test_ast.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
 
 ## root targets

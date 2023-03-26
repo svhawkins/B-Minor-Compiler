@@ -7,10 +7,8 @@
 
 /* this just runs all the test executables */
 
-// TO DO: add pipes to keep track of TOTAL tests run and TOTAL tests passed
-
 void parse_line(char* line, int start, int end, int* total_pass, int* total_test);
-enum { READ = 0, WRITE, NUM_ENDS, MAX_BUFFER = 1024};
+enum { READ = 0, WRITE, NUM_ENDS, MAX_BUFFER = 16384}; // absurd buffer amount i know
 char output[MAX_BUFFER];
 int main(int argc, const char* argv[]) {
   // keep track of total passes and tests
@@ -52,17 +50,17 @@ int main(int argc, const char* argv[]) {
   char* line = strtok(output, "\n"); char* passed = "Passed: ";
   int n = strlen(passed);
   while(line) {
-    // process output...
     if (!strncmp(header, line, strlen(header))) printf("\n");
     if (!strncmp(passed, line, n)) parse_line(line, n, strlen(line), &total_pass, &total_tests);
-    printf("%s\n", line);
-    line = strtok(NULL, "\n");
+    printf("%s\n", line); line = strtok(NULL, "\n");
   }
-  printf("\nTOTAL TESTS: %d\nTOTAL PASSED: %d/%d\n", total_tests, total_pass, total_tests);
+  //printf("\nTOTAL TESTS: %d\n", total_tests);
+  printf("\nTOTAL PASSED: %d/%d\n", total_pass, total_tests);
+  printf("TOTAL FAILED: %d/%d\n", total_tests - total_pass, total_tests);
   return 0;
 }
 void parse_line(char* line, int start, int end, int* total_pass, int* total_test) {
-  char number[3]; int i, j; int n;
+  char number[3]; int i, j, n;
   for (i = start; i < end; i++) {
     for (j = 0; isdigit(line[i + j]); j++) number[j] = line[i + j];
     i += j; n = atoi(number);

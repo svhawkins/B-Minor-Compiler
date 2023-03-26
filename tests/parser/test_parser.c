@@ -11,8 +11,8 @@ extern char error_text[MAX_BUFFER];
 extern unsigned char eof;
 typedef enum {FAILURE = 0, SUCCESS = 1} Status;
 enum {PARSE_SUCCESS = 0, PARSE_FAILURE = 1};
-char test_type[MAX_BUFFER];
 FILE* ifp;
+char test_type[MAX_BUFFER];
 char lines[MAX_BUFFER][MAX_BUFFER];
 
 int get_lines(char v[][MAX_BUFFER], char* filename); // stores file contents

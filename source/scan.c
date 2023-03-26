@@ -12,6 +12,7 @@ extern int n_col;
 extern char error_text[2 * YYLMAX];
 extern char filename[YYLMAX];
 extern bool has_match;
+//extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 
 extern void add_col(bool is_newline);
 void print_header(void);

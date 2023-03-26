@@ -31,7 +31,7 @@ IDENT	[_[:alpha:]][_[:alnum:]]*
 CH_CHAR	(\\[^'\n\0]|[^\n\0'\\])
 CH_STR  (\\[^\n\0]|[^\n\0\"\\])
 %x c_comment
-%option yylineno
+%option yylineno noinput nounput nodefault
 %%
 "/*"			{ add_col(false); 
 			  has_match = false;  stop_line = yylineno; stop_col = n_col;
