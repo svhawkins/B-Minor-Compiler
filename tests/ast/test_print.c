@@ -19,13 +19,11 @@ char test_type[MAX_BUFFER];
 Status test_hello(void);
 Status test_goodbye(void);
 
-
 int main(int argc, const char* argv[]) {
   Status (*tests[])(void) = {
     test_hello,
     test_goodbye
   };
-
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
 

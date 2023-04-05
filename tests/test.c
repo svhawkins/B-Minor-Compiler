@@ -15,17 +15,19 @@ int main(int argc, const char* argv[]) {
   int total_pass = 0, total_tests = 0;
 
   // executables list
-  int n_exec = 3;
+  int n_exec = 5;
   char* path[] = {
     "tests/test_scan",
     "tests/test_parse",
+    "tests/test_factory",
+    "tests/test_print",
     "tests/test_ast"
   };
-  char* name[] = { "test_scan", "test_parse", "test_ast"};
+  char* name[] = { "test_scan", "test_parse", "test_factory", "test_print", "test_ast"};
 
   // what to print per pre-execution
   char* header = "TESTING: ";
-  char* tests[] = {"SCANNER", "PARSER", "ABSTRACT SYNTAX TREE"};
+  char* tests[] = {"SCANNER", "PARSER", "FACTORY FUNCTIONS", "PRINT FUNCTIONS", "ABSTRACT SYNTAX TREE"};
 
   // executions, output is written to pipe
   int pid = 0; int fd[NUM_ENDS];
