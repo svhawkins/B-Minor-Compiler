@@ -163,8 +163,8 @@ Grammar
   107           | function_type
 
   108 type: primitive_type
-  109     | TOKEN_AUTO
-  110     | array_list array_type
+  109     | array_list array_type
+  110     | TOKEN_AUTO
 
   111 function_type: TOKEN_FUNCTION ret_type
 
@@ -195,7 +195,7 @@ Terminals, with rules where they appear
     TOKEN_ERROR (258)
     TOKEN_EOF (259) 4
     TOKEN_ARRAY (260) 124 125
-    TOKEN_AUTO (261) 109
+    TOKEN_AUTO (261) 110
     TOKEN_BOOLEAN (262) 114
     TOKEN_CHAR (263) 115
     TOKEN_ELSE (264) 75
@@ -374,7 +374,7 @@ Nonterminals, with rules where they appear
         on right: 107 113 121
     array_type (94)
         on left: 112 113
-        on right: 110 120
+        on right: 109 120
     primitive_type (95)
         on left: 114 115 116 117
         on right: 108 112 118
@@ -383,7 +383,7 @@ Nonterminals, with rules where they appear
         on right: 98 99 111
     array_list (97)
         on left: 122 123
-        on right: 110 120 123
+        on right: 109 120 123
     array (98)
         on left: 124 125
         on right: 122 123
@@ -1082,9 +1082,9 @@ State 54
 
 State 55
 
-  109 type: TOKEN_AUTO .
+  110 type: TOKEN_AUTO .
 
-    $default  reduce using rule 109 (type)
+    $default  reduce using rule 110 (type)
 
 
 State 56
@@ -1176,7 +1176,7 @@ State 65
 
 State 66
 
-  110 type: array_list . array_type
+  109 type: array_list . array_type
   120 ret_type: array_list . array_type
   123 array_list: array_list . array
 
@@ -2167,11 +2167,11 @@ State 119
 
 State 120
 
-  110 type: array_list array_type .
+  109 type: array_list array_type .
   120 ret_type: array_list array_type .
 
     TOKEN_LPAR  reduce using rule 120 (ret_type)
-    $default    reduce using rule 110 (type)
+    $default    reduce using rule 109 (type)
 
 
 State 121
@@ -3060,7 +3060,7 @@ State 177
 
 State 178
 
-  110 type: array_list . array_type
+  109 type: array_list . array_type
   123 array_list: array_list . array
 
     TOKEN_ARRAY     shift, and go to state 54
@@ -3255,9 +3255,9 @@ State 197
 
 State 198
 
-  110 type: array_list array_type .
+  109 type: array_list array_type .
 
-    $default  reduce using rule 110 (type)
+    $default  reduce using rule 109 (type)
 
 
 State 199

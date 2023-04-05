@@ -251,8 +251,8 @@ param_type : type
 	   ;
 
 type : primitive_type
-     | TOKEN_AUTO
      | array_list array_type
+     | TOKEN_AUTO
      ;
 
 function_type : TOKEN_FUNCTION ret_type

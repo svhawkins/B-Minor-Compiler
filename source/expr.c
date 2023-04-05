@@ -57,4 +57,50 @@ struct expr* expr_create_string_literal(const char* str)
   return e;
 }
 
-void expr_print(struct expr* e) {}
+void expr_fprint(FILE* fp, struct expr* e) {
+  // what is printed is kind dependent
+  if (!e) return;
+
+  switch(e->kind) {
+    // primitives
+    case EXPR_NAME: fprintf(fp, "%s", e->name); break;
+    case EXPR_CH: fprintf(fp, "%c", e->literal_value); break;
+    case EXPR_BOOL: fprintf(fp, "%s", (e->literal_value) ? "true" : "false"); break;
+    case EXPR_STR: fprintf(fp, "%s", e->string_literal); break;
+    case EXPR_INT: fprintf(fp, "%d", e->literal_value); break;
+
+    // operators: unary, binary, also different types of associativity make for different placement of parentheses
+    // TO DO: associativity testing
+
+    // unary operators
+    case EXPR_INC: expr_fprint(fp, e->left); fprintf(fp, "++"); break;
+    case EXPR_DEC: expr_fprint(fp, e->left); fprintf(fp, "--"); break;
+    case EXPR_POS: fprintf(fp, "+"); expr_fprint(fp, e->left); break; // +45 is just 45.
+    case EXPR_NEG: fprintf(fp, "-"); expr_fprint(fp, e->left); break;
+    case EXPR_NOT: fprintf(fp, "!"); expr_fprint(fp, e->left); break;
+
+    // binary operators
+    case EXPR_EXP: expr_fprint(fp, e->left); fprintf(fp, "^"); expr_fprint(fp, e->right); break;
+    case EXPR_MULT: expr_fprint(fp, e->left); fprintf(fp, " * "); expr_fprint(fp, e->right); break;
+    case EXPR_DIV: expr_fprint(fp, e->left); fprintf(fp, " / "); expr_fprint(fp, e->right); break;
+    case EXPR_MOD: expr_fprint(fp, e->left); fprintf(fp, " %% "); expr_fprint(fp, e->right); break;
+    case EXPR_ADD: expr_fprint(fp, e->left); fprintf(fp, " + "); expr_fprint(fp, e->right); break;
+    case EXPR_SUB: expr_fprint(fp, e->left); fprintf(fp, " - "); expr_fprint(fp, e->right); break;
+    case EXPR_LEQ: expr_fprint(fp, e->left); fprintf(fp, " <= "); expr_fprint(fp, e->right); break;
+    case EXPR_LESS: expr_fprint(fp, e->left); fprintf(fp, " < "); expr_fprint(fp, e->right); break;
+    case EXPR_GEQ: expr_fprint(fp, e->left); fprintf(fp, " >= "); expr_fprint(fp, e->right); break;
+    case EXPR_GREAT: expr_fprint(fp, e->left); fprintf(fp, " > "); expr_fprint(fp, e->right); break;
+    case EXPR_EQ: expr_fprint(fp, e->left); fprintf(fp, " == "); expr_fprint(fp, e->right); break;
+    case EXPR_NEQ: expr_fprint(fp, e->left); fprintf(fp, " != "); expr_fprint(fp, e->right); break;
+    case EXPR_AND: expr_fprint(fp, e->left); fprintf(fp, " && "); expr_fprint(fp, e->right); break;
+    case EXPR_OR: expr_fprint(fp, e->left); fprintf(fp, " || "); expr_fprint(fp, e->right); break;
+    case EXPR_ASSIGN: expr_fprint(fp, e->left); fprintf(fp, " = "); expr_fprint(fp, e->right); break;
+
+    // also binary operators
+    case EXPR_SUBSCRIPT: expr_fprint(fp, e->left); fprintf(fp, "["); expr_fprint(fp, e->right); fprintf(fp, "]"); break;
+    case EXPR_FCALL: expr_fprint(fp, e->left); fprintf(fp, "("); expr_fprint(fp, e->right); fprintf(fp, ")"); break;
+
+  }
+}
+
+void expr_print(struct expr* e) { expr_fprint(stdout, e); }

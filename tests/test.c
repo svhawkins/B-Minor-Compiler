@@ -9,7 +9,6 @@
 
 void parse_line(char* line, int start, int end, int* total_pass, int* total_test);
 enum { READ = 0, WRITE, NUM_ENDS, MAX_BUFFER = 16384}; // absurd buffer amount i know
-char output[MAX_BUFFER];
 int main(int argc, const char* argv[]) {
   // keep track of total passes and tests
   int total_pass = 0, total_tests = 0;
@@ -44,7 +43,7 @@ int main(int argc, const char* argv[]) {
       execlp(path[i], name[i], NULL);
     }
   }
-  waitpid(0, NULL, 0);
+  waitpid(0, NULL, 0); char output[MAX_BUFFER];
   read(fd[READ], output, MAX_BUFFER);
   close(fd[READ]); close(fd[WRITE]);
 

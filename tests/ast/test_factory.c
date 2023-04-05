@@ -170,7 +170,7 @@ Status test_type_create_kind(void) {
   Status overall_status = SUCCESS, status;
   char kind_expect[3]; char kind_actual[3];
   for (type_t kind = TYPE_VOID; kind <= TYPE_FUNCTION; kind++) {
-    struct type* t = type_create(kind, NULL, NULL);
+    struct type* t = type_create(kind, NULL, NULL, NULL);
     if (!t) { print_error(test_type, "NOT NULL", "type t"); overall_status = FAILURE; }
     else {
       if (t->kind != kind) {
@@ -527,7 +527,7 @@ Status test_decl_create_atomic_uninit(void) {
   strcpy(test_type, "Testing: decl_create_atomic_uninit");
   Status overall_status = SUCCESS, status;
   char kind_expect[3]; char kind_actual[3];
-  struct decl* d = decl_create("foo", type_create(TYPE_INTEGER, NULL, NULL), NULL, NULL, NULL);
+  struct decl* d = decl_create("foo", type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
     if (strcmp(d->name, "foo")) { print_error(test_type, "foo", "char* d->name"); overall_status = FAILURE; }
@@ -551,7 +551,7 @@ Status test_decl_create_atomic_init(void) {
   strcpy(test_type, "Testing: decl_create_atomic_init");
   Status overall_status = SUCCESS, status;
   char kind_expect[3]; char kind_actual[3];
-  struct decl* d = decl_create("bar", type_create(TYPE_STRING, NULL, NULL), expr_create_string_literal("hello world!:)\n"), NULL, NULL);
+  struct decl* d = decl_create("bar", type_create(TYPE_STRING, NULL, NULL, NULL), expr_create_string_literal("hello world!:)\n"), NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
     if (strcmp(d->name, "bar")) { print_error(test_type, "bar", "char* d->name"); overall_status = FAILURE; }
@@ -586,7 +586,7 @@ Status test_decl_create_composite_array(void) {
   strcpy(test_type, "Testing: decl_create_composite_array");
   Status overall_status = SUCCESS, status;
   char kind_expect[3]; char kind_actual[3];
-  struct decl* d = decl_create("foo", type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL), NULL), NULL, NULL, NULL);
+  struct decl* d = decl_create("foo", type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL), NULL, NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
     if (strcmp(d->name, "foo")) { print_error(test_type, "foo", "char* d->name"); overall_status = FAILURE; }
@@ -620,8 +620,8 @@ Status test_decl_create_composite_function(void) {
   Status overall_status = SUCCESS, status;
   char kind_expect[3]; char kind_actual[3];
   struct decl* d = decl_create("foo", type_create(TYPE_FUNCTION,
-				      type_create(TYPE_VOID, NULL, NULL),
-				      param_list_create("x", type_create(TYPE_INTEGER, NULL, NULL), NULL)),
+				      type_create(TYPE_VOID, NULL, NULL, NULL),
+				      param_list_create("x", type_create(TYPE_INTEGER, NULL, NULL,NULL), NULL), NULL),
 				      NULL, NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
@@ -677,8 +677,8 @@ Status test_decl_create_program(void) {
   Status overall_status = SUCCESS, status;
   char kind_expect[3]; char kind_actual[3];
   // structs that make up param list
-  struct param_list* p = param_list_create("argc", type_create(TYPE_INTEGER, NULL, NULL),
-					   param_list_create("argv", type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL), NULL), NULL)
+  struct param_list* p = param_list_create("argc", type_create(TYPE_INTEGER, NULL, NULL,NULL),
+					   param_list_create("argv", type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, NULL), NULL)
 					  );
   // structs that make up stmts in code
   struct stmt* return_stmt = stmt_create(STMT_RETURN, NULL, NULL, expr_create_integer_literal(0), NULL, NULL, NULL, NULL);
@@ -687,16 +687,16 @@ Status test_decl_create_program(void) {
 						      expr_create(EXPR_LESS, expr_create_name("i"), expr_create_name("n")),
 						      expr_create(EXPR_INC, expr_create_name("i"), NULL),
 						      for_body, NULL, return_stmt);
-  struct stmt* n_init = stmt_create(STMT_DECL, decl_create("n", type_create(TYPE_INTEGER, NULL, NULL), expr_create_integer_literal(10), NULL, NULL),
+  struct stmt* n_init = stmt_create(STMT_DECL, decl_create("n", type_create(TYPE_INTEGER, NULL, NULL, NULL), expr_create_integer_literal(10), NULL, NULL),
 					       NULL, NULL, NULL, NULL, NULL, for_stmt);
 
-  struct stmt* i_init = stmt_create(STMT_DECL, decl_create("i", type_create(TYPE_INTEGER, NULL, NULL), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, n_init);
+  struct stmt* i_init = stmt_create(STMT_DECL, decl_create("i", type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, n_init);
 
 
 
   // the actual declaration (oh dear lord...)
   struct decl* d = decl_create("main", type_create(TYPE_FUNCTION,
-                                      type_create(TYPE_INTEGER, NULL, NULL), p), NULL, i_init, NULL);
+                                      type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL), NULL, i_init, NULL);
 
   // main: function integer(argc: integer, argv: array [] string)
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }

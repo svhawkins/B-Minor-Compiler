@@ -5,15 +5,17 @@
 
 typedef enum {
         // binary operators same as the tokens
-	EXPR_INC,
+	EXPR_INC = 0,
 	EXPR_DEC,
-	EXPR_SUB,
-	EXPR_EXP,
-        EXPR_NOT,
+	EXPR_POS,
+	EXPR_NEG,
+	EXPR_NOT,
+        EXPR_EXP,
         EXPR_MULT,
         EXPR_DIV,
         EXPR_MOD,
         EXPR_ADD,
+	EXPR_SUB,
         EXPR_LEQ,
         EXPR_LESS,
         EXPR_GEQ,
@@ -57,6 +59,7 @@ struct expr* expr_create_boolean_literal(int c);
 struct expr* expr_create_char_literal(char c);
 struct expr* expr_create_string_literal(const char* str);
 
+void expr_fprint(FILE* fp, struct expr* e);
 void expr_print(struct expr* e);
 
 #endif
