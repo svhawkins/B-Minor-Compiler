@@ -1,5 +1,5 @@
 [09:53-10:05] - make test_print, test_factory execs, update makefile + test
-[11:00-
+[11:00-11:30]
 	update readme
 	added driver code for assignment
         renamed main.c
