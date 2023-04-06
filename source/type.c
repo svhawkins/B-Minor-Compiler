@@ -26,6 +26,7 @@ void type_fprint(FILE* fp, struct type* t) {
     case TYPE_CHARACTER: fprintf(fp, "char"); break;
     case TYPE_STRING: fprintf(fp, "string"); break;
     case TYPE_VOID: fprintf(fp, "void"); break;
+    case TYPE_AUTO: fprintf(fp, "auto"); break;
 
     // recursive cases
     case TYPE_ARRAY: fprintf(fp, "array ["); expr_fprint(fp, t->size); fprintf(fp, "] ");

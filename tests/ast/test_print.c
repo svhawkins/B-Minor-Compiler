@@ -35,6 +35,14 @@ Status test_param_list_print_multiple(void);
 Status test_param_list_print_single_nest(void);
 Status test_type_print_function_param_list(void);
 Status test_type_print_array_expr(void);
+Status test_decl_print_uninit_atomic(void);
+Status test_decl_print_uninit_array(void);
+Status test_decl_print_uninit_array_nest(void);
+Status test_decl_print_uninit_function(void);
+Status test_decl_print_init_atomic(void);
+Status test_decl_print_init_array(void);
+Status test_decl_print_init_array_nest(void);
+Status test_decl_print_init_function(void);
 
 /*
   test function preamables:
@@ -75,7 +83,15 @@ int main(int argc, const char* argv[]) {
     test_param_list_print_multiple,
     test_param_list_print_single_nest,
     test_type_print_function_param_list,
-    test_type_print_array_expr
+    test_type_print_array_expr,
+    test_decl_print_uninit_atomic,
+    test_decl_print_uninit_array,
+    test_decl_print_uninit_array_nest,
+    test_decl_print_uninit_function,
+    test_decl_print_init_atomic,
+    test_decl_print_init_array,
+    test_decl_print_init_array_nest,
+    test_decl_print_init_function
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -113,7 +129,7 @@ Status test_expr_print_str(void) {
   strcpy(test_type, "Testing: test_expr_print_str");
   Status status = SUCCESS;
   struct expr* e = expr_create_string_literal("hello world!:)\n");
-  char* expect = "hello world!:)\n";
+  char* expect = "\"hello world!:)\n\"";
 
 
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
@@ -147,7 +163,7 @@ Status test_expr_print_ch(void) {
   Status status = SUCCESS;
 
   struct expr* e = expr_create_char_literal('a');
-  char* expect = "a";
+  char* expect = "'a'";
 
 
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
@@ -216,7 +232,7 @@ Status test_expr_print_op(void) {
 Status test_type_print_atomic(void) {
   strcpy(test_type, "Testing: test_type_print_atomic");
   Status status = SUCCESS;
-  char* expect ="voidbooleancharintegerstring";
+  char* expect ="voidbooleancharintegerstringauto";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (type_t kind = TYPE_VOID; kind < TYPE_ARRAY; kind++) {
     struct type* t = type_create(kind, NULL, NULL, NULL);
@@ -360,6 +376,133 @@ Status test_type_print_array_expr(void) {
   char* expect = "array [3^1] array [3 * 3 / 3] boolean";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   type_fprint(tmp, t);
+  tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
+  fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  return status;
+}
+
+Status test_decl_print_uninit_atomic(void) {
+  strcpy(test_type, "Testing: test_decl_print_uninit_atomic");
+  Status status = SUCCESS;
+  char* expect ="x: boolean;\nx: char;\nx: integer;\nx: string;\nx: auto;\n";
+  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  for (type_t kind = TYPE_BOOLEAN; kind < TYPE_ARRAY; kind++) {
+    struct type* t = type_create(kind, NULL, NULL, NULL);
+    struct decl* d = decl_create("x", t, NULL, NULL, NULL);
+    decl_fprint(tmp, d, 0);
+  }
+  tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
+  fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  return status;
+}
+
+Status test_decl_print_uninit_array(void) {
+  strcpy(test_type, "Testing: test_decl_print_uninit_array");
+  Status status = SUCCESS;
+
+  struct expr* two = expr_create_integer_literal(2);
+  struct type* t = type_create(TYPE_ARRAY, type_create(TYPE_BOOLEAN, NULL, NULL, NULL), NULL, two);
+  struct decl* d = decl_create("x", t, NULL, NULL, NULL);
+  char* expect = "x: array [2] boolean;\n";
+
+  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  decl_fprint(tmp, d, 0);
+  tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
+  fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  return status;
+}
+
+Status test_decl_print_uninit_array_nest(void) {
+  strcpy(test_type, "Testing: test_decl_print_uninit_array_nest");
+  Status status = SUCCESS;
+  struct expr* three = expr_create_integer_literal(3);
+  struct type* subtype = type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, three);
+  struct type* t = type_create(TYPE_ARRAY, subtype, NULL, three);
+  struct decl* d = decl_create("x", t, NULL, NULL, NULL);
+  char* expect = "x: array [3] array [3] integer;\n";
+
+  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  decl_fprint(tmp, d, 0);
+  tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
+  fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  return status;
+}
+
+Status test_decl_print_uninit_function(void) {
+  strcpy(test_type, "Testing: test_decl_print_uninit_function");
+  Status status = SUCCESS;
+
+  struct type* tend = type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, NULL);
+  struct param_list* pend = param_list_create("argv", tend, NULL);
+  struct param_list* p = param_list_create("argc", type_create(TYPE_INTEGER, NULL, NULL, NULL), pend);
+  struct type* t = type_create(TYPE_FUNCTION, type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL);
+  struct decl* d = decl_create("main", t, NULL, NULL, NULL);
+
+  char* expect = "main: function integer (argc: integer, argv: array [] string);\n";
+  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  decl_fprint(tmp, d, 0);
+  tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
+  fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  return status;
+}
+
+Status test_decl_print_init_atomic(void) {
+  strcpy(test_type, "Testing: test_decl_print_init_atomic");
+  Status status = SUCCESS;
+
+  struct expr* inits[5] = { expr_create_boolean_literal(1),
+			    expr_create_char_literal('a'),
+			    expr_create_integer_literal(493),
+			    expr_create_string_literal("string"),
+			    expr_create_integer_literal(-493) // how would auto be done? it nullifies dummy value and makes it again?
+			   };
+
+  char* expect ="x: boolean = true;\nx: char = 'a';\nx: integer = 493;\nx: string = \"string\";\nx: auto = -493;\n";
+  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  for (type_t kind = TYPE_BOOLEAN, i = 0; kind < TYPE_ARRAY; kind++, i++) {
+    struct type* t = type_create(kind, NULL, NULL, NULL);
+    struct decl* d = decl_create("x", t, inits[i], NULL, NULL);
+    decl_fprint(tmp, d, 0);
+  }
+  tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
+  fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  return status;
+}
+
+
+// TO DO: implement
+Status test_decl_print_init_array(void) {
+  strcpy(test_type, "Testing: test_decl_print_init_array");
+  Status status = FAILURE;
+  return status;
+}
+
+// TO DO: implement
+Status test_decl_print_init_array_nest(void) {
+  strcpy(test_type, "Testing: test_decl_print_init_array_nest");
+  Status status = FAILURE;
+  return status;
+}
+
+Status test_decl_print_init_function(void) {
+  strcpy(test_type, "Testing: test_decl_print_init_function");
+  Status status = SUCCESS;
+  struct type* tend = type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, NULL);
+  struct param_list* pend = param_list_create("argv", tend, NULL);
+  struct param_list* p = param_list_create("argc", type_create(TYPE_INTEGER, NULL, NULL, NULL), pend);
+  struct type* t = type_create(TYPE_FUNCTION, type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL);
+  struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL,NULL, NULL, NULL);
+  struct decl* d = decl_create("main", t, NULL, s, NULL);
+
+  char* expect = "main: function integer (argc: integer, argv: array [] string) = {\n  \n}\n";
+  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  decl_fprint(tmp, d, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }

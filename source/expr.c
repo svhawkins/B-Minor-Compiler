@@ -64,9 +64,9 @@ void expr_fprint(FILE* fp, struct expr* e) {
   switch(e->kind) {
     // primitives
     case EXPR_NAME: fprintf(fp, "%s", e->name); break;
-    case EXPR_CH: fprintf(fp, "%c", e->literal_value); break;
+    case EXPR_CH: fprintf(fp, "'%c'", e->literal_value); break;
     case EXPR_BOOL: fprintf(fp, "%s", (e->literal_value) ? "true" : "false"); break;
-    case EXPR_STR: fprintf(fp, "%s", e->string_literal); break;
+    case EXPR_STR: fprintf(fp, "\"%s\"", e->string_literal); break;
     case EXPR_INT: fprintf(fp, "%d", e->literal_value); break;
 
     // operators: unary, binary, also different types of associativity make for different placement of parentheses

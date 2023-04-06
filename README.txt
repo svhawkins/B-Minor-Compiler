@@ -25,11 +25,15 @@ uses new main.c
 
 
 added grammar rule for auto keyword in type declarations
+
+unary negation and binary subtraction are two seperate operations for ast purposes
+unary plus and binary addition are two seperate operations for ast purposes
+
 *************
 features:
 driver function has -t option (eventually)
 
-all _print functions have new function struct_fprint, that prints to a given file stream:
+all <struct>_print functions have new function <struct>_fprint, that prints to a given file stream:
 
 void expr_fprint(FILE* fp, struct expr* e);
 void type_fprint(FILE* fp, struct type* t);
@@ -37,7 +41,8 @@ void param_list_fprint(FILE* fp, struct param_list* p);
 void decl_fprint(FILE* fp, struct decl* d, int indent);
 void stmt_fprint(FILE* fp, struc stmt* s, int ident);
 
-the original _print function from the starter code is just a wrapper to this function, using stdout as the stream:
+the original <struct>_print function from the starter code is just a special case of this function, where
+the file pointer is stdout (just like how printf(...) is just fprintf(stdout, ...))
 
 ex) expr_print:
 void expr_print(struct expr* e) { expr_fprint(stdout, e); }
@@ -68,3 +73,28 @@ any problems/difficulties:
 	array [3] array [30 - 2] integer, the associated sizes remain with their subtypes.
 
 	this also means type_create gets an updated signature.
+
+4. current have no idea how to print out array initializations. i may have to change the grammar and parser tests to accommodate trying to fix this.
+have an expression type for listing/grouping (fcalls may use the same list thing)
+they have a COMMA as an operator.
+bison may be able to make it correctly. which branch has what is associativity dependent.
+
+may have to make additional tests for:
+expr_print (list fcalls)
+type_print (subscript with fcall as argument)
+decl_print (array initializations, fcalls as expressions)
+stmt_print (STMT_DECL case, multiple decls/exprs in for-loop, expr list in print/return)
+
+tests that are overdue:
+
+parser
+1. auto declaration
+2. auto initialization
+3. return type of function
+4. parameter type of function
+5. return type of array of function
+6. parameter type of array of function
+
+
+5. how do i implement auto expressions? do i just assume it is some kind of literal thing? 
+   is this something for the type checker assignment?
