@@ -29,6 +29,7 @@ Status test_expr_print_ch(void);
 Status test_expr_print_bool_true(void);
 Status test_expr_print_bool_false(void);
 Status test_expr_print_op(void);
+Status test_expr_print_fcall_list(void);
 
 /*
  type printing tests:
@@ -140,6 +141,7 @@ int main(int argc, const char* argv[]) {
     test_expr_print_bool_true,
     test_expr_print_bool_false,
     test_expr_print_op,
+    test_expr_print_fcall_list,
     test_type_print_atomic,
     test_type_print_array,
     test_type_print_array_nest,
@@ -305,7 +307,7 @@ Status test_expr_print_op(void) {
   struct expr* l = expr_create_name("x");
   struct expr* r = expr_create_name("y");
 
-  char* expect = "x++\nx--\n+x\n-x\n!x\nx^y\nx * y\nx / y\nx % y\nx + y\nx - y\nx <= y\nx < y\nx >= y\nx > y\nx == y\nx != y\nx && y\nx || y\nx = y\nx[y]\nx(y)\n";
+  char* expect = "x++\nx--\n+x\n-x\n!x\nx^y\nx * y\nx / y\nx % y\nx + y\nx - y\nx <= y\nx < y\nx >= y\nx > y\nx == y\nx != y\nx && y\nx || y\nx = y\nx, y\nx[y]\nx(y)\n";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (expr_t kind = EXPR_INC; kind <= EXPR_FCALL; kind++) {
     struct expr* e = (kind < EXPR_EXP) ? expr_create(kind, l, NULL) : expr_create(kind, l, r);
@@ -313,6 +315,22 @@ Status test_expr_print_op(void) {
   }
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  return status;
+}
+Status test_expr_print_fcall_list(void) {
+  strcpy(test_type, "Testing: test_expr_print_fcall_list");
+  Status status = SUCCESS;
+
+  struct expr* e = expr_create(EXPR_FCALL, expr_create_name("duck"), expr_create(EXPR_COMMA, expr_create_name("duck"), expr_create_name("goose")));
+  char* expect = "duck(duck, goose)";
+
+
+  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  expr_fprint(tmp, e);
+  tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
+  fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
   return status;
 }
@@ -676,10 +694,18 @@ Status test_stmt_print_print_expr(void) {
   return status;
 }
 
-// TO DO: implement expression lists to test this
 Status test_stmt_print_print_list(void) {
   strcpy(test_type, "Testing: test_stmt_print_print_list");
-  Status status = FAILURE;
+  Status status = SUCCESS;
+  struct expr* e = expr_create(EXPR_COMMA, expr_create_name("duck"), expr_create(EXPR_COMMA, expr_create_name("duck"), expr_create_name("goose")));
+  struct stmt* s = stmt_create(STMT_PRINT, NULL, NULL, e, NULL, NULL, NULL, NULL);
+  char* expect = "print duck, duck, goose;\n";
+
+  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  stmt_fprint(tmp, s, 0);
+  tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
+  fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
   return status;
 }
 

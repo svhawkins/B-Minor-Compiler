@@ -1,7 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "expr.h"
 
+// helper functions
+bool expr_is_primitive(expr_t kind) { return (kind >= EXPR_NAME && kind <= EXPR_INT); }
+bool expr_is_unary(expr_t kind) { return (kind >= EXPR_INC && kind <= EXPR_NOT); }
+bool expr_is_binary(expr_t kind) { return (kind >= EXPR_EXP && kind <= EXPR_COMMA); }
+// excludes subscript [] and fcall () since those have right subtree within operator.
 
 struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right )
 {
@@ -95,6 +101,7 @@ void expr_fprint(FILE* fp, struct expr* e) {
     case EXPR_AND: expr_fprint(fp, e->left); fprintf(fp, " && "); expr_fprint(fp, e->right); break;
     case EXPR_OR: expr_fprint(fp, e->left); fprintf(fp, " || "); expr_fprint(fp, e->right); break;
     case EXPR_ASSIGN: expr_fprint(fp, e->left); fprintf(fp, " = "); expr_fprint(fp, e->right); break;
+    case EXPR_COMMA: expr_fprint(fp, e->left); fprintf(fp, ", "); expr_fprint(fp, e->right); break;
 
     // also binary operators
     case EXPR_SUBSCRIPT: expr_fprint(fp, e->left); fprintf(fp, "["); expr_fprint(fp, e->right); fprintf(fp, "]"); break;

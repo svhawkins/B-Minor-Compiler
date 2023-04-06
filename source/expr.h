@@ -4,12 +4,14 @@
 #include "symbol.h"
 
 typedef enum {
-        // binary operators same as the tokens
+        // unary operators
 	EXPR_INC = 0,
 	EXPR_DEC,
 	EXPR_POS,
 	EXPR_NEG,
 	EXPR_NOT,
+
+	// binary operators
         EXPR_EXP,
         EXPR_MULT,
         EXPR_DIV,
@@ -25,6 +27,7 @@ typedef enum {
         EXPR_AND,
         EXPR_OR,
         EXPR_ASSIGN,
+	EXPR_COMMA,
 
         // operators with stuff in the middle
         EXPR_SUBSCRIPT,
