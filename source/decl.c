@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "decl.h"
 
+extern void print_indent(FILE* fp, int indent);
 const char* SPACE = "  ";
 struct decl* decl_create(char* name, struct type* type, struct expr* value, struct stmt* code, struct decl* next)
 {
@@ -21,9 +22,7 @@ struct decl* decl_create(char* name, struct type* type, struct expr* value, stru
 void init_fprint(FILE* fp, struct decl* d, struct type* t) {}
 void decl_fprint(FILE* fp, struct decl* d, int indent) {
   if (!d) return;
-
-  // print indentation
-  for (int i = 0; i < indent; i++) fprintf(fp, "%s", SPACE);
+  print_indent(fp, indent);
 
   // name : type
   fprintf(fp, "%s: ", d->name); type_fprint(fp, d->type);
@@ -31,15 +30,19 @@ void decl_fprint(FILE* fp, struct decl* d, int indent) {
   // init or uninit?
   switch(d->type->kind) {
   case TYPE_FUNCTION:
-    if (d->code) { fprintf(fp, " = "); stmt_fprint(fp, d->code, indent++); break; }
-    else fprintf(fp, ";\n");
+    if (d->code) {
+      fprintf(fp, " = {\n");
+      stmt_fprint(fp, d->code, indent+1);
+      print_indent(fp, indent); fprintf(fp, "}\n");
+    }
+    else fprintf(fp, ";"); if (d->next) { fprintf(fp, "\n"); }
     break;
   default:
     if (d->value) {
       fprintf(fp, " = ");
       if (d->type->kind != TYPE_ARRAY) expr_fprint(fp, d->value);
     }
-    fprintf(fp, ";\n");
+    fprintf(fp, ";"); if (d->next) { fprintf(fp, "\n"); }
     break;
   }
   decl_fprint(fp, d->next, indent);

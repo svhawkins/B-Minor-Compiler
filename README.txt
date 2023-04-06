@@ -1,5 +1,5 @@
 
-today
+04.05.
 [09:53-10:05] - make test_print, test_factory execs, update makefile + test
 [11:00-11:30]
 	update readme
@@ -9,6 +9,9 @@ today
 [12:06-13:52]
 [14:51-18:15]
 [20:40-00:45]
+
+04.06.
+[19:50-00:56]
 
 current problems:
 1. ast structures do not have proper destroy() functions
@@ -106,3 +109,31 @@ parser
    is this something for the type checker assignment?
 
 6. while statements are implemented
+
+
+TO DO:
+
+- pretty print parentheses in expressions for associativity
+  affected tests:
+	test_expr_print_op
+	test_type_print_array_expr
+	test_stmt_print_decl
+	test_stmt_print_expr
+	test_stmt_print_print_expr
+	test_stmt_print_print_list
+	test_stmt_print_return_expr
+	test_stmt_print_for_expr
+	test_stmt_print_for_init
+
+- implement comma as an operator to allow for lists to be able to do:
+  1. proper array initialization
+  2. argument list for function call
+  3. printing a list of expressions
+
+  affected tests:
+	test_decl_print_init_array
+	test_decl_print_init_array_nest
+	test_stm_print_print_list
+
+	additionally (later) test(s) to add:
+	test_expr_print_fcall_list

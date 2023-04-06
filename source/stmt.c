@@ -24,32 +24,80 @@ struct stmt* stmt_create(stmt_t kind, struct decl* decl,
 void print_indent(FILE* fp, int indent) { for (int i = 0; i < indent; i++) fprintf(fp, "%s", SPACE); }
 void stmt_fprint(FILE* fp, struct stmt* s, int indent) {
   if (!s) return;
-  print_indent(fp, indent);
-
+  print_indent(fp, indent); // ^ indents are only printed if there is a statement to be printed!
   // types of statements
   switch(s->kind) {
-    case STMT_DECL: decl_fprint(fp, s->decl, indent); break;
-    case STMT_EXPR: expr_fprint(fp, s->expr); fprintf(fp, ";\n"); break;
-    case STMT_IF_ELSE: fprintf(fp, "if ("); expr_fprint(fp, s->expr); fprintf(fp, ")");
-		       fprintf(fp, "\n"); stmt_fprint(fp, s->body, indent + 1);
-		       if (s->else_body) { fprintf(fp, "else \n"); stmt_fprint(fp, s->else_body, indent++); }
+
+    // decl remains unchanged, no additional indentation.
+    case STMT_DECL: decl_fprint(fp, s->decl, 0); break;
+
+    // expr;
+    case STMT_EXPR: expr_fprint(fp, s->expr); fprintf(fp, ";"); break;
+
+   /* if (expr) {
+        body
+      } else {
+	else_body
+      }
+   */
+    case STMT_IF_ELSE: fprintf(fp, "if ("); expr_fprint(fp, s->expr); fprintf(fp, ") {\n");
+		       stmt_fprint(fp, s->body, indent+1);
+		       print_indent(fp, indent); fprintf(fp, "}");
+                       if (s->else_body) {
+		         fprintf(fp, " else {\n"); stmt_fprint(fp, s->else_body, indent+1);
+			 print_indent(fp, indent); fprintf(fp, "}");
+		       }
 		       break;
+
+    /*
+      for (init_expr; expr; next_expr) {
+        body
+      }
+      **if init_expr is empty and decl is empty, print a space instead.
+      **if init_expr is empty and decl is not empty, print a decl instead (no indentation). decls dont need the semicolon.
+   */
     case STMT_FOR: fprintf(fp, "for (");
-		   // init expr can be decl
-		   if (s->init_expr) { expr_fprint(fp, s->init_expr);} fprintf(fp, "; ");
-		   //else if (s->decl) { decl_fprint(fp,
-		   if (s->expr) { expr_fprint(fp, s->expr); } fprintf(fp, "; ");
-		   if (s->next_expr) { expr_fprint(fp, s->next_expr); }
-		   fprintf(fp, ")\n"); stmt_fprint(fp, s->body, indent++);
+		   if (!s->init_expr && !s->decl) { fprintf(fp, " ;"); }
+		   else if (!s->init_expr && s->decl) { decl_fprint(fp, s->decl, 0); }
+		   else if (s->init_expr) { expr_fprint(fp, s->init_expr); fprintf(fp, ";"); }
+		   fprintf(fp, " ");
+		   expr_fprint(fp, s->expr); fprintf(fp, "; "); // ; expr;
+		   expr_fprint(fp, s->next_expr); fprintf(fp, ") {\n"); // ; next_expr)
+		   stmt_fprint(fp, s->body, indent+1); // { body }
+		   print_indent(fp, indent); fprintf(fp, "}");
 		   break;
-    case STMT_PRINT: fprintf(fp, "print "); expr_fprint(fp, s->expr); fprintf(fp, ";\n"); break;
-    case STMT_RETURN: fprintf(fp, "return "); expr_fprint(fp, s->expr); fprintf(fp, ";\n"); break;
-    case STMT_BLOCK: fprintf(fp, "{\n"); stmt_fprint(fp, s->body, indent++);
-		     print_indent(fp, indent); fprintf(fp, "\n}\n"); break;
-    case STMT_WHILE: fprintf(fp, "while ("); expr_fprint(fp, s->expr); fprintf(fp, ")");
-		     fprintf(fp, "\n"); stmt_fprint(fp, s->body, indent++);
+
+    // print; print expr; print expr, expr;
+    case STMT_PRINT: fprintf(fp, "print"); if (s->expr) fprintf(fp, " ");
+		     expr_fprint(fp, s->expr); fprintf(fp, ";");
+		     break;
+
+    // return; return expr; return expr, expr;
+    case STMT_RETURN: fprintf(fp, "return"); if (s->expr) fprintf(fp, " ");
+		      expr_fprint(fp, s->expr); fprintf(fp, ";");
+		      break;
+    /*
+    {
+      body
+    }
+
+    {}
+    */
+    case STMT_BLOCK: fprintf(fp, "{");
+		     if (s->body) { fprintf(fp, "\n"); stmt_fprint(fp, s->body, indent+1); }
+		     print_indent(fp, indent); fprintf(fp, "}");
+		     break;
+    /*
+     while (expr) {
+       body;
+     }
+    */
+    case STMT_WHILE: fprintf(fp, "while ("); expr_fprint(fp, s->expr); fprintf(fp, ") {\n");
+		     stmt_fprint(fp, s->body, indent+1);
+		     print_indent(fp, indent); fprintf(fp, "}");
 		     break;
   }
+  fprintf(fp, "\n");
   stmt_fprint(fp, s->next, indent);
 }
 void stmt_print(struct stmt* s, int indent) { stmt_fprint(stdout, s, indent); }
