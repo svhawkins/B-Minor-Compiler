@@ -18,8 +18,6 @@ struct decl* decl_create(char* name, struct type* type, struct expr* value, stru
 }
 
 
-// have helper function to print out array initializations
-void init_fprint(FILE* fp, struct decl* d, struct type* t) {}
 void decl_fprint(FILE* fp, struct decl* d, int indent) {
   if (!d) return;
   print_indent(fp, indent);
@@ -40,7 +38,7 @@ void decl_fprint(FILE* fp, struct decl* d, int indent) {
   default:
     if (d->value) {
       fprintf(fp, " = ");
-      if (d->type->kind != TYPE_ARRAY) expr_fprint(fp, d->value);
+      expr_fprint(fp, d->value);
     }
     fprintf(fp, ";"); if (d->next) { fprintf(fp, "\n"); }
     break;

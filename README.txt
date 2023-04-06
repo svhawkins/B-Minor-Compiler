@@ -18,6 +18,7 @@ current problems:
 
 *********************************************
 main.c for parse was renamed to parse.c
+make [test_all] renamed to make [tests]
 
 there are 3 test executables for ast testing
 
@@ -29,7 +30,7 @@ test_ast tests the ast from bison, which integrates the factory and print functi
 
 the factory and print function tests had the structures manually created per test.
 
-new exec: ast? pretty_print? print? -> PRINT
+new exec: print
 uses new main.c
 
 
@@ -37,6 +38,10 @@ added grammar rule for auto keyword in type declarations
 
 unary negation and binary subtraction are two seperate operations for ast purposes
 unary plus and binary addition are two seperate operations for ast purposes
+
+added additional expression kinds:
+expr_comma for expression lists
+expr_init for initialization lists
 
 *************
 features:
@@ -83,17 +88,6 @@ any problems/difficulties:
 
 	this also means type_create gets an updated signature.
 
-4. current have no idea how to print out array initializations. i may have to change the grammar and parser tests to accommodate trying to fix this.
-have an expression type for listing/grouping (fcalls may use the same list thing)
-they have a COMMA as an operator.
-bison may be able to make it correctly. which branch has what is associativity dependent.
-
-may have to make additional tests for:
-expr_print (list fcalls)
-type_print (subscript with fcall as argument)
-decl_print (array initializations, fcalls as expressions)
-stmt_print (STMT_DECL case, multiple decls/exprs in for-loop, expr list in print/return)
-
 tests that are overdue:
 
 parser
@@ -125,15 +119,3 @@ TO DO:
 	test_stmt_print_for_expr
 	test_stmt_print_for_init
 
-- implement comma as an operator to allow for lists to be able to do:
-  1. proper array initialization
-  2. argument list for function call
-  3. printing a list of expressions
-
-  affected tests:
-	test_decl_print_init_array
-	test_decl_print_init_array_nest
-	test_stm_print_print_list
-
-	additionally (later) test(s) to add:
-	test_expr_print_fcall_list

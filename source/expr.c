@@ -8,6 +8,7 @@ bool expr_is_primitive(expr_t kind) { return (kind >= EXPR_NAME && kind <= EXPR_
 bool expr_is_unary(expr_t kind) { return (kind >= EXPR_INC && kind <= EXPR_NOT); }
 bool expr_is_binary(expr_t kind) { return (kind >= EXPR_EXP && kind <= EXPR_COMMA); }
 // excludes subscript [] and fcall () since those have right subtree within operator.
+bool expr_is_wrap(expr_t kind) { return (kind >= EXPR_SUBSCRIPT && kind <= EXPR_INIT); }
 
 struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right )
 {
@@ -103,9 +104,10 @@ void expr_fprint(FILE* fp, struct expr* e) {
     case EXPR_ASSIGN: expr_fprint(fp, e->left); fprintf(fp, " = "); expr_fprint(fp, e->right); break;
     case EXPR_COMMA: expr_fprint(fp, e->left); fprintf(fp, ", "); expr_fprint(fp, e->right); break;
 
-    // also binary operators
+    // wrap operators
     case EXPR_SUBSCRIPT: expr_fprint(fp, e->left); fprintf(fp, "["); expr_fprint(fp, e->right); fprintf(fp, "]"); break;
     case EXPR_FCALL: expr_fprint(fp, e->left); fprintf(fp, "("); expr_fprint(fp, e->right); fprintf(fp, ")"); break;
+    case EXPR_INIT: fprintf(fp, "{"); expr_fprint(fp, e->left); fprintf(fp, "}"); break;
 
   }
 }

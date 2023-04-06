@@ -5,33 +5,34 @@
 
 typedef enum {
         // unary operators
-	EXPR_INC = 0,
-	EXPR_DEC,
-	EXPR_POS,
-	EXPR_NEG,
-	EXPR_NOT,
+	EXPR_INC = 0, // l++
+	EXPR_DEC,// l--
+	EXPR_POS, // +l
+	EXPR_NEG, // -l
+	EXPR_NOT, // !l
 
 	// binary operators
-        EXPR_EXP,
-        EXPR_MULT,
-        EXPR_DIV,
-        EXPR_MOD,
-        EXPR_ADD,
-	EXPR_SUB,
-        EXPR_LEQ,
-        EXPR_LESS,
-        EXPR_GEQ,
-        EXPR_GREAT,
-        EXPR_EQ,
-        EXPR_NEQ,
-        EXPR_AND,
-        EXPR_OR,
-        EXPR_ASSIGN,
-	EXPR_COMMA,
+        EXPR_EXP, // l^r
+        EXPR_MULT, // l*r
+        EXPR_DIV, // l/r
+        EXPR_MOD, // l%r
+        EXPR_ADD, // l+r
+	EXPR_SUB, // l-r
+        EXPR_LEQ, // l<=r
+        EXPR_LESS, // l<r
+        EXPR_GEQ, // l>=r
+        EXPR_GREAT, // l>r
+        EXPR_EQ, // l==r
+        EXPR_NEQ, // l!=r
+        EXPR_AND, // l &&r
+        EXPR_OR, // l || r
+        EXPR_ASSIGN, // l = r
+	EXPR_COMMA, // l, r
 
         // operators with stuff in the middle
-        EXPR_SUBSCRIPT,
-        EXPR_FCALL,
+        EXPR_SUBSCRIPT, // l[r]
+        EXPR_FCALL, // l(r)
+	EXPR_INIT, // {l}
 
         // primitives
         EXPR_NAME,
