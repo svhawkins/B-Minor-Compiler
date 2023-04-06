@@ -30,13 +30,25 @@ void stmt_fprint(FILE* fp, struct stmt* s, int indent) {
   switch(s->kind) {
     case STMT_DECL: decl_fprint(fp, s->decl, indent); break;
     case STMT_EXPR: expr_fprint(fp, s->expr); fprintf(fp, ";\n"); break;
-    case STMT_IF_ELSE: break;
-    case STMT_FOR: break;
-    case STMT_PRINT: break;
-    case STMT_RETURN: break;
+    case STMT_IF_ELSE: fprintf(fp, "if ("); expr_fprint(fp, s->expr); fprintf(fp, ")");
+		       fprintf(fp, "\n"); stmt_fprint(fp, s->body, indent + 1);
+		       if (s->else_body) { fprintf(fp, "else \n"); stmt_fprint(fp, s->else_body, indent++); }
+		       break;
+    case STMT_FOR: fprintf(fp, "for (");
+		   // init expr can be decl
+		   if (s->init_expr) { expr_fprint(fp, s->init_expr);} fprintf(fp, "; ");
+		   //else if (s->decl) { decl_fprint(fp,
+		   if (s->expr) { expr_fprint(fp, s->expr); } fprintf(fp, "; ");
+		   if (s->next_expr) { expr_fprint(fp, s->next_expr); }
+		   fprintf(fp, ")\n"); stmt_fprint(fp, s->body, indent++);
+		   break;
+    case STMT_PRINT: fprintf(fp, "print "); expr_fprint(fp, s->expr); fprintf(fp, ";\n"); break;
+    case STMT_RETURN: fprintf(fp, "return "); expr_fprint(fp, s->expr); fprintf(fp, ";\n"); break;
     case STMT_BLOCK: fprintf(fp, "{\n"); stmt_fprint(fp, s->body, indent++);
 		     print_indent(fp, indent); fprintf(fp, "\n}\n"); break;
-    case STMT_WHILE: break;
+    case STMT_WHILE: fprintf(fp, "while ("); expr_fprint(fp, s->expr); fprintf(fp, ")");
+		     fprintf(fp, "\n"); stmt_fprint(fp, s->body, indent++);
+		     break;
   }
   stmt_fprint(fp, s->next, indent);
 }

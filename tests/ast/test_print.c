@@ -43,6 +43,24 @@ Status test_decl_print_init_atomic(void);
 Status test_decl_print_init_array(void);
 Status test_decl_print_init_array_nest(void);
 Status test_decl_print_init_function(void);
+Status test_decl_print_multiple(void);
+Status test_stmt_print_decl(void);
+Status test_stmt_print_expr(void);
+Status test_stmt_print_print_null(void);
+Status test_stmt_print_return_null(void);
+Status test_stmt_print_block_null(void);
+Status test_stmt_print_block_single(void);
+Status test_stmt_print_block_multiple(void);
+Status test_stmt_print_if_null(void);
+Status test_stmt_print_if_else_null(void);
+Status test_stmt_print_for_null(void);
+Status test_stmt_print_while_null(void);
+Status test_stmt_print_if(void);
+Status test_stmt_print_if_else(void);
+Status test_stmt_print_for(void);
+Status test_stmt_print_while(void);
+Status test_stmt_print_multiple(void);
+Status test_decl_print_program(void);
 
 /*
   test function preamables:
@@ -91,7 +109,25 @@ int main(int argc, const char* argv[]) {
     test_decl_print_init_atomic,
     test_decl_print_init_array,
     test_decl_print_init_array_nest,
-    test_decl_print_init_function
+    test_decl_print_init_function,
+    test_decl_print_multiple,
+    test_stmt_print_decl,
+    test_stmt_print_expr,
+    test_stmt_print_print_null,
+    test_stmt_print_return_null,
+    test_stmt_print_block_null,
+    test_stmt_print_block_single,
+    test_stmt_print_block_multiple,
+    test_stmt_print_if_null,
+    test_stmt_print_if_else_null,
+    test_stmt_print_for_null,
+    test_stmt_print_while_null,
+    test_stmt_print_if,
+    test_stmt_print_if_else,
+    test_stmt_print_for,
+    test_stmt_print_while,
+    test_stmt_print_multiple,
+    test_decl_print_program
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -508,3 +544,113 @@ Status test_decl_print_init_function(void) {
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
   return status;
 }
+
+Status test_decl_print_multiple(void) {
+  strcpy(test_type, "Testing: test_decl_print_multiple");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_decl(void) {
+  strcpy(test_type, "Testing: test_stmt_print_decl");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_expr(void) {
+  strcpy(test_type, "Testing: test_stmt_print_expr");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_print_null(void) {
+  strcpy(test_type, "Testing: test_stmt_print_print_null");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_return_null(void) {
+  strcpy(test_type, "Testing: test_stmt_print_return_null");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_block_null(void) {
+  strcpy(test_type, "Testing: test_stmt_print_block_null");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_block_single(void) {
+  strcpy(test_type, "Testing: test_stmt_print_block_single");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_block_multiple(void) {
+  strcpy(test_type, "Testing: test_stmt_print_block_multiple");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_if_null(void) {
+  strcpy(test_type, "Testing: test_stmt_print_if_null");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_if_else_null(void) {
+  strcpy(test_type, "Testing: test_stmt_print_if_else_null");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_for_null(void) {
+  strcpy(test_type, "Testing: test_stmt_print_for_null");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_while_null(void) {
+  strcpy(test_type, "Testing: test_stmt_print_while_null");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_if(void) {
+  strcpy(test_type, "Testing: test_stmt_print_if");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_if_else(void) {
+  strcpy(test_type, "Testing: test_stmt_print_if_else");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_for(void) {
+  strcpy(test_type, "Testing: test_stmt_print_for");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_while(void) {
+  strcpy(test_type, "Testing: test_stmt_print_while");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_stmt_print_multiple(void) {
+  strcpy(test_type, "Testing: test_stmt_print_multiple");
+  Status status = SUCCESS;
+  return status;
+}
+
+Status test_decl_print_program(void) {
+  strcpy(test_type, "Testing: test_decl_print_program");
+  Status status = SUCCESS;
+  return status;
+}
+
+

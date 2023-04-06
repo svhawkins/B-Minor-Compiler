@@ -1,8 +1,14 @@
+
+today
 [09:53-10:05] - make test_print, test_factory execs, update makefile + test
 [11:00-11:30]
 	update readme
 	added driver code for assignment
         renamed main.c
+
+[12:06-13:52]
+[14:51-18:15]
+[20:40-00:45]
 
 current problems:
 1. ast structures do not have proper destroy() functions
@@ -98,3 +104,5 @@ parser
 
 5. how do i implement auto expressions? do i just assume it is some kind of literal thing? 
    is this something for the type checker assignment?
+
+6. while statements are implemented
