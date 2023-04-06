@@ -9,7 +9,7 @@ struct type* type_create(type_t kind, struct type* subtype, struct param_list* p
     t->kind = kind;
     t->subtype = subtype;
     t->params = NULL;
-    t->size = NULL;
+    t->size = size;
 
     // only function declarations have parameter lists
     if (t->kind == TYPE_FUNCTION) t->params = params;

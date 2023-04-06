@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <unistd.h>
 #include "../../source/decl.h"
 #include "../../source/expr.h"
 #include "../../source/param_list.h"
@@ -11,9 +10,6 @@
 #include "../../source/type.h"
 #define MAX_BUFFER 256
 
-extern FILE* yyin;
-extern void yyrestart();
-extern int yyparse();
 typedef enum {FAILURE = 0, SUCCESS = 1} Status;
 char test_type[MAX_BUFFER];
 char output[MAX_BUFFER];
@@ -37,6 +33,8 @@ Status test_type_print_function_nest(void);
 Status test_param_list_print_single(void);
 Status test_param_list_print_multiple(void);
 Status test_param_list_print_single_nest(void);
+Status test_type_print_function_param_list(void);
+Status test_type_print_array_expr(void);
 
 /*
   test function preamables:
@@ -76,6 +74,8 @@ int main(int argc, const char* argv[]) {
     test_param_list_print_single,
     test_param_list_print_multiple,
     test_param_list_print_single_nest,
+    test_type_print_function_param_list,
+    test_type_print_array_expr
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -321,6 +321,45 @@ Status test_param_list_print_single_nest(void) {
   char* expect = "x: array [] integer";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   param_list_fprint(tmp, p);
+  tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
+  fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  return status;
+}
+
+Status test_type_print_function_param_list(void) {
+  strcpy(test_type, "Testing: test_type_print_function_param_list");
+  Status status = SUCCESS;
+
+  struct type* tend = type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, NULL);
+  struct param_list* pend = param_list_create("argv", tend, NULL);
+  struct param_list* p = param_list_create("argc", type_create(TYPE_INTEGER, NULL, NULL, NULL), pend);
+  struct type* t = type_create(TYPE_FUNCTION, type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL);
+
+  char* expect = "function integer (argc: integer, argv: array [] string)";
+  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  type_fprint(tmp, t);
+  tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
+  fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  return status;
+}
+
+
+// TO DO: may have to update expected output to handle associativity
+Status test_type_print_array_expr(void) {
+  strcpy(test_type, "Testing: test_type_print_array_expr");
+  Status status = SUCCESS;
+
+  struct expr* three = expr_create_integer_literal(3);
+  struct expr* dim1 = expr_create(EXPR_EXP, three, expr_create_integer_literal(1));
+  struct expr* dim2 = expr_create(EXPR_DIV, expr_create(EXPR_MULT, three, three), three);
+  struct type* subtype = type_create(TYPE_ARRAY, type_create(TYPE_BOOLEAN, NULL, NULL, NULL), NULL, dim2);
+  struct type* t = type_create(TYPE_ARRAY, subtype, NULL, dim1);
+
+  char* expect = "array [3^1] array [3 * 3 / 3] boolean";
+  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  type_fprint(tmp, t);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }

@@ -10,9 +10,6 @@
 #include "../../source/type.h"
 #define MAX_BUFFER 256
 
-extern FILE* yyin;
-extern void yyrestart();
-extern int yyparse();
 typedef enum {FAILURE = 0, SUCCESS = 1} Status;
 char test_type[MAX_BUFFER];
 
