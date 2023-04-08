@@ -1,18 +1,6 @@
 
-04.05.
-[09:53-10:05] - make test_print, test_factory execs, update makefile + test
-[11:00-11:30]
-	update readme
-	added driver code for assignment
-        renamed main.c
 
-[12:06-13:52]
-[14:51-18:15]
-[20:40-00:45]
-
-04.06.
-[19:50-00:56]
-
+******************************************
 current problems:
 1. ast structures do not have proper destroy() functions
 
@@ -28,13 +16,18 @@ test_print tests print functions
 test_ast tests the ast from bison, which integrates the factory and print functions
 
 
-the factory and print function tests had the structures manually created per test.
+the factory and print function tests had the structures manually created per test in test_print and test_factory
 
 new exec: print
 uses new main.c
+	print is more or less the same program as parse, except that it stops reading (valid) input once there is EOF/^D.
+        it then prints out what was inputted, prettily!
+
+	if there was invalid input, then no input is printed. just error messages like before.
 
 
 added grammar rule for auto keyword in type declarations
+made exponent grammar rule be right associative instead of left associative
 
 unary negation and binary subtraction are two seperate operations for ast purposes
 unary plus and binary addition are two seperate operations for ast purposes
@@ -65,17 +58,14 @@ This feature was added in order to test the print functions prior to bison integ
 output could be saved somewhere.
 (i tried this with a pipe, but it wouldn't work).
 
+
+
 *** 
 any problems/difficulties:
 
 1. nothing so far. some might arise with the bison ast integration.
 
-2. currently expr_print does not have the 'prettiest' printing, but it prints accurately according to associativity.
-   there are too many parentheses.
-   this is not a huge problem (just may hinder readability really), but not a big priority to have a PRETTY PRETTY PRINTER right now.
-
-
-3. struct type now has additional field to hold its size when in declarations:
+2. struct type now has additional field to hold its size when in declarations:
 	struct type {
 		int kind;
 		struct type* subtype;
@@ -106,16 +96,4 @@ parser
 
 
 TO DO:
-
-- pretty print parentheses in expressions for associativity
-  affected tests:
-	test_expr_print_op
-	test_type_print_array_expr
-	test_stmt_print_decl
-	test_stmt_print_expr
-	test_stmt_print_print_expr
-	test_stmt_print_print_list
-	test_stmt_print_return_expr
-	test_stmt_print_for_expr
-	test_stmt_print_for_init
-
+integrate ast structures and printing with bison grammar
