@@ -84,7 +84,7 @@ Grammar
    49            | TOKEN_LPAR expr TOKEN_RPAR
 
    50 subscript_list: subscript
-   51               | subscript_list subscript
+   51               | subscript subscript_list
 
    52 subscript: TOKEN_LBRACK assign_expr TOKEN_RBRACK
 
@@ -114,7 +114,7 @@ Grammar
    71          | mult_expr TOKEN_MOD exp_expr
 
    72 exp_expr: unary_expr
-   73         | exp_expr TOKEN_EXP unary_expr
+   73         | unary_expr TOKEN_EXP exp_expr
 
    74 select_stmt: TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt
    75            | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt
@@ -912,8 +912,10 @@ State 37
 
    28 assign_expr: unary_expr . TOKEN_ASSIGN assign_expr
    72 exp_expr: unary_expr .
+   73         | unary_expr . TOKEN_EXP exp_expr
 
-    TOKEN_ASSIGN  shift, and go to state 94
+    TOKEN_EXP     shift, and go to state 94
+    TOKEN_ASSIGN  shift, and go to state 95
 
     $default  reduce using rule 72 (exp_expr)
 
@@ -925,9 +927,9 @@ State 38
    35             | postfix_expr . TOKEN_INC
    36             | postfix_expr . TOKEN_DEC
 
-    TOKEN_INC   shift, and go to state 95
-    TOKEN_DEC   shift, and go to state 96
-    TOKEN_LPAR  shift, and go to state 97
+    TOKEN_INC   shift, and go to state 96
+    TOKEN_DEC   shift, and go to state 97
+    TOKEN_LPAR  shift, and go to state 98
 
     $default  reduce using rule 29 (unary_expr)
 
@@ -958,7 +960,7 @@ State 42
    27 assign_expr: lor_expr .
    54 lor_expr: lor_expr . TOKEN_OR land_expr
 
-    TOKEN_OR  shift, and go to state 98
+    TOKEN_OR  shift, and go to state 99
 
     $default  reduce using rule 27 (assign_expr)
 
@@ -968,7 +970,7 @@ State 43
    53 lor_expr: land_expr .
    56 land_expr: land_expr . TOKEN_AND eq_expr
 
-    TOKEN_AND  shift, and go to state 99
+    TOKEN_AND  shift, and go to state 100
 
     $default  reduce using rule 53 (lor_expr)
 
@@ -979,8 +981,8 @@ State 44
    58 eq_expr: eq_expr . TOKEN_EQ rel_expr
    59        | eq_expr . TOKEN_NEQ rel_expr
 
-    TOKEN_EQ   shift, and go to state 100
-    TOKEN_NEQ  shift, and go to state 101
+    TOKEN_EQ   shift, and go to state 101
+    TOKEN_NEQ  shift, and go to state 102
 
     $default  reduce using rule 55 (land_expr)
 
@@ -993,10 +995,10 @@ State 45
    63         | rel_expr . TOKEN_LEQ add_expr
    64         | rel_expr . TOKEN_GEQ add_expr
 
-    TOKEN_LEQ    shift, and go to state 102
-    TOKEN_LESS   shift, and go to state 103
-    TOKEN_GEQ    shift, and go to state 104
-    TOKEN_GREAT  shift, and go to state 105
+    TOKEN_LEQ    shift, and go to state 103
+    TOKEN_LESS   shift, and go to state 104
+    TOKEN_GEQ    shift, and go to state 105
+    TOKEN_GREAT  shift, and go to state 106
 
     $default  reduce using rule 57 (eq_expr)
 
@@ -1007,8 +1009,8 @@ State 46
    66 add_expr: add_expr . TOKEN_ADD mult_expr
    67         | add_expr . TOKEN_SUB mult_expr
 
-    TOKEN_SUB  shift, and go to state 106
-    TOKEN_ADD  shift, and go to state 107
+    TOKEN_SUB  shift, and go to state 107
+    TOKEN_ADD  shift, and go to state 108
 
     $default  reduce using rule 60 (rel_expr)
 
@@ -1020,9 +1022,9 @@ State 47
    70          | mult_expr . TOKEN_DIV exp_expr
    71          | mult_expr . TOKEN_MOD exp_expr
 
-    TOKEN_MULT  shift, and go to state 108
-    TOKEN_DIV   shift, and go to state 109
-    TOKEN_MOD   shift, and go to state 110
+    TOKEN_MULT  shift, and go to state 109
+    TOKEN_DIV   shift, and go to state 110
+    TOKEN_MOD   shift, and go to state 111
 
     $default  reduce using rule 65 (add_expr)
 
@@ -1030,9 +1032,6 @@ State 47
 State 48
 
    68 mult_expr: exp_expr .
-   73 exp_expr: exp_expr . TOKEN_EXP unary_expr
-
-    TOKEN_EXP  shift, and go to state 111
 
     $default  reduce using rule 68 (mult_expr)
 
@@ -1563,20 +1562,21 @@ State 89
 State 90
 
    46 suffix: subscript_list .
-   51 subscript_list: subscript_list . subscript
-
-    TOKEN_LBRACK  shift, and go to state 86
 
     $default  reduce using rule 46 (suffix)
-
-    subscript  go to state 138
 
 
 State 91
 
    50 subscript_list: subscript .
+   51               | subscript . subscript_list
+
+    TOKEN_LBRACK  shift, and go to state 86
 
     $default  reduce using rule 50 (subscript_list)
+
+    subscript_list  go to state 138
+    subscript       go to state 91
 
 
 State 92
@@ -1618,6 +1618,29 @@ State 93
 
 State 94
 
+   73 exp_expr: unary_expr TOKEN_EXP . exp_expr
+
+    TOKEN_IDENT   shift, and go to state 2
+    TOKEN_BOOL    shift, and go to state 20
+    TOKEN_NUMBER  shift, and go to state 21
+    TOKEN_STR     shift, and go to state 22
+    TOKEN_CH      shift, and go to state 23
+    TOKEN_SUB     shift, and go to state 24
+    TOKEN_NOT     shift, and go to state 25
+    TOKEN_ADD     shift, and go to state 26
+    TOKEN_LPAR    shift, and go to state 27
+
+    name          go to state 70
+    unary_expr    go to state 140
+    postfix_expr  go to state 38
+    primary_expr  go to state 39
+    primitive     go to state 40
+    lvalue        go to state 41
+    exp_expr      go to state 141
+
+
+State 95
+
    28 assign_expr: unary_expr TOKEN_ASSIGN . assign_expr
 
     TOKEN_IDENT   shift, and go to state 2
@@ -1631,7 +1654,7 @@ State 94
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    assign_expr   go to state 140
+    assign_expr   go to state 142
     unary_expr    go to state 37
     postfix_expr  go to state 38
     primary_expr  go to state 39
@@ -1646,21 +1669,21 @@ State 94
     exp_expr      go to state 48
 
 
-State 95
+State 96
 
    35 postfix_expr: postfix_expr TOKEN_INC .
 
     $default  reduce using rule 35 (postfix_expr)
 
 
-State 96
+State 97
 
    36 postfix_expr: postfix_expr TOKEN_DEC .
 
     $default  reduce using rule 36 (postfix_expr)
 
 
-State 97
+State 98
 
    34 postfix_expr: postfix_expr TOKEN_LPAR . expr TOKEN_RPAR
 
@@ -1675,7 +1698,7 @@ State 97
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    expr          go to state 141
+    expr          go to state 143
     assign_expr   go to state 36
     unary_expr    go to state 37
     postfix_expr  go to state 38
@@ -1691,7 +1714,7 @@ State 97
     exp_expr      go to state 48
 
 
-State 98
+State 99
 
    54 lor_expr: lor_expr TOKEN_OR . land_expr
 
@@ -1706,12 +1729,12 @@ State 98
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    land_expr     go to state 143
+    land_expr     go to state 144
     eq_expr       go to state 44
     rel_expr      go to state 45
     add_expr      go to state 46
@@ -1719,7 +1742,7 @@ State 98
     exp_expr      go to state 48
 
 
-State 99
+State 100
 
    56 land_expr: land_expr TOKEN_AND . eq_expr
 
@@ -1734,19 +1757,19 @@ State 99
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    eq_expr       go to state 144
+    eq_expr       go to state 145
     rel_expr      go to state 45
     add_expr      go to state 46
     mult_expr     go to state 47
     exp_expr      go to state 48
 
 
-State 100
+State 101
 
    58 eq_expr: eq_expr TOKEN_EQ . rel_expr
 
@@ -1761,18 +1784,18 @@ State 100
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    rel_expr      go to state 145
+    rel_expr      go to state 146
     add_expr      go to state 46
     mult_expr     go to state 47
     exp_expr      go to state 48
 
 
-State 101
+State 102
 
    59 eq_expr: eq_expr TOKEN_NEQ . rel_expr
 
@@ -1787,18 +1810,18 @@ State 101
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    rel_expr      go to state 146
+    rel_expr      go to state 147
     add_expr      go to state 46
     mult_expr     go to state 47
     exp_expr      go to state 48
 
 
-State 102
+State 103
 
    63 rel_expr: rel_expr TOKEN_LEQ . add_expr
 
@@ -1813,17 +1836,17 @@ State 102
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    add_expr      go to state 147
+    add_expr      go to state 148
     mult_expr     go to state 47
     exp_expr      go to state 48
 
 
-State 103
+State 104
 
    61 rel_expr: rel_expr TOKEN_LESS . add_expr
 
@@ -1838,17 +1861,17 @@ State 103
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    add_expr      go to state 148
+    add_expr      go to state 149
     mult_expr     go to state 47
     exp_expr      go to state 48
 
 
-State 104
+State 105
 
    64 rel_expr: rel_expr TOKEN_GEQ . add_expr
 
@@ -1863,17 +1886,17 @@ State 104
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    add_expr      go to state 149
+    add_expr      go to state 150
     mult_expr     go to state 47
     exp_expr      go to state 48
 
 
-State 105
+State 106
 
    62 rel_expr: rel_expr TOKEN_GREAT . add_expr
 
@@ -1888,17 +1911,17 @@ State 105
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    add_expr      go to state 150
+    add_expr      go to state 151
     mult_expr     go to state 47
     exp_expr      go to state 48
 
 
-State 106
+State 107
 
    67 add_expr: add_expr TOKEN_SUB . mult_expr
 
@@ -1913,16 +1936,16 @@ State 106
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    mult_expr     go to state 151
+    mult_expr     go to state 152
     exp_expr      go to state 48
 
 
-State 107
+State 108
 
    66 add_expr: add_expr TOKEN_ADD . mult_expr
 
@@ -1937,16 +1960,16 @@ State 107
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    mult_expr     go to state 152
+    mult_expr     go to state 153
     exp_expr      go to state 48
 
 
-State 108
+State 109
 
    69 mult_expr: mult_expr TOKEN_MULT . exp_expr
 
@@ -1961,15 +1984,15 @@ State 108
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    exp_expr      go to state 153
+    exp_expr      go to state 154
 
 
-State 109
+State 110
 
    70 mult_expr: mult_expr TOKEN_DIV . exp_expr
 
@@ -1984,15 +2007,15 @@ State 109
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    exp_expr      go to state 154
+    exp_expr      go to state 155
 
 
-State 110
+State 111
 
    71 mult_expr: mult_expr TOKEN_MOD . exp_expr
 
@@ -2007,34 +2030,12 @@ State 110
     TOKEN_LPAR    shift, and go to state 27
 
     name          go to state 70
-    unary_expr    go to state 142
+    unary_expr    go to state 140
     postfix_expr  go to state 38
     primary_expr  go to state 39
     primitive     go to state 40
     lvalue        go to state 41
-    exp_expr      go to state 155
-
-
-State 111
-
-   73 exp_expr: exp_expr TOKEN_EXP . unary_expr
-
-    TOKEN_IDENT   shift, and go to state 2
-    TOKEN_BOOL    shift, and go to state 20
-    TOKEN_NUMBER  shift, and go to state 21
-    TOKEN_STR     shift, and go to state 22
-    TOKEN_CH      shift, and go to state 23
-    TOKEN_SUB     shift, and go to state 24
-    TOKEN_NOT     shift, and go to state 25
-    TOKEN_ADD     shift, and go to state 26
-    TOKEN_LPAR    shift, and go to state 27
-
-    name          go to state 70
-    unary_expr    go to state 156
-    postfix_expr  go to state 38
-    primary_expr  go to state 39
-    primitive     go to state 40
-    lvalue        go to state 41
+    exp_expr      go to state 156
 
 
 State 112
@@ -2400,7 +2401,7 @@ State 137
 
 State 138
 
-   51 subscript_list: subscript_list subscript .
+   51 subscript_list: subscript subscript_list .
 
     $default  reduce using rule 51 (subscript_list)
 
@@ -2414,12 +2415,29 @@ State 139
 
 State 140
 
+   72 exp_expr: unary_expr .
+   73         | unary_expr . TOKEN_EXP exp_expr
+
+    TOKEN_EXP  shift, and go to state 94
+
+    $default  reduce using rule 72 (exp_expr)
+
+
+State 141
+
+   73 exp_expr: unary_expr TOKEN_EXP exp_expr .
+
+    $default  reduce using rule 73 (exp_expr)
+
+
+State 142
+
    28 assign_expr: unary_expr TOKEN_ASSIGN assign_expr .
 
     $default  reduce using rule 28 (assign_expr)
 
 
-State 141
+State 143
 
    26 expr: expr . TOKEN_COMMA assign_expr
    34 postfix_expr: postfix_expr TOKEN_LPAR expr . TOKEN_RPAR
@@ -2428,36 +2446,29 @@ State 141
     TOKEN_COMMA  shift, and go to state 93
 
 
-State 142
-
-   72 exp_expr: unary_expr .
-
-    $default  reduce using rule 72 (exp_expr)
-
-
-State 143
+State 144
 
    54 lor_expr: lor_expr TOKEN_OR land_expr .
    56 land_expr: land_expr . TOKEN_AND eq_expr
 
-    TOKEN_AND  shift, and go to state 99
+    TOKEN_AND  shift, and go to state 100
 
     $default  reduce using rule 54 (lor_expr)
 
 
-State 144
+State 145
 
    56 land_expr: land_expr TOKEN_AND eq_expr .
    58 eq_expr: eq_expr . TOKEN_EQ rel_expr
    59        | eq_expr . TOKEN_NEQ rel_expr
 
-    TOKEN_EQ   shift, and go to state 100
-    TOKEN_NEQ  shift, and go to state 101
+    TOKEN_EQ   shift, and go to state 101
+    TOKEN_NEQ  shift, and go to state 102
 
     $default  reduce using rule 56 (land_expr)
 
 
-State 145
+State 146
 
    58 eq_expr: eq_expr TOKEN_EQ rel_expr .
    61 rel_expr: rel_expr . TOKEN_LESS add_expr
@@ -2465,15 +2476,15 @@ State 145
    63         | rel_expr . TOKEN_LEQ add_expr
    64         | rel_expr . TOKEN_GEQ add_expr
 
-    TOKEN_LEQ    shift, and go to state 102
-    TOKEN_LESS   shift, and go to state 103
-    TOKEN_GEQ    shift, and go to state 104
-    TOKEN_GREAT  shift, and go to state 105
+    TOKEN_LEQ    shift, and go to state 103
+    TOKEN_LESS   shift, and go to state 104
+    TOKEN_GEQ    shift, and go to state 105
+    TOKEN_GREAT  shift, and go to state 106
 
     $default  reduce using rule 58 (eq_expr)
 
 
-State 146
+State 147
 
    59 eq_expr: eq_expr TOKEN_NEQ rel_expr .
    61 rel_expr: rel_expr . TOKEN_LESS add_expr
@@ -2481,125 +2492,109 @@ State 146
    63         | rel_expr . TOKEN_LEQ add_expr
    64         | rel_expr . TOKEN_GEQ add_expr
 
-    TOKEN_LEQ    shift, and go to state 102
-    TOKEN_LESS   shift, and go to state 103
-    TOKEN_GEQ    shift, and go to state 104
-    TOKEN_GREAT  shift, and go to state 105
+    TOKEN_LEQ    shift, and go to state 103
+    TOKEN_LESS   shift, and go to state 104
+    TOKEN_GEQ    shift, and go to state 105
+    TOKEN_GREAT  shift, and go to state 106
 
     $default  reduce using rule 59 (eq_expr)
 
 
-State 147
+State 148
 
    63 rel_expr: rel_expr TOKEN_LEQ add_expr .
    66 add_expr: add_expr . TOKEN_ADD mult_expr
    67         | add_expr . TOKEN_SUB mult_expr
 
-    TOKEN_SUB  shift, and go to state 106
-    TOKEN_ADD  shift, and go to state 107
+    TOKEN_SUB  shift, and go to state 107
+    TOKEN_ADD  shift, and go to state 108
 
     $default  reduce using rule 63 (rel_expr)
 
 
-State 148
+State 149
 
    61 rel_expr: rel_expr TOKEN_LESS add_expr .
    66 add_expr: add_expr . TOKEN_ADD mult_expr
    67         | add_expr . TOKEN_SUB mult_expr
 
-    TOKEN_SUB  shift, and go to state 106
-    TOKEN_ADD  shift, and go to state 107
+    TOKEN_SUB  shift, and go to state 107
+    TOKEN_ADD  shift, and go to state 108
 
     $default  reduce using rule 61 (rel_expr)
 
 
-State 149
+State 150
 
    64 rel_expr: rel_expr TOKEN_GEQ add_expr .
    66 add_expr: add_expr . TOKEN_ADD mult_expr
    67         | add_expr . TOKEN_SUB mult_expr
 
-    TOKEN_SUB  shift, and go to state 106
-    TOKEN_ADD  shift, and go to state 107
+    TOKEN_SUB  shift, and go to state 107
+    TOKEN_ADD  shift, and go to state 108
 
     $default  reduce using rule 64 (rel_expr)
 
 
-State 150
+State 151
 
    62 rel_expr: rel_expr TOKEN_GREAT add_expr .
    66 add_expr: add_expr . TOKEN_ADD mult_expr
    67         | add_expr . TOKEN_SUB mult_expr
 
-    TOKEN_SUB  shift, and go to state 106
-    TOKEN_ADD  shift, and go to state 107
+    TOKEN_SUB  shift, and go to state 107
+    TOKEN_ADD  shift, and go to state 108
 
     $default  reduce using rule 62 (rel_expr)
 
 
-State 151
+State 152
 
    67 add_expr: add_expr TOKEN_SUB mult_expr .
    69 mult_expr: mult_expr . TOKEN_MULT exp_expr
    70          | mult_expr . TOKEN_DIV exp_expr
    71          | mult_expr . TOKEN_MOD exp_expr
 
-    TOKEN_MULT  shift, and go to state 108
-    TOKEN_DIV   shift, and go to state 109
-    TOKEN_MOD   shift, and go to state 110
+    TOKEN_MULT  shift, and go to state 109
+    TOKEN_DIV   shift, and go to state 110
+    TOKEN_MOD   shift, and go to state 111
 
     $default  reduce using rule 67 (add_expr)
 
 
-State 152
+State 153
 
    66 add_expr: add_expr TOKEN_ADD mult_expr .
    69 mult_expr: mult_expr . TOKEN_MULT exp_expr
    70          | mult_expr . TOKEN_DIV exp_expr
    71          | mult_expr . TOKEN_MOD exp_expr
 
-    TOKEN_MULT  shift, and go to state 108
-    TOKEN_DIV   shift, and go to state 109
-    TOKEN_MOD   shift, and go to state 110
+    TOKEN_MULT  shift, and go to state 109
+    TOKEN_DIV   shift, and go to state 110
+    TOKEN_MOD   shift, and go to state 111
 
     $default  reduce using rule 66 (add_expr)
 
 
-State 153
+State 154
 
    69 mult_expr: mult_expr TOKEN_MULT exp_expr .
-   73 exp_expr: exp_expr . TOKEN_EXP unary_expr
-
-    TOKEN_EXP  shift, and go to state 111
 
     $default  reduce using rule 69 (mult_expr)
 
 
-State 154
+State 155
 
    70 mult_expr: mult_expr TOKEN_DIV exp_expr .
-   73 exp_expr: exp_expr . TOKEN_EXP unary_expr
-
-    TOKEN_EXP  shift, and go to state 111
 
     $default  reduce using rule 70 (mult_expr)
 
 
-State 155
-
-   71 mult_expr: mult_expr TOKEN_MOD exp_expr .
-   73 exp_expr: exp_expr . TOKEN_EXP unary_expr
-
-    TOKEN_EXP  shift, and go to state 111
-
-    $default  reduce using rule 71 (mult_expr)
-
-
 State 156
 
-   73 exp_expr: exp_expr TOKEN_EXP unary_expr .
+   71 mult_expr: mult_expr TOKEN_MOD exp_expr .
 
-    $default  reduce using rule 73 (exp_expr)
+    $default  reduce using rule 71 (mult_expr)
 
 
 State 157

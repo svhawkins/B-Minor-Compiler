@@ -149,7 +149,7 @@ suffix : call_suffix | subscript_list | %empty ;
 call_suffix : TOKEN_LPAR TOKEN_RPAR | TOKEN_LPAR expr TOKEN_RPAR ;
 
 subscript_list : subscript
-	       | subscript_list subscript
+	       | subscript subscript_list
 	       ;
 
 subscript : TOKEN_LBRACK assign_expr TOKEN_RBRACK
@@ -187,7 +187,7 @@ mult_expr : exp_expr
 	  ;
 
 exp_expr : unary_expr
-	 | exp_expr TOKEN_EXP unary_expr
+	 | unary_expr TOKEN_EXP exp_expr
 	 ;
 
 select_stmt  : TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt

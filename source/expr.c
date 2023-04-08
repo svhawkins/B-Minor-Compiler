@@ -10,6 +10,13 @@ bool expr_is_binary(expr_t kind) { return (kind >= EXPR_EXP && kind <= EXPR_COMM
 // excludes subscript [] and fcall () since those have right subtree within operator.
 bool expr_is_wrap(expr_t kind) { return (kind >= EXPR_SUBSCRIPT && kind <= EXPR_INIT); }
 
+
+// adds parentheses to child expression if nonprimitive/wrap
+void expr_child_fprint(FILE* fp, struct expr* c) {
+  if (expr_is_primitive(c->kind) || expr_is_wrap(c->kind)) expr_fprint(fp, c);
+  else { fprintf(fp, "("); expr_fprint(fp, c); fprintf(fp, ")"); }
+}
+
 struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right )
 {
   struct expr* e = malloc(sizeof(*e));
@@ -80,27 +87,29 @@ void expr_fprint(FILE* fp, struct expr* e) {
     // TO DO: associativity testing
 
     // unary operators
-    case EXPR_INC: expr_fprint(fp, e->left); fprintf(fp, "++"); break;
-    case EXPR_DEC: expr_fprint(fp, e->left); fprintf(fp, "--"); break;
-    case EXPR_POS: fprintf(fp, "+"); expr_fprint(fp, e->left); break; // +45 is just 45.
-    case EXPR_NEG: fprintf(fp, "-"); expr_fprint(fp, e->left); break;
-    case EXPR_NOT: fprintf(fp, "!"); expr_fprint(fp, e->left); break;
+    case EXPR_INC: expr_child_fprint(fp, e->left); fprintf(fp, "++"); break;
+    case EXPR_DEC: expr_child_fprint(fp, e->left); fprintf(fp, "--"); break;
+    case EXPR_POS: fprintf(fp, "+"); expr_child_fprint(fp, e->left); break; // +45 is just 45.
+    case EXPR_NEG: fprintf(fp, "-"); expr_child_fprint(fp, e->left); break;
+    case EXPR_NOT: fprintf(fp, "!"); expr_child_fprint(fp, e->left); break;
 
     // binary operators
-    case EXPR_EXP: expr_fprint(fp, e->left); fprintf(fp, "^"); expr_fprint(fp, e->right); break;
-    case EXPR_MULT: expr_fprint(fp, e->left); fprintf(fp, " * "); expr_fprint(fp, e->right); break;
-    case EXPR_DIV: expr_fprint(fp, e->left); fprintf(fp, " / "); expr_fprint(fp, e->right); break;
-    case EXPR_MOD: expr_fprint(fp, e->left); fprintf(fp, " %% "); expr_fprint(fp, e->right); break;
-    case EXPR_ADD: expr_fprint(fp, e->left); fprintf(fp, " + "); expr_fprint(fp, e->right); break;
-    case EXPR_SUB: expr_fprint(fp, e->left); fprintf(fp, " - "); expr_fprint(fp, e->right); break;
-    case EXPR_LEQ: expr_fprint(fp, e->left); fprintf(fp, " <= "); expr_fprint(fp, e->right); break;
-    case EXPR_LESS: expr_fprint(fp, e->left); fprintf(fp, " < "); expr_fprint(fp, e->right); break;
-    case EXPR_GEQ: expr_fprint(fp, e->left); fprintf(fp, " >= "); expr_fprint(fp, e->right); break;
-    case EXPR_GREAT: expr_fprint(fp, e->left); fprintf(fp, " > "); expr_fprint(fp, e->right); break;
-    case EXPR_EQ: expr_fprint(fp, e->left); fprintf(fp, " == "); expr_fprint(fp, e->right); break;
-    case EXPR_NEQ: expr_fprint(fp, e->left); fprintf(fp, " != "); expr_fprint(fp, e->right); break;
-    case EXPR_AND: expr_fprint(fp, e->left); fprintf(fp, " && "); expr_fprint(fp, e->right); break;
-    case EXPR_OR: expr_fprint(fp, e->left); fprintf(fp, " || "); expr_fprint(fp, e->right); break;
+    case EXPR_EXP: expr_child_fprint(fp, e->left); fprintf(fp, "^"); expr_child_fprint(fp, e->right); break;
+    case EXPR_MULT: expr_child_fprint(fp, e->left); fprintf(fp, " * "); expr_child_fprint(fp, e->right); break;
+    case EXPR_DIV: expr_child_fprint(fp, e->left); fprintf(fp, " / "); expr_child_fprint(fp, e->right); break;
+    case EXPR_MOD: expr_child_fprint(fp, e->left); fprintf(fp, " %% "); expr_child_fprint(fp, e->right); break;
+    case EXPR_ADD: expr_child_fprint(fp, e->left); fprintf(fp, " + "); expr_child_fprint(fp, e->right); break;
+    case EXPR_SUB: expr_child_fprint(fp, e->left); fprintf(fp, " - "); expr_child_fprint(fp, e->right); break;
+    case EXPR_LEQ: expr_child_fprint(fp, e->left); fprintf(fp, " <= "); expr_child_fprint(fp, e->right); break;
+    case EXPR_LESS: expr_child_fprint(fp, e->left); fprintf(fp, " < "); expr_child_fprint(fp, e->right); break;
+    case EXPR_GEQ: expr_child_fprint(fp, e->left); fprintf(fp, " >= "); expr_child_fprint(fp, e->right); break;
+    case EXPR_GREAT: expr_child_fprint(fp, e->left); fprintf(fp, " > "); expr_child_fprint(fp, e->right); break;
+    case EXPR_EQ: expr_child_fprint(fp, e->left); fprintf(fp, " == "); expr_child_fprint(fp, e->right); break;
+    case EXPR_NEQ: expr_child_fprint(fp, e->left); fprintf(fp, " != "); expr_child_fprint(fp, e->right); break;
+    case EXPR_AND: expr_child_fprint(fp, e->left); fprintf(fp, " && "); expr_child_fprint(fp, e->right); break;
+    case EXPR_OR: expr_child_fprint(fp, e->left); fprintf(fp, " || "); expr_child_fprint(fp, e->right); break;
+
+    // FOR NOW NO PAREN
     case EXPR_ASSIGN: expr_fprint(fp, e->left); fprintf(fp, " = "); expr_fprint(fp, e->right); break;
     case EXPR_COMMA: expr_fprint(fp, e->left); fprintf(fp, ", "); expr_fprint(fp, e->right); break;
 
