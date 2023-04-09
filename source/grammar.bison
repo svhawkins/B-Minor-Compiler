@@ -2,6 +2,7 @@
   #include <stdio.h>
   #include <stdlib.h>
   #include <string.h>
+  #include <stdbool.h>
   #include "decl.h"
   #include "expr.h"
   #include "param_list.h"
@@ -14,11 +15,13 @@
   extern int yyerror(const char* str);
   char error_text[YYLMAX];
   unsigned char eof = 0;
+  bool bool_convert(char* s); /* converts given TOKEN_BOOL string to proper integer boolean value */
   void print_error_message(void);
-  struct decl * parser_result = NULL;
+  struct decl* parser_result = NULL;
 %}
 %define parse.error verbose
 
+/* tokens */
 %token TOKEN_ERROR
 %token TOKEN_EOF
 
@@ -71,6 +74,27 @@
 %token TOKEN_COLON
 %token TOKEN_SEMI
 %token TOKEN_COMMA
+
+/* semantic value types */
+%union {
+  struct decl* decl;
+  struct stmt* stmt;
+  struct type* type;
+  struct param_list* param_list;
+  struct expr* expr;
+  char* name;
+}
+
+/* semantic types of non-terminals
+ ** ERRORS WILL GO AWAY once actions are implemented.
+ do in this order:
+	expressions, name
+	types
+	parameter lists
+	declarations
+	statements
+*/
+//%type <expr> expr assign_expr unary_expr postfix_expr primary_expr primitive lvalue subscript_list subscript call_suffix lor_expr land_expr eq_expr rel_expr add_expr mult_expr exp_expr init init_list
 
 %%
 program : ext_decl { return 0; }
@@ -195,23 +219,19 @@ select_stmt  : TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt
 	     ;
 
 iter_stmt : TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt
-	  | TOKEN_FOR TOKEN_LPAR for TOKEN_RPAR stmt
-	  ;
-
-for : TOKEN_SEMI TOKEN_SEMI
-    | TOKEN_SEMI TOKEN_SEMI expr
-    | TOKEN_SEMI expr_stmt
-    | TOKEN_SEMI expr_stmt expr
-    | expr_stmt TOKEN_SEMI
-    | expr_stmt TOKEN_SEMI expr
-    | expr_stmt expr_stmt
-    | expr_stmt expr_stmt expr
-    | decl TOKEN_SEMI
-    | decl TOKEN_SEMI expr
-    | decl expr_stmt
-    | decl expr_stmt expr
-    ;
-
+          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI TOKEN_SEMI TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI TOKEN_SEMI expr TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI expr_stmt TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI expr_stmt expr TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR expr_stmt TOKEN_SEMI TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR expr_stmt TOKEN_SEMI expr TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR expr_stmt expr_stmt TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR expr_stmt expr_stmt expr TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR decl TOKEN_SEMI TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR decl TOKEN_SEMI expr TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR decl expr_stmt TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR decl expr_stmt expr TOKEN_RPAR stmt
+          ;
 
 jump_stmt : TOKEN_RETURN TOKEN_SEMI
 	  | TOKEN_RETURN expr TOKEN_SEMI
@@ -291,3 +311,6 @@ int yyerror(const char* str) {
 
 /* prints error messages that are NOT eof */
 void print_error_message(void) { fprintf(stderr, "%s\n", error_text); }
+
+
+bool bool_convert(char* s) { return (!strcmp(s, "true")); }

@@ -559,7 +559,7 @@ Status test_type_print_function(void) {
   Status status = SUCCESS;
   struct type* subtype = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct type* t = type_create(TYPE_FUNCTION, subtype, NULL, NULL);
-  char* expect = "function void ()";
+  char* expect = "function void (void)";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   type_fprint(tmp, t);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
@@ -573,7 +573,7 @@ Status test_type_print_function_nest(void) {
   Status status = SUCCESS;
   struct type* subtype = type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL);
   struct type* t = type_create(TYPE_FUNCTION, subtype, NULL, NULL);
-  char* expect = "function array [] integer ()";
+  char* expect = "function array [] integer (void)";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   type_fprint(tmp, t);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
