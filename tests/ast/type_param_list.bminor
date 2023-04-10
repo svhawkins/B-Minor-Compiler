@@ -1,0 +1,15 @@
+nothing:function void();
+nothing2:function void(void);
+something:     function      integer(	a: integer	);
+something2: function				integer(a:integer,b:integer,c:integer);
+main:function integer(argc:integer,argv:array[]string);
+linear_algebra:function void
+(tensor:array[]array[]array[]integer,
+ matrix:array[]array[]integer,
+ vector:array[]integer,
+ scalar:integer
+);
+tensor:function array[]array[]array[]integer();
+matrix:function        array[]array[]integer();
+vector:function		      array[]integer();
+scalar:function			     integer();

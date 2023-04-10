@@ -8,7 +8,7 @@
 #include "../../source/stmt.h"
 #include "../../source/symbol.h"
 #include "../../source/type.h"
-#define MAX_BUFFER 512
+#define MAX_BUFFER 2048
 
 extern FILE* yyin;
 extern void yyrestart();
@@ -37,12 +37,16 @@ Status test_expr_associativity(void);
 Status test_expr_precedence(void);
 Status test_expr_postfix_binary(void);
 
+// type and parameter list testing (as function declarations)
+Status test_type_param_list(void);
+
 int main(int argc, const char* argv[]) {
   Status (*tests[])(void) = {
     test_expr_vanilla,
     test_expr_associativity,
     test_expr_precedence,
-    test_expr_postfix_binary
+    test_expr_postfix_binary,
+    test_type_param_list
   };
 
   int n_tests = sizeof(tests)/sizeof(tests[0]);
@@ -153,6 +157,24 @@ Status test_expr_postfix_binary(void) {
   FILE* ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "x[i][j];\nx[i][j][k];\nf(x)(y);\nf(duck)(duck)(goose);\nf(a, b, c)(x, y, z)[i][j][k];\n";
   for(int i = 0; !eof; i++) if (yyparse() == 0) { stmt_fprint(ifp, test_parser_result, 0); test_parser_result = NULL; }
+  fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
+  fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  return status;
+}
+
+
+// integration test of both types and parameter_lists as uninitialized function declarations
+Status test_type_param_list(void) {
+  strcpy(test_type, "test_type_param_list");
+  char* filename = "./tests/ast/type_param_list.bminor";
+  Status status = SUCCESS;
+  yyrestart(yyin); yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
+  FILE* ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
+  char* expect = "nothing: function void (void);\nnothing2: function void (void);\nsomething: function integer (a: integer);\nsomething2: function integer (a: integer, b: integer, c: integer);\nmain: function integer (argc: integer, argv: array [] string);\nlinear_algebra: function void (tensor: array [] array [] array [] integer, matrix: array [] array [] integer, vector: array [] integer, scalar: integer);\ntensor: function array [] array [] array [] integer (void);\nmatrix: function array [] array [] integer (void);\nvector: function array [] integer (void);\nscalar: function integer (void);\n\n";
+  for(int i = 0; !eof; i++) if (yyparse() == 0) {
+    decl_fprint(ifp, parser_result, 0); fprintf(ifp, "\n"); parser_result = NULL;
+  }
   fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }

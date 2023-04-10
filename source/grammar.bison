@@ -280,7 +280,7 @@ params : param TOKEN_COMMA params
        | param { $$ = $1; }
        ;
 
-param : name TOKEN_COLON param_type { $$ = param_list_create(name_clean($1), $3, NULL); }
+param : name TOKEN_COLON param_type { $$ = param_list_create($1, $3, NULL); }
       ;
 
 param_type : type { $$ = $1; }
