@@ -38,7 +38,7 @@
 # define YY_YY_SOURCE_PARSER_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 0
+# define YYDEBUG 1
 #endif
 #if YYDEBUG
 extern int yydebug;
@@ -47,11 +47,10 @@ extern int yydebug;
 /* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
-  typedef enum yytokentype
+typedef enum yytokentype
   {
     TOKEN_ERROR = 258,
     TOKEN_EOF = 259,
-
     TOKEN_ARRAY = 260,
     TOKEN_AUTO = 261,
     TOKEN_BOOLEAN = 262,
@@ -66,13 +65,11 @@ extern int yydebug;
     TOKEN_STRING = 271,
     TOKEN_VOID = 272,
     TOKEN_WHILE = 273,
-
     TOKEN_IDENT = 274,
     TOKEN_BOOL = 275,
     TOKEN_NUMBER = 276,
     TOKEN_STR = 277,
     TOKEN_CH = 278,
-
     TOKEN_INC = 279,
     TOKEN_DEC = 280,
     TOKEN_SUB = 281,
@@ -91,7 +88,6 @@ extern int yydebug;
     TOKEN_AND = 294,
     TOKEN_OR = 295,
     TOKEN_ASSIGN = 296,
-
     TOKEN_LBRACK = 297,
     TOKEN_RBRACK = 298,
     TOKEN_LPAR = 299,
@@ -105,14 +101,9 @@ extern int yydebug;
 #endif
 
 /* Value type.  */
-#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
-# define YYSTYPE_IS_TRIVIAL 1
-# define YYSTYPE_IS_DECLARED 1
-#endif
 
 
-extern YYSTYPE yylval;
+//extern YYSTYPE yylval;
 
 int yyparse (void);
 

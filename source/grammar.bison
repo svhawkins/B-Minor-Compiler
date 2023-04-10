@@ -13,6 +13,7 @@
   extern char* yytext;
   extern int yylex();
   extern int yyerror(const char* str);
+
   char error_text[YYLMAX];
   unsigned char eof = 0;
   bool bool_convert(char* s); /* converts given TOKEN_BOOL string to proper integer boolean value */
@@ -77,12 +78,7 @@
 
 /* semantic value types */
 %union {
-  struct decl* decl;
-  struct stmt* stmt;
-  struct type* type;
-  struct param_list* param_list;
   struct expr* expr;
-  char* name;
 }
 
 /* semantic types of non-terminals
@@ -94,7 +90,7 @@
 	declarations
 	statements
 */
-//%type <expr> expr assign_expr unary_expr postfix_expr primary_expr primitive lvalue subscript_list subscript call_suffix lor_expr land_expr eq_expr rel_expr add_expr mult_expr exp_expr init init_list
+%type <expr> primitive
 
 %%
 program : ext_decl { return 0; }
@@ -166,11 +162,21 @@ primary_expr : primitive
 	     | lvalue
 	     ;
 
-primitive : TOKEN_BOOL | TOKEN_CH | TOKEN_NUMBER | TOKEN_STR ;
+primitive : TOKEN_BOOL
+	  | TOKEN_CH
+          | TOKEN_NUMBER
+	  | TOKEN_STR { $$ = expr_create_string_literal(yytext); printf("[%s]\n", $$->string_literal); }
+	  ;
 
 lvalue : name suffix ;
-suffix : call_suffix | subscript_list | %empty ;
-call_suffix : TOKEN_LPAR TOKEN_RPAR | TOKEN_LPAR expr TOKEN_RPAR ;
+suffix : call_suffix
+       | subscript_list
+       | %empty
+       ;
+
+call_suffix : TOKEN_LPAR TOKEN_RPAR
+            | TOKEN_LPAR expr TOKEN_RPAR
+            ;
 
 subscript_list : subscript
 	       | subscript subscript_list
