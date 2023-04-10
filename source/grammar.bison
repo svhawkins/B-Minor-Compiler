@@ -14,12 +14,15 @@
   extern char* yytext;
   extern int yylex();
   extern int yyerror(const char* str);
-  char clean_name[YYLMAX];
-
+  char* name_clean(char* s); // cleans yytext. 
   char error_text[YYLMAX];
   unsigned char eof = 0;
   bool bool_convert(char* s); /* converts given TOKEN_BOOL string to proper integer boolean value */
   void print_error_message(void);
+
+
+
+  // parser results
   struct stmt* test_parser_result = NULL; // for testing
   struct decl* parser_result = NULL;
   
@@ -91,7 +94,7 @@
   char* name;
 }
 %nterm <name> name
-%type <expr> primitive primary_expr subscript subscript_list expr postfix_expr unary_expr assign_expr lor_expr land_expr eq_expr rel_expr add_expr mult_expr exp_expr
+%type <expr> primitive primary_expr subscript expr postfix_expr unary_expr assign_expr lor_expr land_expr eq_expr rel_expr add_expr mult_expr exp_expr
 %type <stmt> expr_stmt stmt test_program program
 //%type <decl> ext_decl function_decl
 
@@ -161,23 +164,27 @@ postfix_expr : primary_expr { $$ = $1; }
 
 primary_expr : primitive { $$ = $1; }
 	     | TOKEN_LPAR expr TOKEN_RPAR { $$ = $2; }
-	     | name { $$ = expr_create_name($1); }
-	     | name TOKEN_LPAR TOKEN_RPAR  { $$ = expr_create(EXPR_FCALL, expr_create_name($1), NULL); }
-	     | name TOKEN_LPAR expr TOKEN_RPAR { $$ = expr_create(EXPR_FCALL, expr_create_name($1), $3); }
-	     | name subscript_list { $2->left = expr_create_name($1); $$ = $2; }
+	     | name TOKEN_LPAR TOKEN_RPAR  { $$ = expr_create(EXPR_FCALL, expr_create_name(name_clean($1)), NULL); }
+	     | name TOKEN_LPAR expr TOKEN_RPAR { $$ = expr_create(EXPR_FCALL, expr_create_name(name_clean($1)), $3); }
+	     | name { $$ = expr_create_name(name_clean($1)); }
+	     | name subscript { $2->left = expr_create_name(name_clean($1)); $$ = $2; }
+	     | name subscript subscript
+	       { $2->left = expr_create_name(name_clean($1)); $3->left = $2; $$ = $3; }
+	     | name subscript subscript subscript
+	       { $2->left = expr_create_name(name_clean($1)); $3->left = $2; $4->left = $3; $$ = $4; }
+	     | name subscript subscript subscript subscript
+	       { $2->left = expr_create_name(name_clean($1)); $3->left = $2; $4->left = $3; $5->left = $4; $$ = $5; }
+	     | name subscript subscript subscript subscript subscript
+	       { $2->left = expr_create_name(name_clean($1)); $3->left = $2; $4->left = $3; $5->left = $4; $6->left = $5; $$ = $6; }
 	     ;
+
+subscript : TOKEN_LBRACK assign_expr TOKEN_RBRACK { $$ = expr_create(EXPR_SUBSCRIPT, NULL, $2); }
+	  ;
 
 primitive : TOKEN_BOOL { $$ = expr_create_boolean_literal(bool_convert(yytext)); }
 	  | TOKEN_CH { $$ = expr_create_char_literal((char)atoi(yytext)); }
           | TOKEN_NUMBER { $$ = expr_create_integer_literal(atoi(yytext)); }
 	  | TOKEN_STR { $$ = expr_create_string_literal(yytext); }
-	  ;
-
-subscript_list : subscript { $$ = $1; }
-	       | subscript_list subscript { $$ = $1; $1->left = $2; }
-	       ;
-
-subscript : TOKEN_LBRACK assign_expr TOKEN_RBRACK { $$ = expr_create(EXPR_SUBSCRIPT, NULL, $2); }
 	  ;
 
 lor_expr : land_expr { $$ = $1; }
@@ -315,11 +322,12 @@ void print_error_message(void) { fprintf(stderr, "%s\n", error_text); }
 
 bool bool_convert(char* s) { return (!strcmp(s, "true")); }
 
-void name_clean(char* s) {
+char* name_clean(char* s) {
   int i, j; char new_str[strlen(s)];
   for (i = 0; isspace(s[i]); i++) {} // skip whitespace
   for (j = 0; isalnum(s[i]) || s[i] == '_'; i++, j++) new_str[j] = s[i];
   new_str[j] = '\0';
-  strcpy(clean_name, new_str);
+  strcpy(s, new_str);
+  return s;
 }
   

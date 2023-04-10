@@ -123,3 +123,7 @@ void expr_fprint(FILE* fp, struct expr* e) {
 }
 
 void expr_print(struct expr* e) { expr_fprint(stdout, e); }
+
+
+struct expr* expr_leaf_left(struct expr* e) { return (e->left) ? expr_leaf_left(e->left) : e; }
+struct expr* expr_leaf_right(struct expr* e) { return (e->right) ? expr_leaf_right(e->right) : e; }

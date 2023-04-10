@@ -10,6 +10,26 @@ current problems/bugs:
 
    x[i][j];[i][j];]; for x[i][j]
    with all the other literals it works PERFECTLY fine (very good actually), so I am not sure where it is going wrong.
+   I really don't understand. With MANUALLY created ast structures, this isn't a problem. So it's not the print
+   function, meaning it is bison. 
+   
+   Update: I managed to fix it a little bit, just had to 'clean' the value.
+
+3. subscript lists do not nest for arbitrary dimension
+   I was having problems figuring out the proper rules/format for the proper ast construction, so I
+   just applied a really bad band-aid fix where the first 5 dimensions are hard-coded. I can fix it later,
+   but it works for now (WHO is going to need a 5-dimensional array).
+
+   Luckily, hard-coding the dimensions follows a pattern:
+	1. The left branch of the next expression is the entirety of the previous expression.
+	2. The base case is $2, where its left subtree is NOT a subscript rule, but the name.
+	3. The resulting tree ($$) is the final subscript rule.
+
+	If I have time later I can make a better rule for this, but not right now.
+
+4. Function call lists are not yet supported.
+   Cannot do things like f(x)(y), but composition is possible: f(x(y))
+   Similar problems to what is described in (3).
 
 *********************************************
 main.c for parse was renamed to parse.c
