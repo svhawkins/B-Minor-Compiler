@@ -182,7 +182,7 @@ subscript : TOKEN_LBRACK assign_expr TOKEN_RBRACK { $$ = expr_create(EXPR_SUBSCR
 	  ;
 
 primitive : TOKEN_BOOL { $$ = expr_create_boolean_literal(bool_convert(yytext)); }
-	  | TOKEN_CH { $$ = expr_create_char_literal((char)atoi(yytext)); }
+	  | TOKEN_CH { $$ = expr_create_char_literal(yytext[0]); }
           | TOKEN_NUMBER { $$ = expr_create_integer_literal(atoi(yytext)); }
 	  | TOKEN_STR { $$ = expr_create_string_literal(yytext); }
 	  ;

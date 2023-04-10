@@ -30,6 +30,7 @@ current problems/bugs:
 4. Function call lists are not yet supported.
    Cannot do things like f(x)(y), but composition is possible: f(x(y))
    Similar problems to what is described in (3).
+   (because of this f(x)[i] doesn't quite yet work)
 
 *********************************************
 main.c for parse was renamed to parse.c
@@ -65,7 +66,7 @@ expr_init for initialization lists
 
 *************
 features:
-driver function has -t option (eventually)
+driver function has -t option just like in [parse], since this main program is just a continuation of the validator
 
 all <struct>_print functions have new function <struct>_fprint, that prints to a given file stream:
 
@@ -82,17 +83,14 @@ ex) expr_print:
 void expr_print(struct expr* e) { expr_fprint(stdout, e); }
 
 This feature was added in order to test the print functions prior to bison integration, so that the
-output could be saved somewhere.
-(i tried this with a pipe, but it wouldn't work).
+output could be saved somewhere (attempts were done with a pipe, but no avail/debugging I did not want to go through)
 
 
 
 *** 
 any problems/difficulties:
 
-1. nothing so far. some might arise with the bison ast integration.
-
-2. struct type now has additional field to hold its size when in declarations:
+1. struct type now has additional field to hold its size when in declarations:
 	struct type {
 		int kind;
 		struct type* subtype;
@@ -105,7 +103,7 @@ any problems/difficulties:
 
 	this also means type_create gets an updated signature.
 
-3. difficulty: integrating the semantic types with the parser
+2. difficulty: integrating the semantic types with the parser
    why it was difficult: I did NOT #include all the necessary files and LINK them with any executable/.c file
    that used the parser/semantic types after implementing and testing them.
    (that is, linker was yelling at me because test_parse executable had undefined references to factory
@@ -114,22 +112,4 @@ any problems/difficulties:
 
    several hours were wasted figuring it out :/.
 
-tests that are overdue:
-
-parser
-1. auto declaration
-2. auto initialization
-3. return type of function
-4. parameter type of function
-5. return type of array of function
-6. parameter type of array of function
-
-
-5. how do i implement auto expressions? do i just assume it is some kind of literal thing? 
-   is this something for the type checker assignment?
-
-6. while statements are implemented
-
-
-TO DO:
-integrate ast structures and printing with bison grammar
+3. while statements are implemented

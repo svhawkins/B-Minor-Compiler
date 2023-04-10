@@ -325,7 +325,7 @@ Status test_expr_print_op(void) {
   struct expr* l = expr_create_name("x");
   struct expr* r = expr_create_name("y");
 
-  char* expect = "x++\nx--\n+x\n-x\n!x\nx^y\nx * y\nx / y\nx % y\nx + y\nx - y\nx <= y\nx < y\nx >= y\nx > y\nx == y\nx != y\nx && y\nx || y\nx = y\nx, y\nx[y]\nx(y)\n{x}\n";
+  char* expect = "x++\nx--\nx\n-x\n!x\nx ^ y\nx * y\nx / y\nx % y\nx + y\nx - y\nx <= y\nx < y\nx >= y\nx > y\nx == y\nx != y\nx && y\nx || y\nx = y\nx, y\nx[y]\nx(y)\n{x}\n";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (expr_t kind = EXPR_INC; kind <= EXPR_INIT; kind++) {
     struct expr* e = (kind < EXPR_EXP || kind == EXPR_INIT) ? expr_create(kind, l, NULL) : expr_create(kind, l, r);
@@ -381,7 +381,7 @@ Status test_expr_print_op_right_assoc_unary(void) {
 
   struct expr* l = expr_create_name("foo");
 
-  char* expect = "+(+foo)\n-(-foo)\n!(!foo)\n";
+  char* expect = "foo\n-(-foo)\n!(!foo)\n";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (expr_t kind = EXPR_POS; kind <= EXPR_NOT; kind++) {
     struct expr* e = expr_create(kind, expr_create(kind, l, NULL), NULL);
@@ -396,7 +396,7 @@ Status test_expr_print_op_right_assoc_binary(void) {
   strcpy(test_type, "Testing: test_expr_print_op_right_assoc_binary");
   Status status = SUCCESS;
   struct expr* e = expr_create(EXPR_EXP, expr_create_name("duck"), expr_create(EXPR_EXP, expr_create_name("duck"), expr_create_name("goose")));
-  char* expect = "duck^(duck^goose)";
+  char* expect = "duck ^ (duck ^ goose)";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
@@ -654,7 +654,7 @@ Status test_type_print_array_expr(void) {
   struct type* subtype = type_create(TYPE_ARRAY, type_create(TYPE_BOOLEAN, NULL, NULL, NULL), NULL, dim2);
   struct type* t = type_create(TYPE_ARRAY, subtype, NULL, dim1);
 
-  char* expect = "array [3^1] array [(3 * 3) / 3] boolean";
+  char* expect = "array [3 ^ 1] array [(3 * 3) / 3] boolean";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   type_fprint(tmp, t);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }

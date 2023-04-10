@@ -1,0 +1,29 @@
+%% 493;
+%% 'q';
+%% "duck";
+%% true;
+%% foo;
+%% f++;
+%% f--;
+%% f(0);
+%% f[0];
+%% +1;
+%% -1;
+%% !true;
+%% 0^1;
+%% 0*1;
+%% 0/1;
+%% 0%1;
+%% 0+ 1; // a lack of a space assumes + with 1, making +1 instead of 0 + 1
+%% 0- 1; // a lack of a space assumes - with 1, making -1 instead 0 - 1
+%% 0<1;
+%% 0<=1;
+%% 0>1;
+%% 0>=1;
+%% 0==1;
+%% 0!=1;
+%% true&&false;
+%% true||false;
+%% f=0;
+%% 0,1;
+
