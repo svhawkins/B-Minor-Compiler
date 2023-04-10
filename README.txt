@@ -1,8 +1,15 @@
 
 
 ******************************************
-current problems:
+current problems/bugs:
 1. ast structures do not have proper destroy() functions
+
+2. name for expr_create_name is not being stored properly.
+   giving funny things like
+   x + y; + y; for x + y;
+
+   x[i][j];[i][j];]; for x[i][j]
+   with all the other literals it works PERFECTLY fine (very good actually), so I am not sure where it is going wrong.
 
 *********************************************
 main.c for parse was renamed to parse.c
@@ -77,6 +84,15 @@ any problems/difficulties:
 	array [3] array [30 - 2] integer, the associated sizes remain with their subtypes.
 
 	this also means type_create gets an updated signature.
+
+3. difficulty: integrating the semantic types with the parser
+   why it was difficult: I did NOT #include all the necessary files and LINK them with any executable/.c file
+   that used the parser/semantic types after implementing and testing them.
+   (that is, linker was yelling at me because test_parse executable had undefined references to factory
+    functions because it was now included in the grammar, which was not the case when the parser and its test
+    code was only a validator)
+
+   several hours were wasted figuring it out :/.
 
 tests that are overdue:
 

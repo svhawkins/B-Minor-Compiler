@@ -13,6 +13,7 @@ bool expr_is_wrap(expr_t kind) { return (kind >= EXPR_SUBSCRIPT && kind <= EXPR_
 
 // adds parentheses to child expression if nonprimitive/wrap
 void expr_child_fprint(FILE* fp, struct expr* c) {
+  if (!c) return;
   if (expr_is_primitive(c->kind) || expr_is_wrap(c->kind)) expr_fprint(fp, c);
   else { fprintf(fp, "("); expr_fprint(fp, c); fprintf(fp, ")"); }
 }
