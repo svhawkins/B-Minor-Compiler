@@ -1,0 +1,5 @@
+%% x[i][j];
+%% x[i][j][k];
+%% f(x)(y);
+%% f(duck)(duck)(goose);
+%% f(a,b,c)(x,y,z)[i][j][k];

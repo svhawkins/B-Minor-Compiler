@@ -27,4 +27,8 @@ struct type* type_create(type_t kind, struct type* subtype, struct param_list* p
 void type_fprint(FILE* fp, struct type* t);
 void type_print(struct type* t);
 
+
+// assigns the leaf subtype a subtype
+void type_subtype_leaf_assign(struct type* t, struct type* subtype);
+
 #endif

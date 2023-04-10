@@ -66,8 +66,7 @@ struct expr* expr_create_string_literal(const char* str);
 void expr_fprint(FILE* fp, struct expr* e);
 void expr_print(struct expr* e);
 
-// traversals
-struct expr* expr_leaf_left(struct expr* e);
-struct expr* expr_leaf_right(struct expr* e);
+// traversals for branch assignments
+void expr_left_leaf_assign(struct expr* e, struct expr* leaf);void expr_right_leaf_assign(struct expr* e, struct expr* leaf);
 
 #endif

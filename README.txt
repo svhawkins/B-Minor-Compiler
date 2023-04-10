@@ -14,6 +14,7 @@ current problems/bugs:
    function, meaning it is bison. 
    
    Update: I managed to fix it a little bit, just had to 'clean' the value.
+   I fixed it. Needed to use strdup.
 
 3. subscript lists do not nest for arbitrary dimension
    I was having problems figuring out the proper rules/format for the proper ast construction, so I
@@ -27,10 +28,14 @@ current problems/bugs:
 
 	If I have time later I can make a better rule for this, but not right now.
 
+   I fixed it. Made FCALL and SUBSCRIPT be postfix expressions in the grammar, more similar to C.
+
 4. Function call lists are not yet supported.
    Cannot do things like f(x)(y), but composition is possible: f(x(y))
    Similar problems to what is described in (3).
    (because of this f(x)[i] doesn't quite yet work)
+
+   This is fixed.
 
 *********************************************
 main.c for parse was renamed to parse.c
@@ -53,12 +58,16 @@ uses new main.c
 
 	if there was invalid input, then no input is printed. just error messages like before.
 
+	since my grammar has the inclusion of test_program as a valid program production, the parser result can
+	be either a statement or a declaration.
 
 added grammar rule for auto keyword in type declarations
 made exponent grammar rule be right associative instead of left associative
 
 unary negation and binary subtraction are two seperate operations for ast purposes
 unary plus and binary addition are two seperate operations for ast purposes
+subscripts and fcalls are now productions in postfix expr, much like how it is in the c grammar.
+(it also fixes a lot of bugs I had before, which is convenient :).
 
 added additional expression kinds:
 expr_comma for expression lists
@@ -86,6 +95,9 @@ This feature was added in order to test the print functions prior to bison integ
 output could be saved somewhere (attempts were done with a pipe, but no avail/debugging I did not want to go through)
 
 
+
+type also has an additional function: type_subtype_leaf_assign(struct type* t, struct type* subtype)
+which assigns a subtype to the LEAF of the type tree with t as the root of it. 
 
 *** 
 any problems/difficulties:

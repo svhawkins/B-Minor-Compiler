@@ -35,18 +35,14 @@ Status file_error(char* test_type, char* filename);
 Status test_expr_vanilla(void);
 Status test_expr_associativity(void);
 Status test_expr_precedence(void);
-Status test_expr_subscript_list(void);
-Status test_expr_fcall_list(void);
-Status test_expr_subscript_fcall(void);
+Status test_expr_postfix_binary(void);
 
 int main(int argc, const char* argv[]) {
   Status (*tests[])(void) = {
     test_expr_vanilla,
     test_expr_associativity,
     test_expr_precedence,
-    //test_expr_subscript_list,
-    //test_expr_fcall_list
-    //test_expr_subscript_fcall
+    test_expr_postfix_binary
   };
 
   int n_tests = sizeof(tests)/sizeof(tests[0]);
@@ -149,14 +145,16 @@ Status test_expr_precedence(void) {
   return status;
 }
 
-
-// TO DO: implement after subscript_list and fcall lists are implemented (instead of hardcoded)
-Status test_expr_subscript_list(void) {
-  return FAILURE;
-}
-Status test_expr_fcall_list(void) {
-  return FAILURE;
-}
-Status test_expr_subscript_fcall(void) {
-  return FAILURE;
+Status test_expr_postfix_binary(void) {
+  strcpy(test_type, "test_expr_postfix_binary");
+  char* filename = "./tests/ast/expr_postfix.bminor";
+  Status status = SUCCESS;
+  yyrestart(yyin); yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
+  FILE* ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
+  char* expect = "x[i][j];\nx[i][j][k];\nf(x)(y);\nf(duck)(duck)(goose);\nf(a, b, c)(x, y, z)[i][j][k];\n";
+  for(int i = 0; !eof; i++) if (yyparse() == 0) { stmt_fprint(ifp, test_parser_result, 0); test_parser_result = NULL; }
+  fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
+  fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  return status;
 }

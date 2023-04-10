@@ -38,3 +38,8 @@ void type_fprint(FILE* fp, struct type* t) {
   }
 }
 void type_print(struct type* t) { type_fprint(stdout, t); }
+
+void type_subtype_leaf_assign(struct type* t, struct type* subtype) {
+  if (!t->subtype) t->subtype = subtype;
+  else type_subtype_leaf_assign(t->subtype, subtype);
+}

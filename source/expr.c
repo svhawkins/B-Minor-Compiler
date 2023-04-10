@@ -122,5 +122,11 @@ void expr_fprint(FILE* fp, struct expr* e) {
 void expr_print(struct expr* e) { expr_fprint(stdout, e); }
 
 
-struct expr* expr_leaf_left(struct expr* e) { return (e->left) ? expr_leaf_left(e->left) : e; }
-struct expr* expr_leaf_right(struct expr* e) { return (e->right) ? expr_leaf_right(e->right) : e; }
+void expr_left_leaf_assign(struct expr* e, struct expr* leaf) {
+  if (!e->left) e->left = leaf;
+  else expr_left_leaf_assign(e->left, leaf);
+}
+void expr_right_leaf_assign(struct expr* e, struct expr* leaf) {
+  if (!e->right) e->right = leaf;
+  else expr_right_leaf_assign(e->right, leaf);
+}
