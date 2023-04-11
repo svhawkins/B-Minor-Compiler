@@ -1,10 +1,10 @@
-x:integer = 5 * 5; // good 2
-x:array[4] integer = {1, 2, 3, 4}; // good 3
-id_matrix : array[3] array[3] integer = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-str: string = "hello world"; // good 5
-c:char = str[0]; // good 6
-iarr: array [4] integer = {1,2,3,4}; // good 7
-carr:array [4] char = {'a', 'b', 'c', 'd'}; // good 8
-barr:array [4] boolean = {true, false, true, true}; // good 9
-iaar: array [4] array [4] integer = {iarr, iarr, iarr, iarr}; // good 10
-z:boolean  = true || -(4*x^5) + (4 - 4) >= 16 - 6 * 3 + x && y^2 == 16; // >//arr : array[2] auto = {'0', '1'}; // bad
+%% x:integer = 5 * 5; // good 2
+%% x:array[4] integer = {1, 2, 3, 4}; // good 3
+%% id_matrix : array[3] array[3] integer = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+%% str: string = "hello world"; // good 5
+%% c:char = str[0]; // good 6
+%% iarr: array [4] integer = {1,2,3,4}; // good 7
+%% carr:array [4] char = {'a', 'b', 'c', 'd'}; // good 8
+%% barr:array [4] boolean = {true, false, true, true}; // good 9
+%% iaar: array [4] array [4] integer = {iarr, iarr, iarr, iarr}; // good 10
+%% z:boolean  = true || -(4*x^5) + (4 - 4) >= 16 - 6 * 3 + x && y^2 == 16; // >//arr : array[2] auto = {'0', '1'}; // bad

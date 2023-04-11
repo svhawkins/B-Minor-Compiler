@@ -830,6 +830,17 @@ Status test_decl_print_multiple(void) {
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+
+/*
+  long int n = strlen(expect), m = strlen(output); int i;
+  printf("expect length: %ld\toutput length: %ld\n", n, m);
+  printf("expect == output\n");
+  for (i = 0; i < (n < m) ? n : m; i++) {
+    if (expect[i] != output[i]) break;
+    printf("[%c] == [%c]\n", expect[i], output[i]);
+  }
+  printf("%d: expect: [%c]\toutput: [%c]\n", i, expect[i], output[i]);
+*/
   return status;
 }
 

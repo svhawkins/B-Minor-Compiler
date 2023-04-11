@@ -94,22 +94,25 @@
 %nterm <name> name
 %type <expr> primitive primary_expr subscript subscript_list expr postfix_expr unary_expr assign_expr lor_expr land_expr eq_expr rel_expr add_expr mult_expr exp_expr
 %type <stmt> expr_stmt stmt test_program
-%type <decl> ext_decl function_decl decl program
+%type <decl> ext_decl function_decl decl program ext_decl_list
 %type <type> param_type type array_type function_type primitive_type ret_type array_list array
 %type <param_list> param_list params param
 
 %%
-program : ext_decl { parser_result = $1; return 0; }
-	| program ext_decl { $$ = $1; $1->next = $2; }
+program : ext_decl_list { parser_result = $1; return 0; }
 	| TOKEN_MOD TOKEN_MOD test_program { test_parser_result = $3; return 0; }
-	| TOKEN_EOF { parser_result = NULL; test_parser_result = NULL; eof = 1; return 0; }
+	| TOKEN_EOF { eof = 1; return 0; }
 	;
+
+ext_decl_list : ext_decl ext_decl_list { $$ = $1; $1->next = $2; }
+	      | ext_decl { $$ = $1; }
+	      ;
 
 test_program : stmt { $$ = $1; }
 	     | ext_decl { $$ = stmt_create(STMT_DECL, $1, NULL, NULL, NULL, NULL, NULL, NULL); }
 	     ;
 
-decl : name TOKEN_COLON type TOKEN_SEMI
+decl : name TOKEN_COLON type TOKEN_SEMI { $$ = decl_create($1, $3, NULL, NULL, NULL); }
      | name TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI
      ;
 

@@ -33,16 +33,17 @@ void decl_fprint(FILE* fp, struct decl* d, int indent) {
       stmt_fprint(fp, d->code, indent+1);
       print_indent(fp, indent); fprintf(fp, "}\n");
     }
-    else fprintf(fp, ";"); if (d->next) { fprintf(fp, "\n"); }
+    else fprintf(fp, ";");
     break;
   default:
     if (d->value) {
       fprintf(fp, " = ");
       expr_fprint(fp, d->value);
     }
-    fprintf(fp, ";"); if (d->next) { fprintf(fp, "\n"); }
+    fprintf(fp, ";");
     break;
   }
+  if (d->next) { fprintf(fp, "\n"); }
   decl_fprint(fp, d->next, indent);
 }
 void decl_print(struct decl* d, int indent) { decl_fprint(stdout, d, indent); }

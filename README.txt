@@ -125,3 +125,7 @@ any problems/difficulties:
    several hours were wasted figuring it out :/.
 
 3. while statements are implemented
+
+
+4. Several programs that tested the validator became test programs instead
+   of regular programs since they are only testing a line.

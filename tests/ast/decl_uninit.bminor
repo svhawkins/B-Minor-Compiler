@@ -1,0 +1,7 @@
+i:integer;
+b:boolean;
+c:char;
+s:string;
+vector:array[3]integer;
+matrix:array[3]array[3]integer;
+tensor:array[3]array[3]array[3]integer;

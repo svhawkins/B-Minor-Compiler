@@ -251,14 +251,13 @@ Status test_declarations(void) {
   if (!yyin) { return file_error(test_type, filename); }
   Status status, overall_status = SUCCESS;
 
-  unsigned char expected[70] = { 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+  unsigned char expected[50] = { 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
 				 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				 1, 1, 1, 1, 1, 0, 1, 1, 1, 1,
-				 1, 1, 1, 1, 1, 0, 0, 1, 1, 0,
-				 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				 1, 1, 1, 0, 1, 1, 1, 1, 1, 1,
-				 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+				 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				 0, 0, 1, 1, 0, 1, 1, 0, 1, 1,
+				 1, 1, 1, 1, 1, 1, 1, 1, 0, 1,
                                };
+
   int expect, actual; yylineno = 0; eof = 0;
   for(int i = 0; !eof; i++) {
     actual = yyparse();

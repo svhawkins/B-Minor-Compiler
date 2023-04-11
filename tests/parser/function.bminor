@@ -1,26 +1,26 @@
-main: function void(argc : integer, argv: array [] string); // good 0
-main: function void() = {} // good 1
-x:function void(y:integer); // good 2
-main:function void(hello:string, ); // bad 3 4
-main:function void(,hello:string); // bad 5 6 7
-main:function void(y:integer, x); // bad 8 9
-func1: function integer (x:integer, y:char) = { print x; return 1; } // good 10
-func2: function integer (y:char) = { print x; return 2; } // good 11
-func3: function integer (x:integer, y:char, z:string) = {  print z; return 4; } // good 12
-fxn: function integer (x:integer) = { return x++; } // good 13
-fxn2: function char (x:integer, y:char, z:boolean) = { if(y=='z') return 'Z'; else return 'z'; } // good 14
-fxn3: function char (x: array [] integer, y:char, z: array [] array [] boolean) = { if(y=='z') return 'Z'; else return 'z'; } // good 15
-foo: function auto(); // bad 16 17 18
-foo: function void(); // good 19
-foo: function integer(); // good 20
-foo: function char(); // good 21
-foo: function string(); // good 22
-foo: function boolean(); // good 23
-foo: function void void(); // bad 24 25 26
-foo: function(); // bad 27 28 29
-foo: function void() = } // bad 30
-foo: function void(void); // good 31
-foo: function void; // bad 32
-foo: function void() {} // bad 33 34
-foo: function void(n: void); // bad 35 36 37
-foo: function void(n: auto); // bad 38 39 40
+%% main: function void(argc : integer, argv: array [] string); // good 0
+%% main: function void() = {} // good 1
+%% x:function void(y:integer); // good 2
+%% main:function void(hello:string, ); // bad 3 4
+%% main:function void(,hello:string); // bad 5 6 7
+%% main:function void(y:integer, x); // bad 8 9
+%% func1: function integer (x:integer, y:char) = { print x; return 1; } // good 10
+%% func2: function integer (y:char) = { print x; return 2; } // good 11
+%% func3: function integer (x:integer, y:char, z:string) = {  print z; return 4; } // good 12
+%% fxn: function integer (x:integer) = { return x++; } // good 13
+%% fxn2: function char (x:integer, y:char, z:boolean) = { if(y=='z') return 'Z'; else return 'z'; } // good 14
+%% fxn3: function char (x: array [] integer, y:char, z: array [] array [] boolean) = { if(y=='z') return 'Z'; else return 'z'; } // good 15
+%% foo: function auto(); // bad 16 17 18
+%% foo: function void(); // good 19
+%% foo: function integer(); // good 20
+%% foo: function char(); // good 21
+%% foo: function string(); // good 22
+%% foo: function boolean(); // good 23
+%% foo: function void void(); // bad 24 25 26
+%% foo: function(); // bad 27 28 29
+%% foo: function void() = } // bad 30
+%% foo: function void(void); // good 31
+%% foo: function void; // bad 32
+%% foo: function void() {} // bad 33 34
+%% foo: function void(n: void); // bad 35 36 37
+%% foo: function void(n: auto); // bad 38 39 40
