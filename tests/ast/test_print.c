@@ -805,7 +805,8 @@ Status test_decl_print_init_function(void) {
   struct param_list* p = param_list_create("argc", type_create(TYPE_INTEGER, NULL, NULL, NULL), pend);
   struct type* t = type_create(TYPE_FUNCTION, type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL);
   struct stmt* s = stmt_create(STMT_EXPR, NULL, NULL, expr_create_name("duck"), NULL,NULL, NULL, NULL);
-  struct decl* d = decl_create("main", t, NULL, s, NULL);
+  struct stmt* ss = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, s, NULL, NULL);
+  struct decl* d = decl_create("main", t, NULL, ss, NULL);
 
   char* expect = "main: function integer (argc: integer, argv: array [] string) = {\n  duck;\n}\n";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
@@ -1162,7 +1163,8 @@ Status test_print_program(void) {
   struct stmt* for_stmt = stmt_create(STMT_FOR, NULL, assign, less, inc, for_body, NULL, return_stmt);
   struct stmt* n_init = stmt_create(STMT_DECL, n, NULL, NULL, NULL, NULL, NULL, for_stmt);
   struct stmt* i_init = stmt_create(STMT_DECL, i, NULL, NULL, NULL, NULL, NULL, n_init);
-  struct decl* d = decl_create("main", type_create(TYPE_FUNCTION, integer, p, NULL), NULL, i_init, NULL);
+  struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, i_init, NULL, NULL);
+  struct decl* d = decl_create("main", type_create(TYPE_FUNCTION, integer, p, NULL), NULL, s, NULL);
 
   char* expect = "main: function integer (argc: integer, argv: array [] string) = {\n  i: integer;\n  n: integer = 10;\n  for (i = 0; i < n; i++) {\n    print \"hello world!:)\";\n  }\n  return 0;\n}\n";
   FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }

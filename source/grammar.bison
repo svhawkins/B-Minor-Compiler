@@ -92,8 +92,8 @@
   char* name;
 }
 %nterm <name> name
-%type <expr> primitive primary_expr subscript subscript_list expr postfix_expr unary_expr assign_expr lor_expr land_expr eq_expr rel_expr add_expr mult_expr exp_expr
-%type <stmt> expr_stmt stmt test_program
+%type <expr> primitive primary_expr subscript subscript_list expr postfix_expr unary_expr assign_expr lor_expr land_expr eq_expr rel_expr add_expr mult_expr exp_expr init init_expr init_list
+%type <stmt> expr_stmt stmt test_program block_stmt block_list block print_stmt jump_stmt iter_stmt select_stmt
 %type <decl> ext_decl function_decl decl program ext_decl_list
 %type <type> param_type type array_type function_type primitive_type ret_type array_list array
 %type <param_list> param_list params param
@@ -113,15 +113,15 @@ test_program : stmt { $$ = $1; }
 	     ;
 
 decl : name TOKEN_COLON type TOKEN_SEMI { $$ = decl_create($1, $3, NULL, NULL, NULL); }
-     | name TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI
+     | name TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI { $$ = decl_create($1, $3, $5, NULL,  NULL); }
      ;
 
-init : TOKEN_LCURL init_list TOKEN_RCURL
-     | expr
+init : TOKEN_LCURL init_expr TOKEN_RCURL { $$ = expr_create(EXPR_INIT, $2, NULL); }
+     | expr { $$ = $1; }
      ;
 
-init_list : init
-          | init_list TOKEN_COMMA init
+init_list : init { $$ = expr_create(EXPR_INIT, $1, NULL); }
+          | init_list TOKEN_COMMA init { $$ = expr_create(EXPR_COMMA, $1, $3); }
           ;
  
 name : TOKEN_IDENT { $$ = strdup(yytext); } // TO DO: MEMORY MANAGEMENT THIS NEEDS TO BE FREED!!!!!!
@@ -132,23 +132,27 @@ ext_decl : decl { $$ = $1; }
          | function_decl { $$ = $1; }
          ;
 
-stmt : print_stmt
+stmt : print_stmt { $$ = $1; }
      | expr_stmt { $$ = $1; }
-     | iter_stmt
-     | jump_stmt
-     | block_stmt
-     | select_stmt
+     | iter_stmt { $$ = $1; }
+     | jump_stmt { $$ = $1; }
+     | block_stmt { $$ = $1; }
+     | select_stmt { $$ = $1; }
      ;
 
-print_stmt : TOKEN_PRINT expr TOKEN_SEMI
+print_stmt : TOKEN_PRINT expr TOKEN_SEMI { $$ = stmt_create(STMT_PRINT, NULL, NULL, $2, NULL, NULL, NULL, NULL); }
 	   ;
 
 expr_stmt : expr TOKEN_SEMI { $$ = stmt_create(STMT_EXPR, NULL, NULL, $1, NULL, NULL, NULL, NULL); } 
 	  ;
 
 expr : assign_expr { $$ = $1; }
-     | expr TOKEN_COMMA assign_expr { $$ = expr_create(EXPR_COMMA, $1, $3); } 
+     | expr TOKEN_COMMA assign_expr { $$ = expr_create(EXPR_COMMA, $1, $3); }
      ;
+
+init_expr : init { $$ = $1; }
+          | init_expr TOKEN_COMMA init { $$ = expr_create(EXPR_COMMA, $1, $3); }
+          ;
 
 assign_expr : lor_expr { $$ = $1; }
             | unary_expr TOKEN_ASSIGN assign_expr { $$ = expr_create(EXPR_ASSIGN, $1, $3); }
@@ -226,38 +230,44 @@ exp_expr : unary_expr { $$ = $1; }
 	 ;
 
 select_stmt  : TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt
+	       { 
+		$$ = stmt_create(STMT_IF_ELSE, NULL, NULL, $3, NULL, $5, NULL, NULL);
+	       }
 	     | TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt TOKEN_ELSE stmt
+	       {
+		$$ = stmt_create(STMT_IF_ELSE, NULL, NULL, $3, NULL, $5, $7, NULL);
+	       }
 	     ;
 
-iter_stmt : TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI TOKEN_SEMI TOKEN_RPAR stmt
+iter_stmt : TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt { $$ = stmt_create(STMT_WHILE, NULL, NULL, $3, NULL, $5, NULL, NULL); }
+          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI TOKEN_SEMI TOKEN_RPAR stmt 
           | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI TOKEN_SEMI expr TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI expr_stmt TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI expr_stmt expr TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR expr_stmt TOKEN_SEMI TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR expr_stmt TOKEN_SEMI expr TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR expr_stmt expr_stmt TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR expr_stmt expr_stmt expr TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI expr TOKEN_SEMI TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI expr TOKEN_SEMI expr TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI TOKEN_SEMI TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI TOKEN_SEMI expr TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI expr TOKEN_SEMI TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI expr TOKEN_SEMI expr TOKEN_RPAR stmt
           | TOKEN_FOR TOKEN_LPAR decl TOKEN_SEMI TOKEN_RPAR stmt
           | TOKEN_FOR TOKEN_LPAR decl TOKEN_SEMI expr TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR decl expr_stmt TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR decl expr_stmt expr TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR decl expr TOKEN_SEMI TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR decl expr TOKEN_SEMI expr TOKEN_RPAR stmt
           ;
 
-jump_stmt : TOKEN_RETURN TOKEN_SEMI
-	  | TOKEN_RETURN expr TOKEN_SEMI
+jump_stmt : TOKEN_RETURN TOKEN_SEMI { $$ = stmt_create(STMT_RETURN, NULL, NULL, NULL, NULL, NULL, NULL, NULL); }
+	  | TOKEN_RETURN expr TOKEN_SEMI { $$ = stmt_create(STMT_RETURN, NULL, NULL, $2, NULL, NULL, NULL, NULL); }
 	  ;
 
-block_stmt : TOKEN_LCURL TOKEN_RCURL
-           | TOKEN_LCURL block_list TOKEN_RCURL
+block_stmt : TOKEN_LCURL TOKEN_RCURL { $$ = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL); }
+           | TOKEN_LCURL block_list TOKEN_RCURL { $$ = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, $2, NULL, NULL); }
            ;
 
-block_list : block
-           | block_list block
+block_list : block { $$ = $1; }
+           | block block_list { $$ = $1; $1->next = $2; }
            ;
 
-block : decl
-      | stmt
+block : decl { $$ = stmt_create(STMT_DECL, $1, NULL, NULL, NULL, NULL, NULL, NULL); }
+      | stmt { $$ = $1; }
       ;
 
 
@@ -265,9 +275,13 @@ function_decl : name TOKEN_COLON ret_type TOKEN_LPAR param_list TOKEN_RPAR TOKEN
 	        {
 		/* assign the params for a function here */
 		 $3->params = $5;
-		 $$ = decl_create(name_clean($1), $3, NULL, NULL, NULL); 
+		 $$ = decl_create($1, $3, NULL, NULL, NULL); 
 		}
-	      | name TOKEN_COLON ret_type TOKEN_LPAR param_list TOKEN_RPAR TOKEN_ASSIGN block_stmt { /* assign the params here in type */ }
+	      | name TOKEN_COLON ret_type TOKEN_LPAR param_list TOKEN_RPAR TOKEN_ASSIGN block_stmt
+	        { /* assign the params here in type */
+		  $3->params = $5;
+		  $$ = decl_create($1, $3, NULL, $8, NULL);
+		}
 	      ;
 
 param_list : params { $$ = $1; }

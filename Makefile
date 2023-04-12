@@ -1,6 +1,6 @@
 
 ## this code has a lot of warnings. unused but supplied flex functions in the generated source file
-CFLAGS = -pedantic -Og
+CFLAGS = -pedantic -Og -Wall -Wextra
 TESTS = tests/test_scan tests/test_parse tests/test_factory tests/test_print tests/test_ast
 EXEC = scan parse print $(TESTS) test
 OBJECTS = source/*.o tests/scanner/*.o tests/parser/*.o tests/ast/*.o

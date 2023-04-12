@@ -1,0 +1,11 @@
+i: integer = 493;
+b: boolean = false;
+c: char = 'a';
+s: string = "a";
+foo: array [1] integer = {493};
+bar: array [1] array [1] integer = {{493}};
+baz: array [2] boolean = {false, true};
+qux: array [3] array [3] integer = {{1,0,0}, {0,1,0}, {0,0,1}};
+f:function void()={}
+g:function void()={duck;}
+h:function void()={duck;duck;goose;}

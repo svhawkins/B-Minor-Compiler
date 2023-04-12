@@ -65,8 +65,8 @@ int main(int argc, const char* argv[]) {
     printf("%s\n", line); line = strtok(NULL, "\n");
   }
   //printf("\nTOTAL TESTS: %d\n", total_tests);
-  printf("\nTOTAL PASSED: %d/%d\n", total_pass, total_tests);
-  printf("TOTAL FAILED: %d/%d\n", total_tests - total_pass, total_tests);
+  printf("\nTOTAL PASSED: %3d/%.d\n", total_pass, total_tests);
+  printf("TOTAL FAILED: %3d/%.d\n", total_tests - total_pass, total_tests);
   return 0;
 }
 void parse_line(char* line, int start, int end, int* total_pass, int* total_test) {

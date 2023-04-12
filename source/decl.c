@@ -29,9 +29,9 @@ void decl_fprint(FILE* fp, struct decl* d, int indent) {
   switch(d->type->kind) {
   case TYPE_FUNCTION:
     if (d->code) {
-      fprintf(fp, " = {\n");
-      stmt_fprint(fp, d->code, indent+1);
-      print_indent(fp, indent); fprintf(fp, "}\n");
+      fprintf(fp, " = ");
+      stmt_fprint(fp, d->code, indent);
+      //print_indent(fp, indent); fprintf(fp, "}\n");
     }
     else fprintf(fp, ";");
     break;
