@@ -1,6 +1,3 @@
-Sandra Hawkins
-ID: 01843958
-E-Mail: Sandra_Hawkins@student.uml.edu
 
 COMP 4060 201
 Assignment 2: B-Minor Grammar Validator
