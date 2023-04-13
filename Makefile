@@ -1,8 +1,9 @@
 
 ## -Wall errrors from generated code.
 CFLAGS = -pedantic -Og -Wall -Wextra
-TESTS = tests/test_scan tests/test_parse tests/test_factory tests/test_print tests/test_ast
-EXEC = scan parse print $(TESTS) test
+TESTS = tests/test_scan tests/test_parse tests/test_factory tests/test_print tests/test_ast test
+COMPILER = scan parse print
+EXEC = $(COMPILER) $(TESTS)
 OBJECTS = source/*.o tests/scanner/*.o tests/parser/*.o tests/ast/*.o
 GEN = source/scanner.c source/parser.c
 INCLUDES = source/decl.o source/expr.o source/param_list.o source/stmt.o source/symbol.o source/type.o
@@ -10,8 +11,11 @@ INCLUDES = source/decl.o source/expr.o source/param_list.o source/stmt.o source/
 ## compiles all targets
 all: $(EXEC)
 
+## compiles all source (compiler) targets
+compiler: $(COMPILER)
+
 ## compiles all test targets
-tests: $(TESTS) test
+tests: $(TESTS)
 
 ## test targets
 test: tests/test.c
