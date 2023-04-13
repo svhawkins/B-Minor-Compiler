@@ -1,4 +1,3 @@
-
 #ifndef STMT_H
 #define STMT_H
 
@@ -33,4 +32,5 @@ struct stmt* stmt_create(stmt_t kind, struct decl* decl,
 
 void stmt_fprint(FILE* fp, struct stmt* s, int indent);
 void stmt_print(struct stmt* s, int indent);
+
 #endif

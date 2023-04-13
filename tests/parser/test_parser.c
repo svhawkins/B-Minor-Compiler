@@ -9,19 +9,16 @@
 #include "../../source/type.h"
 #define MAX_BUFFER 256
 
-extern FILE* yyin;
+extern FILE* yyin; FILE* ifp;
 extern void yyrestart();
 extern int yylineno;
 extern int yyparse();
 extern char error_text[MAX_BUFFER];
 extern unsigned char eof;
-typedef enum {FAILURE = 0, SUCCESS = 1} Status;
-enum {PARSE_SUCCESS = 0, PARSE_FAILURE = 1};
-FILE* ifp;
+typedef enum { FAILURE = 0, SUCCESS = 1 } Status;
+enum { PARSE_SUCCESS = 0, PARSE_FAILURE = 1 };
 char test_type[MAX_BUFFER];
-char lines[MAX_BUFFER][MAX_BUFFER];
 
-int get_lines(char v[][MAX_BUFFER], char* filename); // stores file contents
 Status file_error(char* test_type, char* filename); // error messsage when opening file
 void print_error(char* test_type, int case_no, int expect, int actual); // error message for test failures
 Status test_parse(int expect, int actual); // tests parse status
@@ -37,7 +34,7 @@ Status test_functions(void); // tests function declarations and definitions
 Status test_code(void); // tests a valid program
 Status test_empty(void); // tests an empty program
 
-int main(int argc, const char* argv[]) {
+int main(void) {
   Status (*tests[])(void) = {
     test_expressions,
     test_print_statements,
@@ -56,20 +53,11 @@ int main(int argc, const char* argv[]) {
   printf("Running %d tests...\n", n_tests);
   for (int i = 0; i < n_tests; i++) { if (tests[i]()) { n_pass++; }}
 
-  printf("Passed: %d/%d\n", n_pass, n_tests);
-  printf("Failed: %d/%d\n", (n_tests - n_pass), n_tests);
+  printf("Passed: %2d/%d\n", n_pass, n_tests);
+  printf("Failed: %2d/%d\n", (n_tests - n_pass), n_tests);
   return 0;
 }
 
-int get_lines(char v[][MAX_BUFFER], char* filename) {
-  ifp = fopen(filename, "r"); if (!ifp) { return 1; }
-  char line[MAX_BUFFER]; int i;
-  for (i = 0; fgets(line, MAX_BUFFER, ifp); i++) {
-    strcpy(v[i], line);
-  }
-  fclose(ifp);
-  return i + 1;
-}
 void print_error(char* test_type, int case_no, int expect, int actual) {
   char* expect_str = (expect == PARSE_SUCCESS) ? "PARSE_SUCCESS" : "PARSE_FAILURE";
   char* actual_str = (actual == PARSE_SUCCESS) ? "PARSE_SUCCESS" : "PARSE_FAILURE";
@@ -78,6 +66,7 @@ void print_error(char* test_type, int case_no, int expect, int actual) {
   printf("line %d: case %d\n", yylineno, case_no);
   printf("Expected result: %s, recieved result: %s\n\n", expect_str, actual_str);
 }
+
 Status test_parse(int expect, int actual) { return (expect == actual) ? SUCCESS : FAILURE; }
 
 Status file_error(char* test_type, char* filename) {
@@ -88,11 +77,9 @@ Status file_error(char* test_type, char* filename) {
 Status test_expressions(void) {
   strcpy(test_type, "Testing: Expressions");
   char* filename = "./tests/parser/expression.bminor";
-  int n = get_lines(lines, filename);
   Status status, overall_status = SUCCESS;
   yyin = fopen(filename, "r");
   if (!yyin) { return file_error(test_type, filename); }
-
 
   // have an array to hold expected values due to yyparse() continuing even after a failed parse.
   // there are more expected values than there are lines in the file.
@@ -122,7 +109,6 @@ Status test_expressions(void) {
 Status test_print_statements(void) {
   strcpy(test_type, "Testing: Print statements");
   char* filename = "./tests/parser/print.bminor";
-  int n = get_lines(lines, filename);
   // apparently tokens from prev file(s) were still in buffer
   // messing up parses
   yyrestart(yyin); //yyrewind()
@@ -153,7 +139,6 @@ Status test_print_statements(void) {
 Status test_jump_statements(void) {
   strcpy(test_type, "Testing: Return statements");
   char* filename = "./tests/parser/jump.bminor";
-  int n = get_lines(lines, filename);
   yyrestart(yyin);
   yyin = fopen(filename, "r");
   if (!yyin) { return file_error(test_type, filename); }
@@ -181,7 +166,6 @@ Status test_jump_statements(void) {
 Status test_iteration_statements(void) {
   strcpy(test_type, "Testing: For and While statements");
   char* filename = "./tests/parser/iteration.bminor";
-  int n = get_lines(lines, filename);
   yyrestart(yyin);
   yyin = fopen(filename, "r");
   if (!yyin) { return file_error(test_type, filename); }
@@ -212,7 +196,6 @@ Status test_iteration_statements(void) {
 Status test_selection_statements(void) {
   strcpy(test_type, "Testing: If and Else statements");
   char* filename = "./tests/parser/selection.bminor";
-  int n = get_lines(lines, filename);
   yyrestart(yyin);
   yyin = fopen(filename, "r");
   if (!yyin) { return file_error(test_type, filename); }
@@ -245,7 +228,6 @@ Status test_selection_statements(void) {
 Status test_declarations(void) {
   strcpy(test_type, "Testing: Declarations");
   char* filename = "./tests/parser/declaration.bminor";
-  int n = get_lines(lines, filename);
   yyrestart(yyin);
   yyin = fopen(filename, "r");
   if (!yyin) { return file_error(test_type, filename); }
@@ -277,7 +259,6 @@ Status test_declarations(void) {
 Status test_initializations(void) {
   strcpy(test_type, "Testing: Initializations");
   char* filename = "./tests/parser/initialization.bminor";
-  int n = get_lines(lines, filename);
   yyrestart(yyin);
   yyin = fopen(filename, "r");
   if (!yyin) { return file_error(test_type, filename); }
@@ -307,7 +288,6 @@ Status test_initializations(void) {
 Status test_functions(void) {
   strcpy(test_type, "Testing: Function declarations/definitions");
   char* filename = "./tests/parser/function.bminor";
-  int n = get_lines(lines, filename);
   yyrestart(yyin);
   yyin = fopen(filename, "r");
   if (!yyin) { return file_error(test_type, filename); }
@@ -338,7 +318,6 @@ Status test_functions(void) {
 Status test_code(void) {
   strcpy(test_type, "Testing: Programs");
   char* filename = "./tests/parser/code.bminor";
-  int n = get_lines(lines, filename);
   yyrestart(yyin);
   yyin = fopen(filename, "r");
   if (!yyin) { return file_error(test_type, filename); }
@@ -363,7 +342,6 @@ Status test_code(void) {
 Status test_empty(void) {
   strcpy(test_type, "Testing: Empty Program");
   char* filename = "./tests/parser/empty.bminor";
-  int n = get_lines(lines, filename);
   yyrestart(yyin);
   yyin = fopen(filename, "r");
   if (!yyin) { return file_error(test_type, filename); }
@@ -379,7 +357,7 @@ Status test_empty(void) {
       overall_status = FAILURE;
     }
   }
-    fclose(yyin);
-    return overall_status;
+  fclose(yyin);
+  return overall_status;
 }
 

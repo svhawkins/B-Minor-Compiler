@@ -141,10 +141,12 @@ void error_message(error_t error, token_t kind) {
     case STRAY:	sprintf(msg, "\tStray %s token", yytext); break;
     case EMPTY: sprintf(msg, "\tEmpty character %s. Characters cannot be empty", yytext); break;
     case MISS_TERM: 
-      switch(kind) { case TOKEN_STR: strcpy(term, "\""); break; case TOKEN_CH: strcpy(term, "'"); break; }
+      if (kind == TOKEN_STR) strcpy(term, "\"");
+      else if (kind == TOKEN_CH) strcpy(term, "'");
       if (kind == TOKEN_EOF) { sprintf(msg, "\tMissing terminating %s for comment", term); }
       else { sprintf(msg, "\tMissing terminating %s for token %s", term, yytext); }
       break;
+    default: break;
   }
   strcat(error_text, msg);
 }
@@ -184,6 +186,7 @@ token_t format_token(token_t kind) {
         switch(yytext[i]) {
           case '0': ch = '\0'; has_null = true; break;
           case 'n': ch = '\n'; break;
+	  default: break;
         }
         buffer[j] = ch; is_escape = false; j++;
       } else { buffer[j] = ch; j++; }

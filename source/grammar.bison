@@ -92,7 +92,7 @@
   char* name;
 }
 %nterm <name> name
-%type <expr> primitive primary_expr subscript subscript_list expr postfix_expr unary_expr assign_expr lor_expr land_expr eq_expr rel_expr add_expr mult_expr exp_expr init init_expr init_list
+%type <expr> primitive primary_expr expr postfix_expr unary_expr assign_expr lor_expr land_expr eq_expr rel_expr add_expr mult_expr exp_expr init init_expr
 %type <stmt> expr_stmt stmt test_program block_stmt block_list block print_stmt jump_stmt iter_stmt select_stmt
 %type <decl> ext_decl function_decl decl program ext_decl_list
 %type <type> param_type type array_type function_type primitive_type ret_type array_list array
@@ -119,10 +119,6 @@ decl : name TOKEN_COLON type TOKEN_SEMI { $$ = decl_create($1, $3, NULL, NULL, N
 init : TOKEN_LCURL init_expr TOKEN_RCURL { $$ = expr_create(EXPR_INIT, $2, NULL); }
      | expr { $$ = $1; }
      ;
-
-init_list : init { $$ = expr_create(EXPR_INIT, $1, NULL); }
-          | init_list TOKEN_COMMA init { $$ = expr_create(EXPR_COMMA, $1, $3); }
-          ;
  
 name : TOKEN_IDENT { $$ = strdup(yytext); } // TO DO: MEMORY MANAGEMENT THIS NEEDS TO BE FREED!!!!!!
      | TOKEN_LPAR name TOKEN_RPAR { $$ = $2; }
@@ -176,17 +172,6 @@ primary_expr : primitive { $$ = $1; }
 	     | TOKEN_LPAR expr TOKEN_RPAR { $$ = $2; }
 	     | name { $$ = expr_create_name($1); }
 	     ;
-
-subscript_list : subscript_list subscript
-		 {
-		   $2->left = $1; // originally null
-		   $$ = $2;
-		 }
-	       | subscript { $$ = $1; }
-	       ;
-
-subscript : TOKEN_LBRACK assign_expr TOKEN_RBRACK { $$ = expr_create(EXPR_SUBSCRIPT, NULL, $2); }
-	  ;
 
 primitive : TOKEN_BOOL { $$ = expr_create_boolean_literal(bool_convert(yytext)); }
 	  | TOKEN_CH { $$ = expr_create_char_literal(yytext[0]); }

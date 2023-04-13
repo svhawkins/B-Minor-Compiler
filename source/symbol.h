@@ -1,4 +1,3 @@
-
 #ifndef SYMBOL_H
 #define SYMBOL_H
 
@@ -12,11 +11,11 @@ typedef enum {
 
 struct symbol {
 	symbol_t kind;
-	struct type *type;
-	char *name;
+	struct type* type;
+	char* name;
 	int which;
 };
 
-struct symbol * symbol_create( symbol_t kind, struct type *type, char *name );
+struct symbol* symbol_create(symbol_t kind, struct type *type, char *name);
 
 #endif

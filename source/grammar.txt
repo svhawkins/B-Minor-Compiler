@@ -1,24 +1,6 @@
-Nonterminals useless in grammar
-
-    init_list
-    subscript_list
-    subscript
-
-
 Terminals unused in grammar
 
     TOKEN_ERROR
-
-
-Rules useless in grammar
-
-  119 init_list: init
-  120          | init_list TOKEN_COMMA init
-
-  121 subscript_list: subscript_list subscript
-  122               | subscript
-
-  123 subscript: TOKEN_LBRACK assign_expr TOKEN_RBRACK
 
 
 State 78 conflicts: 1 shift/reduce

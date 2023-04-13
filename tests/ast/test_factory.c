@@ -10,9 +10,8 @@
 #include "../../source/type.h"
 #define MAX_BUFFER 256
 
-typedef enum {FAILURE = 0, SUCCESS = 1} Status;
+typedef enum { FAILURE = 0, SUCCESS = 1 } Status;
 char test_type[MAX_BUFFER];
-
 
 void print_error(char* test, char* expect, char* value);
 Status file_error(char* test_type, char* filename); // error messsage when opening file
@@ -38,7 +37,7 @@ Status test_decl_create_composite_array(void);
 Status test_decl_create_composite_function(void);
 Status test_decl_create_program(void);
 
-int main(int argc, const char* argv[]) {
+int main(void) {
   Status (*tests[])(void) = {
     test_decl_create_null,
     test_decl_create_name,
@@ -68,8 +67,8 @@ int main(int argc, const char* argv[]) {
   printf("Running %d tests...\n", n_tests);
   for (int i = 0; i < n_tests; i++) { if (tests[i]()) { n_pass++; }}
 
-  printf("Passed: %d/%d\n", n_pass, n_tests);
-  printf("Failed: %d/%d\n", (n_tests - n_pass), n_tests);
+  printf("Passed: %2d/%d\n", n_pass, n_tests);
+  printf("Failed: %2d/%d\n", (n_tests - n_pass), n_tests);
   return 0;
 }
 
@@ -77,12 +76,13 @@ Status file_error(char* test_type, char* filename) {
   printf("Failed to open %s for %s.\n Test failure.\n", filename, test_type);
   return FAILURE;
 }
+
 // pointers so use strings for expected types
 void print_error(char* test, char* expect, char* value) { printf("Error:\t[%s]:\n\tExpected a value of %s for value: [%s]\n", test, expect, value); }
 
 Status test_decl_create_null(void) {
   strcpy(test_type, "Testing: decl_create, all NULL");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   struct decl* d = decl_create(NULL, NULL, NULL, NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
@@ -97,7 +97,7 @@ Status test_decl_create_null(void) {
 
 Status test_decl_create_name(void) {
   strcpy(test_type, "Testing: decl_create, non-NULL name");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   struct decl* d = decl_create("foo", NULL, NULL, NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
@@ -110,10 +110,9 @@ Status test_decl_create_name(void) {
   return overall_status;
 }
 
-
 Status test_param_list_create_null(void) {
   strcpy(test_type, "Testing: param_list_create, all NULL");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   struct param_list* p = param_list_create(NULL, NULL, NULL);
   if (!p) { print_error(test_type, "NOT NULL", "param_list p"); overall_status = FAILURE; }
   else {
@@ -126,7 +125,7 @@ Status test_param_list_create_null(void) {
 
 Status test_param_list_create_name(void) {
   strcpy(test_type, "Testing: param_list_create_name, non-NULL name");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   struct param_list* p = param_list_create("foo", NULL, NULL);
   if (!p) { print_error(test_type, "NOT NULL", "param_list p"); overall_status = FAILURE; }
   else {
@@ -139,7 +138,7 @@ Status test_param_list_create_name(void) {
 
 Status test_stmt_create_kind(void) {
   strcpy(test_type, "Testing: test_stmt_create_kind");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   for (stmt_t kind = STMT_DECL; kind <= STMT_BLOCK; kind++) {
     struct stmt* s = stmt_create(kind, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
@@ -164,7 +163,7 @@ Status test_stmt_create_kind(void) {
 
 Status test_type_create_kind(void) {
   strcpy(test_type, "Testing: test_type_create_kind");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   for (type_t kind = TYPE_VOID; kind <= TYPE_FUNCTION; kind++) {
     struct type* t = type_create(kind, NULL, NULL, NULL);
@@ -184,7 +183,7 @@ Status test_type_create_kind(void) {
 
 Status test_expr_create_kind(void) {
   strcpy(test_type, "Testing: test_expr_create_kind");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   for (expr_t kind = EXPR_INC; kind <= EXPR_FCALL; kind++) {
     struct expr* e = expr_create(kind, NULL, NULL);
@@ -202,7 +201,6 @@ Status test_expr_create_kind(void) {
         print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
       }
       if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
-      //if (e->symbol) { print_error(test_type, "NULL", "symbol* e->symbol"); overall_status = FAILURE; }
     }
   }
   return overall_status;
@@ -227,7 +225,6 @@ Status test_expr_create_name(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
-    //if (e->symbol) { print_error(test_type, "NULL", "symbol* e->symbol"); overall_status = FAILURE; }
   }
   return overall_status;
 }
@@ -251,7 +248,6 @@ Status test_expr_create_int(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
-    //if (e->symbol) { print_error(test_type, "NULL", "symbol* e->symbol"); overall_status = FAILURE; }
   }
   return overall_status;
 }
@@ -275,7 +271,6 @@ Status test_expr_create_bool(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
-    //if (e->symbol) { print_error(test_type, "NULL", "symbol* e->symbol"); overall_status = FAILURE; }
   }
   return overall_status;
 }
@@ -299,7 +294,6 @@ Status test_expr_create_char(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
-    //if (e->symbol) { print_error(test_type, "NULL", "symbol* e->symbol"); overall_status = FAILURE; }
   }
   return overall_status;
 }
@@ -323,7 +317,6 @@ Status test_expr_create_str(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (strcmp("foo", e->string_literal)) { print_error(test_type, "foo", "char* e->string_literal"); overall_status = FAILURE; }
-    //if (e->symbol) { print_error(test_type, "NULL", "symbol* e->symbol"); overall_status = FAILURE; }
   }
   return overall_status;
 }
@@ -351,7 +344,6 @@ Status test_expr_create_unary(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
-    //if (e->symbol) { print_error(test_type, "NULL", "symbol* e->symbol"); overall_status = FAILURE; }
     if (e->left->left) { print_error(test_type, "NULL", "expr* e->left->left"); overall_status = FAILURE; }
     if (e->left->right) { print_error(test_type, "NULL", "expr* e->left->right"); overall_status = FAILURE; }
   }
@@ -374,8 +366,6 @@ Status test_expr_create_binary_2_op(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
-    if (e->symbol) { print_error(test_type, "NULL", "symbol* e->symbol"); overall_status = FAILURE; }
-
 
     // left subtree
     if (!e->left) { print_error(test_type, "NOT NULL", "expr* e->left"); overall_status = FAILURE; }
@@ -426,7 +416,6 @@ Status test_expr_create_binary_3_op(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
-    if (e->symbol) { print_error(test_type, "NULL", "symbol* e->symbol"); overall_status = FAILURE; }
 
     // left subtree
     if (!e->left) { print_error(test_type, "NOT NULL", "expr* e->left"); overall_status = FAILURE; }
@@ -489,7 +478,7 @@ Status test_expr_create_binary_3_op(void) {
 
 Status test_stmt_create_print(void) {
   strcpy(test_type, "Testing: test_stmt_create_print");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   struct stmt* s = stmt_create(STMT_PRINT, NULL, NULL, expr_create_string_literal("hello world!:)\n") , NULL, NULL, NULL, NULL);
   if (!s) { print_error(test_type, "NOT NULL", "stmt s"); overall_status = FAILURE; }
@@ -522,7 +511,7 @@ Status test_stmt_create_print(void) {
 
 Status test_decl_create_atomic_uninit(void) {
   strcpy(test_type, "Testing: decl_create_atomic_uninit");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   struct decl* d = decl_create("foo", type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
@@ -546,7 +535,7 @@ Status test_decl_create_atomic_uninit(void) {
 
 Status test_decl_create_atomic_init(void) {
   strcpy(test_type, "Testing: decl_create_atomic_init");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   struct decl* d = decl_create("bar", type_create(TYPE_STRING, NULL, NULL, NULL), expr_create_string_literal("hello world!:)\n"), NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
@@ -581,7 +570,7 @@ Status test_decl_create_atomic_init(void) {
 
 Status test_decl_create_composite_array(void) {
   strcpy(test_type, "Testing: decl_create_composite_array");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   struct decl* d = decl_create("foo", type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL), NULL, NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
@@ -614,7 +603,7 @@ Status test_decl_create_composite_array(void) {
 
 Status test_decl_create_composite_function(void) {
   strcpy(test_type, "Testing: decl_create_composite_function");
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   struct decl* d = decl_create("foo", type_create(TYPE_FUNCTION,
 				      type_create(TYPE_VOID, NULL, NULL, NULL),
@@ -671,7 +660,7 @@ Status test_decl_create_program(void) {
   }
   */
 
-  Status overall_status = SUCCESS, status;
+  Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   // structs that make up param list
   struct param_list* p = param_list_create("argc", type_create(TYPE_INTEGER, NULL, NULL,NULL),
@@ -955,5 +944,6 @@ Status test_decl_create_program(void) {
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
     if (d->code->next->next->next->expr->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->next->expr->string_literal"); overall_status = FAILURE; }
-  } return overall_status;
+  }
+  return overall_status;
 }

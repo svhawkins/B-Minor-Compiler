@@ -12,8 +12,6 @@ extern int n_col;
 extern char error_text[2 * YYLMAX];
 extern char filename[YYLMAX];
 extern bool has_match;
-//extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
-
 extern void add_col(bool is_newline);
 void print_header(void);
 token_t print_token(token_t kind);
@@ -52,6 +50,7 @@ int main(int argc, const char* argv[]) {
   printf("Total tokens: %d\n", n_tokens);
   return 0;
 }
+
 mode_t determine_mode(const char* flag) {
   mode_t m = DEFAULT;
   if (strcmp(flag, "-c") == 0) m = COLUMN;

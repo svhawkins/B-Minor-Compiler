@@ -33,7 +33,8 @@ void type_fprint(FILE* fp, struct type* t) {
 		     type_fprint(fp, t->subtype);
 		     break;
     case TYPE_FUNCTION: fprintf(fp, "function "); type_fprint(fp, t->subtype);
-			fprintf(fp, " ("); if (t->params) param_list_fprint(fp, t->params); else fprintf(fp, "void"); fprintf(fp, ")");
+			fprintf(fp, " (");
+			if (t->params) param_list_fprint(fp, t->params); else fprintf(fp, "void"); fprintf(fp, ")");
 			break;
   }
 }

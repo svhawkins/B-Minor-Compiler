@@ -1,5 +1,5 @@
 
-## this code has a lot of warnings. unused but supplied flex functions in the generated source file
+## -Wall errrors from generated code.
 CFLAGS = -pedantic -Og -Wall -Wextra
 TESTS = tests/test_scan tests/test_parse tests/test_factory tests/test_print tests/test_ast
 EXEC = scan parse print $(TESTS) test
@@ -34,10 +34,6 @@ parse: source/parse.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
 print: source/main.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
-
-## directory source code
-#%source/.o: %source/.c source/parser.h
-	#gcc $(CFLAGS) -c -g $^ $@
 
 ## generated code
 source/scanner.c: source/scanner.flex

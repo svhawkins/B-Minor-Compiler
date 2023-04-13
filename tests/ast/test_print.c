@@ -10,7 +10,8 @@
 #include "../../source/type.h"
 #define MAX_BUFFER 256
 
-typedef enum {FAILURE = 0, SUCCESS = 1} Status;
+FILE* tmp;
+typedef enum { FAILURE = 0, SUCCESS = 1 } Status;
 char test_type[MAX_BUFFER];
 char output[MAX_BUFFER];
 
@@ -23,9 +24,11 @@ void print_error(char* test, char* expect, char* value);
 Status file_error(char* test_type); // error message when getting temporary file
 
 
-/* expression printing tests:
+/*
+   expression printing tests:
    atomic types, operators, and associativity
 */
+
 Status test_expr_print_name(void);
 Status test_expr_print_str(void);
 Status test_expr_print_int(void);
@@ -46,9 +49,10 @@ Status test_expr_print_init_nest(void);
 Status test_expr_print_init_list_nest(void);
 
 /*
- type printing tests:
+  type printing tests:
   atomic types, array types, function types (no parameter lists)
 */
+
 Status test_type_print_atomic(void);
 Status test_type_print_array(void);
 Status test_type_print_array_nest(void);
@@ -56,9 +60,10 @@ Status test_type_print_function(void);
 Status test_type_print_function_nest(void);
 
 /*
-param_list printing tests
-single parameter, multiparameter, composite parameter type
+  param_list printing tests
+  single parameter, multiparameter, composite parameter type
 */
+
 Status test_param_list_print_single(void);
 Status test_param_list_print_multiple(void);
 Status test_param_list_print_single_nest(void);
@@ -68,6 +73,7 @@ type print integration tests for:
 - function parameter lists
 - array sizes within the [] operator
 */
+
 Status test_type_print_function_param_list(void);
 Status test_type_print_array_expr(void);
 
@@ -76,6 +82,7 @@ declaration print testing
 uninitialized values, initialized values of all types
 printing declaration lists
 */
+
 Status test_decl_print_uninit_atomic(void);
 Status test_decl_print_uninit_array(void);
 Status test_decl_print_uninit_array_nest(void);
@@ -90,6 +97,7 @@ Status test_decl_print_multiple(void);
 statement printing tests
 based on kind
 */
+
 Status test_stmt_print_decl(void);
 Status test_stmt_print_expr(void);
 
@@ -133,13 +141,13 @@ Status test_print_program(void);
 
 /*
 tmp files
-  FILE* tmp; tmp = fopen("foo.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("foo.txt", "w"); if (!tmp) { return file_error(test_type); }
   <struct>_fprint(tmp, struct);
   tmp = freopen("foo.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("foo.txt");
 */
 
-int main(int argc, const char* argv[]) {
+int main(void) {
   Status (*tests[])(void) = {
     test_expr_print_name,
     test_expr_print_str,
@@ -205,15 +213,15 @@ int main(int argc, const char* argv[]) {
   printf("Running %d tests...\n", n_tests);
   for (int i = 0; i < n_tests; i++) { if (tests[i]()) { n_pass++; }}
 
-  printf("Passed: %d/%d\n", n_pass, n_tests);
-  printf("Failed: %d/%d\n", (n_tests - n_pass), n_tests);
+  printf("Passed: %2d/%d\n", n_pass, n_tests);
+  printf("Failed: %2d/%d\n", (n_tests - n_pass), n_tests);
   return 0;
 }
 
 // reads contents of file into string s
 void fileread(FILE* fp, char* s, int n) {
   int i; for (i = 0; i < n && !feof(fp); i++) s[i] = fgetc(fp);
-  s[i-1] = '\0'; fclose(fp);
+  s[i-1] = '\0'; fclose(fp); fp = NULL;
 }
 
 void compare_expect_output(char* expect, char* output) {
@@ -231,6 +239,7 @@ Status file_error(char* test_type) {
   printf("Failed to open temporary I/O file for %s.\n Test failure.\n", test_type);
   return FAILURE;
 }
+
 void print_error(char* test, char* expect, char* value) { printf("Error:\t[%s]:\n\tExpected:\n[%s]\n\tReceived:\n[%s]\n", test, expect, value); }
 
 // testing expressions of the primitives, also the base case for expr_print
@@ -240,7 +249,7 @@ Status test_expr_print_name(void) {
   struct expr* e = expr_create_name("foo");
   char* expect = "foo";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -254,9 +263,7 @@ Status test_expr_print_str(void) {
   Status status = SUCCESS;
   struct expr* e = expr_create_string_literal("hello world!:)\n");
   char* expect = "\"hello world!:)\n\"";
-
-
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -272,8 +279,7 @@ Status test_expr_print_int(void) {
   struct expr* e = expr_create_integer_literal(493);
   char* expect = "493";
 
-
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -289,8 +295,7 @@ Status test_expr_print_ch(void) {
   struct expr* e = expr_create_char_literal('a');
   char* expect = "'a'";
 
-
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -306,8 +311,7 @@ Status test_expr_print_bool_true(void) {
   struct expr* e = expr_create_boolean_literal(true);
   char* expect = "true";
 
-
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -315,6 +319,7 @@ Status test_expr_print_bool_true(void) {
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
   return status;
 }
+
 Status test_expr_print_bool_false(void) {
   strcpy(test_type, "Testing: test_expr_print_bool_false");
   Status status = SUCCESS;
@@ -322,8 +327,7 @@ Status test_expr_print_bool_false(void) {
   struct expr* e = expr_create_boolean_literal(false);
   char* expect = "false";
 
-
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -341,7 +345,7 @@ Status test_expr_print_op(void) {
   struct expr* r = expr_create_name("y");
 
   char* expect = "x++\nx--\nx\n-x\n!x\nx ^ y\nx * y\nx / y\nx % y\nx + y\nx - y\nx <= y\nx < y\nx >= y\nx > y\nx == y\nx != y\nx && y\nx || y\nx = y\nx, y\nx[y]\nx(y)\n{x}\n";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (expr_t kind = EXPR_INC; kind <= EXPR_INIT; kind++) {
     struct expr* e = (kind < EXPR_EXP || kind == EXPR_INIT) ? expr_create(kind, l, NULL) : expr_create(kind, l, r);
     expr_fprint(tmp, e); fprintf(tmp, "\n");
@@ -359,7 +363,7 @@ Status test_expr_print_op_left_assoc_unary(void) {
   struct expr* l = expr_create_name("foo");
 
   char* expect = "(foo++)++\n(foo--)--\n";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (expr_t kind = EXPR_INC; kind <= EXPR_DEC; kind++) {
     struct expr* e = expr_create(kind, expr_create(kind, l, NULL), NULL);
     expr_fprint(tmp, e); fprintf(tmp, "\n");
@@ -379,7 +383,7 @@ Status test_expr_print_op_left_assoc_binary(void) {
   struct expr* c = expr_create_name("c");
 
   char* expect = "(a * b) * c\n(a / b) / c\n(a % b) % c\n(a + b) + c\n(a - b) - c\n(a <= b) <= c\n(a < b) < c\n(a >= b) >= c\n(a > b) > c\n(a == b) == c\n(a != b) != c\n(a && b) && c\n(a || b) || c\n";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (expr_t kind = EXPR_MULT; kind <= EXPR_OR; kind++) {
     struct expr* e = expr_create(kind, expr_create(kind, a, b), c);
     expr_fprint(tmp, e); fprintf(tmp, "\n");
@@ -397,7 +401,7 @@ Status test_expr_print_op_right_assoc_unary(void) {
   struct expr* l = expr_create_name("foo");
 
   char* expect = "foo\n-(-foo)\n!(!foo)\n";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (expr_t kind = EXPR_POS; kind <= EXPR_NOT; kind++) {
     struct expr* e = expr_create(kind, expr_create(kind, l, NULL), NULL);
     expr_fprint(tmp, e); fprintf(tmp, "\n");
@@ -407,12 +411,13 @@ Status test_expr_print_op_right_assoc_unary(void) {
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
   return status;
 }
+
 Status test_expr_print_op_right_assoc_binary(void) {
   strcpy(test_type, "Testing: test_expr_print_op_right_assoc_binary");
   Status status = SUCCESS;
   struct expr* e = expr_create(EXPR_EXP, expr_create_name("duck"), expr_create(EXPR_EXP, expr_create_name("duck"), expr_create_name("goose")));
   char* expect = "duck ^ (duck ^ goose)";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -425,7 +430,7 @@ Status test_expr_print_fcall_list(void) {
   Status status = SUCCESS;
   struct expr* e = expr_create(EXPR_FCALL, expr_create_name("duck"), expr_create(EXPR_COMMA, expr_create_name("duck"), expr_create_name("goose")));
   char* expect = "duck(duck, goose)";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -439,7 +444,7 @@ Status test_expr_print_fcall_nest(void) {
   Status status = SUCCESS;
   struct expr* e = expr_create(EXPR_FCALL, expr_create_name("f"), expr_create(EXPR_FCALL, expr_create_name("g"), expr_create_name("x")));
   char* expect = "f(g(x))";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -452,7 +457,7 @@ Status test_expr_print_subscript_nest(void) {
   Status status = SUCCESS;
   struct expr* e = expr_create(EXPR_SUBSCRIPT, expr_create_name("f"), expr_create(EXPR_SUBSCRIPT, expr_create_name("g"), expr_create_name("x")));
   char* expect = "f[g[x]]";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -466,7 +471,7 @@ Status test_expr_print_subscript_list(void) {
   struct expr* left = expr_create(EXPR_SUBSCRIPT, expr_create_name("foo"), expr_create_name("i"));
   struct expr* e = expr_create(EXPR_SUBSCRIPT, left, expr_create_name("j"));
   char* expect = "foo[i][j]";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -482,7 +487,7 @@ Status test_expr_print_init_list(void) {
   struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_name("duck"), expr_create_name("goose")), NULL);
   char* expect = "{duck, goose}";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -497,7 +502,7 @@ Status test_expr_print_init_nest(void) {
 
   struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_INIT, expr_create_name("duck"), NULL), NULL);
   char* expect = "{{duck}}";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -514,7 +519,7 @@ Status test_expr_print_init_list_nest(void) {
   struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, duck, goose), NULL);
   char* expect = "{{duck}, {goose}}";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -529,7 +534,7 @@ Status test_type_print_atomic(void) {
   strcpy(test_type, "Testing: test_type_print_atomic");
   Status status = SUCCESS;
   char* expect ="voidbooleancharintegerstringauto";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (type_t kind = TYPE_VOID; kind < TYPE_ARRAY; kind++) {
     struct type* t = type_create(kind, NULL, NULL, NULL);
     type_fprint(tmp, t);
@@ -546,7 +551,7 @@ Status test_type_print_array(void) {
   struct type* subtype = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* t = type_create(TYPE_ARRAY, subtype, NULL, NULL);
   char* expect = "array [] integer";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   type_fprint(tmp, t);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -560,7 +565,7 @@ Status test_type_print_array_nest(void) {
   struct type* subtype = type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL);
   struct type* t = type_create(TYPE_ARRAY, subtype, NULL, NULL);
   char* expect = "array [] array [] integer";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   type_fprint(tmp, t);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -575,7 +580,7 @@ Status test_type_print_function(void) {
   struct type* subtype = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct type* t = type_create(TYPE_FUNCTION, subtype, NULL, NULL);
   char* expect = "function void (void)";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   type_fprint(tmp, t);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -589,7 +594,7 @@ Status test_type_print_function_nest(void) {
   struct type* subtype = type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL);
   struct type* t = type_create(TYPE_FUNCTION, subtype, NULL, NULL);
   char* expect = "function array [] integer (void)";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   type_fprint(tmp, t);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -604,7 +609,7 @@ Status test_param_list_print_single(void) {
   struct type* t = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct param_list* p = param_list_create("x", t, NULL);
   char* expect = "x: integer";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   param_list_fprint(tmp, p);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -619,7 +624,7 @@ Status test_param_list_print_multiple(void) {
   struct param_list* pend = param_list_create("y", t, NULL);
   struct param_list* p = param_list_create("x", t, pend);
   char* expect = "x: integer, y: integer";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   param_list_fprint(tmp, p);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -633,7 +638,7 @@ Status test_param_list_print_single_nest(void) {
   struct type* t = type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL);
   struct param_list* p = param_list_create("x", t, NULL);
   char* expect = "x: array [] integer";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   param_list_fprint(tmp, p);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -651,7 +656,7 @@ Status test_type_print_function_param_list(void) {
   struct type* t = type_create(TYPE_FUNCTION, type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL);
 
   char* expect = "function integer (argc: integer, argv: array [] string)";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   type_fprint(tmp, t);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -670,7 +675,7 @@ Status test_type_print_array_expr(void) {
   struct type* t = type_create(TYPE_ARRAY, subtype, NULL, dim1);
 
   char* expect = "array [3 ^ 1] array [(3 * 3) / 3] boolean";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   type_fprint(tmp, t);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -683,7 +688,7 @@ Status test_decl_print_uninit_atomic(void) {
   strcpy(test_type, "Testing: test_decl_print_uninit_atomic");
   Status status = SUCCESS;
   char* expect ="x: boolean;x: char;x: integer;x: string;x: auto;";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (type_t kind = TYPE_BOOLEAN; kind < TYPE_ARRAY; kind++) {
     struct type* t = type_create(kind, NULL, NULL, NULL);
     struct decl* d = decl_create("x", t, NULL, NULL, NULL);
@@ -704,7 +709,7 @@ Status test_decl_print_uninit_array(void) {
   struct decl* d = decl_create("x", t, NULL, NULL, NULL);
   char* expect = "x: array [2] boolean;";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   decl_fprint(tmp, d, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -721,7 +726,7 @@ Status test_decl_print_uninit_array_nest(void) {
   struct decl* d = decl_create("x", t, NULL, NULL, NULL);
   char* expect = "x: array [3] array [3] integer;";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   decl_fprint(tmp, d, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -740,7 +745,7 @@ Status test_decl_print_uninit_function(void) {
   struct decl* d = decl_create("main", t, NULL, NULL, NULL);
 
   char* expect = "main: function integer (argc: integer, argv: array [] string);";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   decl_fprint(tmp, d, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -760,7 +765,7 @@ Status test_decl_print_init_atomic(void) {
 			   };
 
   char* expect ="x: boolean = true;x: char = 'a';x: integer = 493;x: string = \"string\";x: auto = 493;";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (type_t kind = TYPE_BOOLEAN, i = 0; kind < TYPE_ARRAY; kind++, i++) {
     struct type* t = type_create(kind, NULL, NULL, NULL);
     struct decl* d = decl_create("x", t, inits[i], NULL, NULL);
@@ -782,7 +787,7 @@ Status test_decl_print_init_array(void) {
   struct decl* d = decl_create("bool", t, v, NULL, NULL);
   char* expect = "bool: array [] boolean = {true, false};";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   decl_fprint(tmp, d, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -804,7 +809,7 @@ Status test_decl_print_init_array_nest(void) {
   struct decl* d = decl_create("identity", t, v, NULL, NULL);
   char* expect = "identity: array [] array [] integer = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   decl_fprint(tmp, d, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -824,7 +829,7 @@ Status test_decl_print_init_function(void) {
   struct decl* d = decl_create("main", t, NULL, ss, NULL);
 
   char* expect = "main: function integer (argc: integer, argv: array [] string) = {\n  duck;\n}\n";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   decl_fprint(tmp, d, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -841,22 +846,11 @@ Status test_decl_print_multiple(void) {
   struct decl* d = decl_create("n", integer, expr_create_integer_literal(2), NULL, dend);
   char* expect = "n: integer = 2;\nsquare: array [n] array [n] integer;";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   decl_fprint(tmp, d, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
-
-/*
-  long int n = strlen(expect), m = strlen(output); int i;
-  printf("expect length: %ld\toutput length: %ld\n", n, m);
-  printf("expect == output\n");
-  for (i = 0; i < (n < m) ? n : m; i++) {
-    if (expect[i] != output[i]) break;
-    printf("[%c] == [%c]\n", expect[i], output[i]);
-  }
-  printf("%d: expect: [%c]\toutput: [%c]\n", i, expect[i], output[i]);
-*/
   return status;
 }
 
@@ -869,7 +863,7 @@ Status test_stmt_print_decl(void) {
   struct stmt* s = stmt_create(STMT_DECL, d, NULL, NULL, NULL, NULL, NULL, NULL);
   char* expect = "b: boolean = true && false;\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -884,7 +878,7 @@ Status test_stmt_print_expr(void) {
   struct stmt* s = stmt_create(STMT_EXPR, NULL, NULL, e, NULL, NULL, NULL, NULL);
   char* expect = "x = 493 + 1;\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -898,7 +892,7 @@ Status test_stmt_print_print_null(void) {
   struct stmt* s = stmt_create(STMT_PRINT, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   char* expect = "print;\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -913,7 +907,7 @@ Status test_stmt_print_print_expr(void) {
   struct stmt* s = stmt_create(STMT_PRINT, NULL, NULL, e, NULL, NULL, NULL, NULL);
   char* expect = "print (false && true) || foo;\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -928,7 +922,7 @@ Status test_stmt_print_print_list(void) {
   struct stmt* s = stmt_create(STMT_PRINT, NULL, NULL, e, NULL, NULL, NULL, NULL);
   char* expect = "print duck, duck, goose;\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -942,7 +936,7 @@ Status test_stmt_print_return_null(void) {
   struct stmt* s = stmt_create(STMT_RETURN, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   char* expect = "return;\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -957,7 +951,7 @@ Status test_stmt_print_return_expr(void) {
   struct stmt* s = stmt_create(STMT_RETURN, NULL, NULL, e, NULL, NULL, NULL, NULL);
   char* expect = "return (false && true) || foo;\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -971,7 +965,7 @@ Status test_stmt_print_block_null(void) {
   struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   char* expect = "{}";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -986,7 +980,7 @@ Status test_stmt_print_block_single(void) {
   struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, body, NULL, NULL);
   char* expect = "{\n  duck;\n}";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -1002,7 +996,7 @@ Status test_stm_print_block_list(void) {
   struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, body, NULL, NULL);
   char* expect = "{\n  duck;\n  goose;\n}";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -1016,7 +1010,7 @@ Status test_stmt_print_if_null(void) {
   struct stmt* s = stmt_create(STMT_IF_ELSE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   char* expect = "if () {\n}\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -1032,7 +1026,7 @@ Status test_stmt_print_if(void) {
   struct stmt* s = stmt_create(STMT_IF_ELSE, NULL, NULL, e, NULL, duck, NULL, NULL);
   char* expect = "if (e) {\n  duck;\n}\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -1049,7 +1043,7 @@ Status test_stmt_print_if_else(void) {
   struct stmt* s = stmt_create(STMT_IF_ELSE, NULL, NULL, e, NULL, duck, goose, NULL);
   char* expect = "if (e) {\n  duck;\n} else {\n  goose;\n}\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -1067,7 +1061,7 @@ Status test_stmt_print_if_else_nest(void) {
   struct stmt* s = stmt_create(STMT_IF_ELSE, NULL, NULL, e, NULL, snest, goose, NULL);
   char* expect = "if (e) {\n  if (e) {\n    duck;\n  } else {\n    goose;\n  }\n} else {\n  goose;\n}\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -1081,13 +1075,14 @@ Status test_stmt_print_while_null(void) {
   struct stmt* s = stmt_create(STMT_WHILE, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   char* expect = "while () {\n}\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
   return status;
 }
+
 Status test_stmt_print_while(void) {
   strcpy(test_type, "Testing: test_stmt_print_while");
   Status status = SUCCESS;
@@ -1096,7 +1091,7 @@ Status test_stmt_print_while(void) {
   struct stmt* s = stmt_create(STMT_WHILE, NULL, NULL, e, NULL, duck, NULL, NULL);
   char* expect = "while (e) {\n  duck;\n}\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -1114,7 +1109,7 @@ Status test_stmt_print_for_expr(void) {
   struct stmt* body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   char* expect = "for ( ; ; ) {}\nfor ( ; ; i++) {}\nfor ( ; i < n; ) {}\nfor ( ; i < n; i++) {}\nfor (i = 0; ; ) {}\nfor (i = 0; ; i++) {}\nfor (i = 0; i < n; ) {}\nfor (i = 0; i < n; i++) {}\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (int i = 0; i < (1 << 3); i++) {
     struct stmt* s = stmt_create(STMT_FOR, NULL,
 				 (i & (1 << 2)) ? exprs[0] : NULL, (i & (1 << 1)) ? exprs[1] : NULL, (i & (1 << 0)) ? exprs[2] : NULL,
@@ -1124,7 +1119,6 @@ Status test_stmt_print_for_expr(void) {
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
-  //compare_expect_output(expect, output);
   return status;
 }
 
@@ -1136,12 +1130,11 @@ Status test_stmt_print_for_decl(void) {
   struct stmt* s = stmt_create(STMT_FOR, d, NULL, NULL, NULL, body, NULL, NULL);
   char* expect = "for (i: integer; ; ) {}\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
-  //compare_expect_output(expect, output);
   return status;
 }
 
@@ -1153,7 +1146,7 @@ Status test_stmt_print_for_init(void) {
   struct stmt* s = stmt_create(STMT_FOR, d, NULL, NULL, NULL, body, NULL, NULL);
   char* expect = "for (i: integer = 0; ; ) {}\n";
 
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   stmt_fprint(tmp, s, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
@@ -1187,11 +1180,10 @@ Status test_print_program(void) {
   struct decl* d = decl_create("main", type_create(TYPE_FUNCTION, integer, p, NULL), NULL, s, NULL);
 
   char* expect = "main: function integer (argc: integer, argv: array [] string) = {\n  i: integer;\n  n: integer = 10;\n  for (i = 0; i < n; i++) {\n    print \"hello world!:)\";\n  }\n  return 0;\n}\n";
-  FILE* tmp; tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   decl_fprint(tmp, d, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
   fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
-  //compare_expect_output(expect, output);
   return status;
 }

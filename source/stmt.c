@@ -24,7 +24,9 @@ struct stmt* stmt_create(stmt_t kind, struct decl* decl,
 void print_indent(FILE* fp, int indent) { for (int i = 0; i < indent; i++) fprintf(fp, "%s", SPACE); }
 void stmt_fprint(FILE* fp, struct stmt* s, int indent) {
   if (!s) return;
-  if (!(s->kind == STMT_BLOCK && !s->next)) print_indent(fp, indent); // ^ indents are only printed if there is a statement to be printed!
+  if (!(s->kind == STMT_BLOCK && !s->next)) print_indent(fp, indent);
+  // ^ indents are only printed if there is a statement to be printed!
+
   // types of statements
   switch(s->kind) {
 
@@ -41,13 +43,20 @@ void stmt_fprint(FILE* fp, struct stmt* s, int indent) {
       }
    */
     case STMT_IF_ELSE: fprintf(fp, "if ("); expr_fprint(fp, s->expr); fprintf(fp, ") ");
-                       if (s->body && s->body->kind == STMT_BLOCK) stmt_fprint(fp, s->body, indent); // { body }
-                       else { fprintf(fp, "{\n");stmt_fprint(fp, s->body, indent+1); print_indent(fp, indent); fprintf(fp, "}"); }
+                       if (s->body && s->body->kind == STMT_BLOCK) {
+		         stmt_fprint(fp, s->body, indent); // blocks already have {}
+		       } else {
+			 fprintf(fp, "{\n"); stmt_fprint(fp, s->body, indent+1);
+			 print_indent(fp, indent); fprintf(fp, "}");
+		       }
                        if (s->else_body) {
                          if (s->else_body->kind == STMT_BLOCK) {
 			   fprintf(fp, " else "); stmt_fprint(fp, s->else_body, indent);
 			 } // { body }
-                         else { fprintf(fp, " else {\n");stmt_fprint(fp, s->else_body, indent+1); print_indent(fp, indent); fprintf(fp, "}"); }
+                         else {
+			   fprintf(fp, " else {\n"); stmt_fprint(fp, s->else_body, indent+1);
+			   print_indent(fp, indent); fprintf(fp, "}");
+			 }
 		       }
 		       break;
 
@@ -56,7 +65,8 @@ void stmt_fprint(FILE* fp, struct stmt* s, int indent) {
         body
       }
       **if init_expr is empty and decl is empty, print a space instead.
-      **if init_expr is empty and decl is not empty, print a decl instead (no indentation). decls dont need the semicolon.
+      **if init_expr is empty and decl is not empty, print a decl instead (no indentation).
+	   decls dont need the semicolon.
    */
     case STMT_FOR: fprintf(fp, "for (");
 		   if (!s->init_expr && !s->decl) { fprintf(fp, " ;"); }
@@ -66,7 +76,10 @@ void stmt_fprint(FILE* fp, struct stmt* s, int indent) {
 		   expr_fprint(fp, s->expr); fprintf(fp, "; "); // ; expr;
 		   expr_fprint(fp, s->next_expr); fprintf(fp, ") "); // ; next_expr)
                    if (s->body && s->body->kind == STMT_BLOCK) stmt_fprint(fp, s->body, indent); // { body }
-                   else { fprintf(fp, "{\n");stmt_fprint(fp, s->body, indent+1); print_indent(fp, indent); fprintf(fp, "}"); }
+                   else {
+		     fprintf(fp, "{\n"); stmt_fprint(fp, s->body, indent+1);
+		     print_indent(fp, indent); fprintf(fp, "}");
+		   }
 		   break;
 
     // print; print expr; print expr, expr;
@@ -97,7 +110,10 @@ void stmt_fprint(FILE* fp, struct stmt* s, int indent) {
     */
     case STMT_WHILE: fprintf(fp, "while ("); expr_fprint(fp, s->expr); fprintf(fp, ") ");
 		     if (s->body && s->body->kind == STMT_BLOCK) stmt_fprint(fp, s->body, 0); // { body }
-		     else { fprintf(fp, "{\n");stmt_fprint(fp, s->body, indent+1); print_indent(fp, indent); fprintf(fp, "}"); }
+		     else {
+		       fprintf(fp, "{\n"); stmt_fprint(fp, s->body, indent+1);
+		       print_indent(fp, indent); fprintf(fp, "}");
+		     }
 		     break;
   }
   if (s->kind != STMT_BLOCK) fprintf(fp, "\n");

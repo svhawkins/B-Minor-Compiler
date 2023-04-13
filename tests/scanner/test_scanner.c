@@ -13,7 +13,7 @@ extern char* yytext;
 extern int yylineno;
 extern int n_col;
 
-typedef enum {FAILURE, SUCCESS} Status;
+typedef enum { FAILURE = 0, SUCCESS } Status;
 char test_type[MAX_BUFFER];
 
 
@@ -31,7 +31,7 @@ Status test_strings(void);
 Status test_string_format(void);
 Status test_code(void);
 
-int main(int argc, const char* argv[]) {
+int main(void) {
   /* holding all the tests */
   Status (*tests[])(void) = {
     test_keywords,
@@ -56,6 +56,7 @@ Status file_error(char* test_type, char* filename) {
   printf("Failed to open %s for %s.\n Test failure.\n", filename, test_type);
   return FAILURE;
 }
+
 void print_error(char* test_type, token_t expect, token_t actual) {
   printf("Error: %s\n", test_type);
   printf("\tToken %s\n", yytext);
@@ -63,7 +64,9 @@ void print_error(char* test_type, token_t expect, token_t actual) {
   printf("\tExpected type %d, Recieved type %d\n", expect, actual);
   } else { printf("Unexpected type %d\n", actual); }
 }
+
 Status test_token(token_t expect, token_t actual) { return (expect == actual) ? SUCCESS : FAILURE; }
+
 Status test_eof(token_t t) {
   strcpy(test_type,"EOF Token Test");
   Status status = test_token(TOKEN_EOF, t) || test_token(0, t);
