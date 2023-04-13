@@ -240,18 +240,18 @@ select_stmt  : TOKEN_IF TOKEN_LPAR expr TOKEN_RPAR stmt
 	     ;
 
 iter_stmt : TOKEN_WHILE TOKEN_LPAR expr TOKEN_RPAR stmt { $$ = stmt_create(STMT_WHILE, NULL, NULL, $3, NULL, $5, NULL, NULL); }
-          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI TOKEN_SEMI TOKEN_RPAR stmt 
-          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI TOKEN_SEMI expr TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI expr TOKEN_SEMI TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI expr TOKEN_SEMI expr TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI TOKEN_SEMI TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI TOKEN_SEMI expr TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI expr TOKEN_SEMI TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI expr TOKEN_SEMI expr TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR decl TOKEN_SEMI TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR decl TOKEN_SEMI expr TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR decl expr TOKEN_SEMI TOKEN_RPAR stmt
-          | TOKEN_FOR TOKEN_LPAR decl expr TOKEN_SEMI expr TOKEN_RPAR stmt
+          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI TOKEN_SEMI TOKEN_RPAR stmt { $$ = stmt_create(STMT_FOR, NULL, NULL, NULL, NULL, $6, NULL, NULL); }
+          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI TOKEN_SEMI expr TOKEN_RPAR stmt { $$ = stmt_create(STMT_FOR, NULL, NULL, NULL, $5, $7, NULL, NULL); }
+          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI expr TOKEN_SEMI TOKEN_RPAR stmt { $$ = stmt_create(STMT_FOR, NULL, NULL, $4, NULL, $7, NULL, NULL); }
+          | TOKEN_FOR TOKEN_LPAR TOKEN_SEMI expr TOKEN_SEMI expr TOKEN_RPAR stmt { $$ = stmt_create(STMT_FOR, NULL, NULL, $4, $6, $8, NULL, NULL); }
+          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI TOKEN_SEMI TOKEN_RPAR stmt { $$ = stmt_create(STMT_FOR, NULL, $3, NULL, NULL, $7, NULL, NULL); }
+          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI TOKEN_SEMI expr TOKEN_RPAR stmt { $$ = stmt_create(STMT_FOR, NULL, $3, NULL, $6, $8, NULL, NULL); }
+          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI expr TOKEN_SEMI TOKEN_RPAR stmt { $$ = stmt_create(STMT_FOR, NULL, $3, $5, NULL, $8, NULL, NULL); }
+          | TOKEN_FOR TOKEN_LPAR expr TOKEN_SEMI expr TOKEN_SEMI expr TOKEN_RPAR stmt  { $$ = stmt_create(STMT_FOR, NULL, $3, $5, $7, $9, NULL, NULL); } 
+          | TOKEN_FOR TOKEN_LPAR decl TOKEN_SEMI TOKEN_RPAR stmt { $$ = stmt_create(STMT_FOR, $3, NULL, NULL, NULL, $6, NULL, NULL); }
+          | TOKEN_FOR TOKEN_LPAR decl TOKEN_SEMI expr TOKEN_RPAR stmt { $$ = stmt_create(STMT_FOR, $3, NULL, NULL, $5, $7, NULL, NULL); }
+          | TOKEN_FOR TOKEN_LPAR decl expr TOKEN_SEMI TOKEN_RPAR stmt { $$ = stmt_create(STMT_FOR, $3, NULL, $4, NULL, $7, NULL, NULL); }
+          | TOKEN_FOR TOKEN_LPAR decl expr TOKEN_SEMI expr TOKEN_RPAR stmt { $$ = stmt_create(STMT_FOR, $3, NULL, $4, $6, $8, NULL, NULL); }
           ;
 
 jump_stmt : TOKEN_RETURN TOKEN_SEMI { $$ = stmt_create(STMT_RETURN, NULL, NULL, NULL, NULL, NULL, NULL, NULL); }

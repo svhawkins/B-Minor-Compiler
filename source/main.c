@@ -23,7 +23,7 @@ int main(int argc, const char* argv[]) {
   if (argc > 1 && !strcmp(argv[1], "-t")) { yydebug = 1; }
   for (int i = 0; !eof; i++) {
     printf("%d: ", i);
-    if (yyparse() == 0 && !eof) {
+    if (yyparse() == 0) {
       if (test_parser_result) { stmt_print(test_parser_result, 0); test_parser_result = NULL; }
       //else if (parser_result) { decl_print(parser_result, 0); printf("\n"); }
     }

@@ -31,7 +31,7 @@ void decl_fprint(FILE* fp, struct decl* d, int indent) {
     if (d->code) {
       fprintf(fp, " = ");
       stmt_fprint(fp, d->code, indent);
-      //print_indent(fp, indent); fprintf(fp, "}\n");
+      print_indent(fp, indent); fprintf(fp, "\n");
     }
     else fprintf(fp, ";");
     break;

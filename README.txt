@@ -1,5 +1,72 @@
 
 
+
+tree
+.
+├── Makefile
+├── README.txt
+├── source
+│   ├── decl.c
+│   ├── decl.h
+│   ├── expr.c
+│   ├── expr.h
+│   ├── grammar.bison
+│   ├── grammar.txt
+│   ├── main.c
+│   ├── param_list.c
+│   ├── param_list.h
+│   ├── parse.c
+│   ├── parser.h
+│   ├── scan.c
+│   ├── scanner.flex
+│   ├── stmt.c
+│   ├── stmt.h
+│   ├── symbol.c
+│   ├── symbol.h
+│   ├── type.c
+│   └── type.h
+└── tests
+    ├── ast
+    │   ├── code.bminor
+    │   ├── code_pretty.bminor
+    │   ├── decl_init.bminor
+    │   ├── decl_uninit.bminor
+    │   ├── expr_associativity.bminor
+    │   ├── expr_postfix.bminor
+    │   ├── expr_precedence.bminor
+    │   ├── expr_vanilla.bminor
+    │   ├── stmt_body.bminor
+    │   ├── stmt_for.bminor
+    │   ├── test_ast.c
+    │   ├── test_factory.c
+    │   ├── test_print.c
+    │   └── type_param_list.bminor
+    ├── parser
+    │   ├── code.bminor
+    │   ├── declaration.bminor
+    │   ├── empty.bminor
+    │   ├── expression.bminor
+    │   ├── function.bminor
+    │   ├── initialization.bminor
+    │   ├── iteration.bminor
+    │   ├── jump.bminor
+    │   ├── print.bminor
+    │   ├── selection.bminor
+    │   └── test_parser.c
+    ├── scanner
+    │   ├── character.bminor
+    │   ├── code.bminor
+    │   ├── foo.bminor
+    │   ├── identifier.bminor
+    │   ├── integer.bminor
+    │   ├── keywords.bminor
+    │   ├── string.bminor
+    │   ├── string_format.bminor
+    │   └── test_scanner.c
+    └── test.c
+
+5 directories, 56 files
+
 ******************************************
 current problems/bugs:
 1. ast structures do not have proper destroy() functions

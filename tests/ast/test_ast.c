@@ -8,7 +8,7 @@
 #include "../../source/stmt.h"
 #include "../../source/symbol.h"
 #include "../../source/type.h"
-#define MAX_BUFFER 2048
+#define MAX_BUFFER 8192
 
 extern FILE* yyin; FILE* ifp;
 extern void yyrestart();
@@ -16,6 +16,7 @@ extern int yyparse();
 extern char error_text[MAX_BUFFER]; // print_error sprintf error messages
 extern unsigned char eof;
 char output[MAX_BUFFER];
+char program[MAX_BUFFER];
 
 // parser outputs
 extern struct stmt* test_parser_result;
@@ -41,9 +42,16 @@ Status test_expr_postfix_binary(void);
 // type and parameter list testing (as function declarations)
 Status test_type_param_list(void);
 
-// declaration + initialization testing
+// declaration + initialization testing (and block statements)
 Status test_decl_uninit(void);
 Status test_decl_init(void);
+
+// statement testing
+Status test_stmt_body(void);
+Status test_stmt_for(void);
+
+// program testing
+Status test_code_pretty(void);
 
 int main(int argc, const char* argv[]) {
   Status (*tests[])(void) = {
@@ -53,7 +61,10 @@ int main(int argc, const char* argv[]) {
     test_expr_postfix_binary,
     test_type_param_list,
     test_decl_uninit,
-    test_decl_init
+    test_decl_init,
+    test_stmt_body,
+    test_stmt_for,
+    test_code_pretty
   };
 
   int n_tests = sizeof(tests)/sizeof(tests[0]);
@@ -237,5 +248,56 @@ Status test_decl_init(void) {
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt"); ifp = NULL;
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
   //compare_expect_output(expect, output);
+  return status;
+}
+
+Status test_stmt_body(void) {
+  strcpy(test_type, "test_stmt_body");
+  char* filename = "./tests/ast/stmt_body.bminor";
+  Status status = SUCCESS;
+  yyrestart(yyin);
+  yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
+  ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
+  char* expect = "print duck;\nprint duck, goose;\nreturn;\nreturn duck;\nwhile (e) {\n  duck;\n}\nwhile (e) {}\nfor ( ; ; ) {\n  duck;\n}\nfor ( ; ; ) {}\nif (e) {} else {}\nif (e) {\n  duck;\n} else {\n  goose;\n}\nif (e) {} else {\n  goose;\n}\nif (e) {\n  duck;\n} else {}\n";
+  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); test_parser_result = NULL; }
+  fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
+  fileread(ifp, output, MAX_BUFFER); remove("temp.txt"); ifp = NULL;
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  //compare_expect_output(expect, output);
+  return status;
+}
+
+Status test_stmt_for(void) {
+  strcpy(test_type, "test_stmt_for");
+  char* filename = "./tests/ast/stmt_for.bminor";
+  Status status = SUCCESS;
+  yyrestart(yyin);
+  yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
+  ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
+  char* expect = "for ( ; ; i++) {}\nfor ( ; i < n; ) {}\nfor ( ; i < n; i++) {}\nfor (i = 0; ; ) {}\nfor (i = 0; ; i++) {}\nfor (i = 0; i < n; ) {}\nfor (i = 0; i < n; i++) {}\nfor (i: integer; ; ) {}\nfor (i: integer = 0; ; ) {}\n";
+  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); test_parser_result = NULL; }
+  fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
+  fileread(ifp, output, MAX_BUFFER); remove("temp.txt"); ifp = NULL;
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  //compare_expect_output(expect, output);
+  return status;
+}
+
+Status test_code_pretty(void) {
+  strcpy(test_type, "test_code_pretty");
+  char* filename = "./tests/ast/code.bminor";
+  Status status = SUCCESS;
+  yyrestart(yyin);
+  yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
+  ifp = fopen("./tests/ast/code_pretty.bminor", "r"); if (!ifp) { return file_error(test_type, "./tests/ast/code_pretty.bminor"); }
+  fileread(ifp, program, MAX_BUFFER);
+  ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
+  while(yyparse() == 0 && !eof) {}
+  decl_fprint(ifp, parser_result, 0);
+  //for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); test_parser_result = NULL; }
+  fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
+  fileread(ifp, output, MAX_BUFFER); remove("temp.txt"); ifp = NULL;
+  if (strcmp(output, program)) { print_error(test_type, program, output); status = FAILURE; }
+  //compare_expect_output(program, output);
   return status;
 }

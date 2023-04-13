@@ -1,0 +1,12 @@
+%% print duck;
+%% print duck, goose;
+%% return;
+%% return duck;
+%% while(e)duck;
+%% while(e){}
+%% for(;;)duck;
+%% for(;;){}
+%% if(e){}else{}
+%% if(e)duck;else goose;
+%% if(e){}else goose;
+%% if(e)duck;else{}
