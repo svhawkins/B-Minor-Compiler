@@ -227,7 +227,7 @@ structure formatting to make it be 'pretty':
 	this is not: x , y
 
 3. Parentheses are added around an expression subtree if it is not of a primitive type.
-   These expressions do not get parentheses: (), [], {}, comma
+   These expressions do not get parentheses: (), [], {}, =, comma
 
 4. Keywords (if, for, function, void, etc.) are always followed by a space
    (Unless it is an uninitialized declaration, where the keyword is not followed by a space, just a semicolon ;)
