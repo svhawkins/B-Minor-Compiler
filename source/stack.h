@@ -23,7 +23,7 @@ Stack* stack_create();
 frees the memory allocated by the stack and its items.
 sets stack pointer to NULL upon success.
 */
-void stack_destroy(Stack* s);
+void stack_destroy(Stack** s);
 
 
 /*
@@ -52,4 +52,4 @@ int stack_size(Stack* s);
 Returns to pointer to item specified by position.
 The top of the stack is position 0.
 */
-void* stack_item(int position);
+void* stack_item(Stack* s, int position);
