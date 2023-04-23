@@ -1,15 +1,13 @@
 COMP 4060 201
 Assignment 4: Symbol Table and Type Checking
 
-
-
 BRANCHES:
 
 stack:
 (with manually created AST trees)
-  - implements basic stack for symbol table
+  DONE- implements basic stack for symbol table
   - implements name resolution functions for each of the AST structures
-  - symbol table stack unit testing (null void pointers)
+  DONE- symbol table stack unit testing (null void pointers)
   - symbol table stack + hash table intgration testing
   - name resolution function unit + integration testing
 
