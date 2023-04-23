@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "symbol_table.h"
+#include "expr.h"
+#include "type.h"
+#include "param_list.h"
+#include "stmt.h"
+#include "decl.h"
 
 // for debugging purposes
 int yydebug = 0;
@@ -16,13 +20,12 @@ extern struct decl* parser_result;
 
 int main(int argc, const char* argv[]) {
   if (argc > 1 && !strcmp(argv[1], "-t")) { yydebug = 1; }
-/*  for (int i = 0; !eof; i++) {
+  for (int i = 0; !eof; i++) {
     printf("%d: ", i);
     if (yyparse() == 0) {
       if (test_parser_result) { stmt_print(test_parser_result, 0); test_parser_result = NULL; }
     } else { print_error_message(); }
   }
-  if (parser_result) { decl_print(parser_result, 0); printf("\n"); } */
-  printf("Hello world! :)\n");
+  if (parser_result) { decl_print(parser_result, 0); printf("\n"); }
   return 0;
 }

@@ -14,27 +14,37 @@ int main(void) {
   int total_pass = 0, total_tests = 0;
 
   // executables list
-  int n_exec = 5;
+  int n_exec = 8;
   char* path[] = {
     "tests/test_scan",
     "tests/test_parse",
     "tests/test_factory",
     "tests/test_print",
-    "tests/test_ast"
+    "tests/test_ast",
+    "tests/test_stack",
+    "tests/test_typecheck",
+    "tests/test_symbol_table"
   };
   char* name[] = { "test_scan",
 		   "test_parse",
 		   "test_factory",
 		   "test_print",
-		   "test_ast"};
+		   "test_ast",
+		   "test_stack",
+		   "test_typecheck",
+		   "test_symbol_table"
+		  };
 
   // what to print per pre-execution
   char* header = "TESTING: ";
-  char* tests[] = {"SCANNER",
+  char* tests[] = { "SCANNER",
 		    "PARSER",
   		    "FACTORY FUNCTIONS",
 		    "PRINT FUNCTIONS",
-		    "ABSTRACT SYNTAX TREE"
+		    "ABSTRACT SYNTAX TREE",
+		    "NAME RESOLUTION",
+		    "TYPECHECKING",
+		    "SYMBOL TABLE"
 		   };
 
   // executions, output is written to pipe
@@ -52,6 +62,7 @@ int main(void) {
       execlp(path[i], name[i], NULL);
     }
   }
+
   waitpid(0, NULL, 0); char output[MAX_BUFFER];
   read(fd[READ], output, MAX_BUFFER);
   close(fd[READ]); close(fd[WRITE]);
@@ -64,11 +75,11 @@ int main(void) {
     if (!strncmp(passed, line, n)) parse_line(line, n, strlen(line), &total_pass, &total_tests);
     printf("%s\n", line); line = strtok(NULL, "\n");
   }
-  //printf("\nTOTAL TESTS: %d\n", total_tests);
   printf("\nTOTAL PASSED: %3d/%.d\n", total_pass, total_tests);
   printf("TOTAL FAILED: %3d/%.d\n", total_tests - total_pass, total_tests);
   return 0;
 }
+
 void parse_line(char* line, int start, int end, int* total_pass, int* total_test) {
   char number[3]; int i, j, n;
   for (i = start; i < end; i++) {
