@@ -44,3 +44,11 @@ void type_subtype_leaf_assign(struct type* t, struct type* subtype) {
   if (!t->subtype) t->subtype = subtype;
   else type_subtype_leaf_assign(t->subtype, subtype);
 }
+
+void type_destroy(struct type** t) {
+  if (!(*t)) return;
+  param_list_destroy(&((*t)->params));
+  type_destroy(&((*t)->subtype));
+  expr_destroy(&((*t)->size));
+  free(*t); *t = NULL;
+}

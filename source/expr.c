@@ -30,6 +30,8 @@ struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right )
     e->name = NULL;
     e->literal_value = 0;
     e->string_literal = NULL;
+
+    // TO DO: add to table
     e->symbol = NULL;
   }
   return e;
@@ -120,3 +122,12 @@ void expr_fprint(FILE* fp, struct expr* e) {
 }
 
 void expr_print(struct expr* e) { expr_fprint(stdout, e); }
+
+void expr_destroy(struct expr** e) {
+  if (!(*e)) return;
+  expr_destroy(&((*e)->left));
+  expr_destroy(&((*e)->right));
+  if ((*e)->kind == EXPR_NAME) free((void*)(*e)->name);
+  symbol_destroy(&((*e)->symbol));
+  free(*e); *e = NULL;
+}

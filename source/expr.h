@@ -66,4 +66,6 @@ struct expr* expr_create_string_literal(const char* str);
 void expr_fprint(FILE* fp, struct expr* e);
 void expr_print(struct expr* e);
 
+void expr_destroy(struct expr** e);
+
 #endif

@@ -16,4 +16,6 @@ struct param_list* param_list_create(char* name, struct type* type, struct param
 void param_list_fprint(FILE* fp, struct param_list* p);
 void param_list_print(struct param_list* p);
 
+void param_list_destroy(struct param_list** p);
+
 #endif

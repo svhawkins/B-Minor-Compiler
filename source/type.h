@@ -31,4 +31,6 @@ void type_print(struct type* t);
 // assigns the leaf subtype a subtype
 void type_subtype_leaf_assign(struct type* t, struct type* subtype);
 
+void type_destroy(struct type** t);
+
 #endif

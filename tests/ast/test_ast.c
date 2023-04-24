@@ -139,7 +139,7 @@ Status test_expr_vanilla(void) {
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); }
   char* expect = "493;\n'q';\n\"duck\";\ntrue;\nfoo;\nf++;\nf--;\nf(0);\nf[0];\n1;\n-1;\n!true;\n0 ^ 1;\n0 * 1;\n0 / 1;\n0 % 1;\n0 + 1;\n0 - 1;\n0 < 1;\n0 <= 1;\n0 > 1;\n0 >= 1;\n0 == 1;\n0 != 1;\ntrue && false;\ntrue || false;\nf = 0;\n0, 1;\n";
   eof = 0;
-  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) stmt_fprint(ifp, test_parser_result, 0);
+  for(int i = 0; !eof; i++) { if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); } stmt_destroy(&test_parser_result); }
   fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
@@ -155,7 +155,7 @@ Status test_expr_associativity(void) {
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); }
   char* expect = "(f++)++;\n(f--)--;\nf(f(0));\nf[f[0]];\nf;\n-(-f);\n!(!true);\n0 ^ (1 ^ 2);\n(0 * 1) * 2;\n(0 / 1) / 2;\n(0 % 1) % 2;\n(0 + 1) + 2;\n(0 - 1) - 2;\n(0 < 1) < 2;\n(0 <= 1) <= 2;\n(0 > 1) > 2;\n(0 >= 1) >= 2;\n(0 == 1) == 2;\n(0 != 1) != 2;\n(true && false) && true;\n(true || false) || true;\nf = foo = 0;\n0, 1, 2;\n";
   eof = 0;
-  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); test_parser_result = NULL; }
+  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); stmt_destroy(&test_parser_result); }
   fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
@@ -171,7 +171,7 @@ Status test_expr_precedence(void) {
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "foo = (((((((a--) ^ b) % c) + d) < e) == f) && g) || h, bar = (((-(a++)) ^ b) * c) + d, baz = ((((!(a[b])) <= c) != d) && e) || f, qux = ((((((-((a(b))--)) ^ c) / d) + e) == f) && g) || h;\n";
-  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); test_parser_result = NULL; }
+  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); stmt_destroy(&test_parser_result); }
   fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
@@ -186,7 +186,7 @@ Status test_expr_postfix_binary(void) {
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "x[i][j];\nx[i][j][k];\nf(x)(y);\nf(duck)(duck)(goose);\nf(a, b, c)(x, y, z)[i][j][k];\n";
-  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); test_parser_result = NULL; }
+  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); stmt_destroy(&test_parser_result); }
   fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
@@ -208,6 +208,7 @@ Status test_type_param_list(void) {
   fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  decl_destroy(&parser_result);
   return status;
 }
 
@@ -224,6 +225,7 @@ Status test_decl_uninit(void) {
   fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  decl_destroy(&parser_result);
   return status;
 }
 
@@ -240,6 +242,7 @@ Status test_decl_init(void) {
   fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  decl_destroy(&parser_result);
   return status;
 }
 
@@ -251,7 +254,7 @@ Status test_stmt_body(void) {
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "print duck;\nprint duck, goose;\nreturn;\nreturn duck;\nwhile (e) {\n  duck;\n}\nwhile (e) {}\nfor ( ; ; ) {\n  duck;\n}\nfor ( ; ; ) {}\nif (e) {} else {}\nif (e) {\n  duck;\n} else {\n  goose;\n}\nif (e) {} else {\n  goose;\n}\nif (e) {\n  duck;\n} else {}\n";
-  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); test_parser_result = NULL; }
+  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); stmt_destroy(&test_parser_result); }
   fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
@@ -266,7 +269,7 @@ Status test_stmt_for(void) {
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "for ( ; ; i++) {}\nfor ( ; i < n; ) {}\nfor ( ; i < n; i++) {}\nfor (i = 0; ; ) {}\nfor (i = 0; ; i++) {}\nfor (i = 0; i < n; ) {}\nfor (i = 0; i < n; i++) {}\nfor (i: integer; ; ) {}\nfor (i: integer = 0; ; ) {}\n";
-  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); test_parser_result = NULL; }
+  for(int i = 0; !eof; i++) if (yyparse() == 0 && !eof) { stmt_fprint(ifp, test_parser_result, 0); stmt_destroy(&test_parser_result); }
   fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
@@ -287,5 +290,6 @@ Status test_code_pretty(void) {
   fclose(yyin); ifp = freopen("temp.txt", "r", ifp); if (!ifp) { return file_error(test_type, "temp.txt"); }
   fileread(ifp, output, MAX_BUFFER); remove("temp.txt");
   if (strcmp(output, program)) { print_error(test_type, program, output); status = FAILURE; }
+  decl_destroy(&parser_result);
   return status;
 }

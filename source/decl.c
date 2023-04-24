@@ -13,6 +13,9 @@ struct decl* decl_create(char* name, struct type* type, struct expr* value, stru
     d->value = value;
     d->code = code;
     d->next = next;
+
+    // TO DO: add symbol to table
+    d->symbol = NULL;
   }
   return d;
 }
@@ -46,4 +49,17 @@ void decl_fprint(FILE* fp, struct decl* d, int indent) {
   if (d->next) { fprintf(fp, "\n"); }
   decl_fprint(fp, d->next, indent);
 }
+
 void decl_print(struct decl* d, int indent) { decl_fprint(stdout, d, indent); }
+
+void decl_destroy(struct decl** d) {
+  if (!(*d)) return;
+  free((*d)->name);
+  type_destroy(&((*d)->type));
+  expr_destroy(&((*d)->value));
+  stmt_destroy(&((*d)->code));
+  symbol_destroy(&((*d)->symbol));
+  decl_destroy(&((*d)->next));
+  free(*d); *d = NULL;
+}
+

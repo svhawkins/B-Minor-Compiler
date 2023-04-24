@@ -92,13 +92,14 @@ Status test_decl_create_null(void) {
     if (d->code) { print_error(test_type, "NULL", "stmt* d->code"); overall_status = FAILURE; }
     if (d->next) { print_error(test_type, "NULL", "decl* d->next"); overall_status = FAILURE; }
   }
+  decl_destroy(&d);
   return overall_status;
 }
 
 Status test_decl_create_name(void) {
   strcpy(test_type, "Testing: decl_create, non-NULL name");
   Status overall_status = SUCCESS;
-  struct decl* d = decl_create("foo", NULL, NULL, NULL, NULL);
+  struct decl* d = decl_create(strdup("foo"), NULL, NULL, NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
     if (strcmp(d->name, "foo")) { print_error(test_type, "foo", "char* d->name"); overall_status = FAILURE; }
@@ -107,6 +108,7 @@ Status test_decl_create_name(void) {
     if (d->code) { print_error(test_type, "NULL", "stmt* d->code"); overall_status = FAILURE; }
     if (d->next) { print_error(test_type, "NULL", "decl* d->next"); overall_status = FAILURE; }
   }
+  decl_destroy(&d);
   return overall_status;
 }
 
@@ -120,19 +122,21 @@ Status test_param_list_create_null(void) {
     if (p->type) { print_error(test_type, "NULL", "type* p->type"); overall_status = FAILURE; }
     if (p->next) { print_error(test_type, "NULL", "param_list* p->next"); overall_status = FAILURE; }
   }
+  param_list_destroy(&p);
   return overall_status;
 }
 
 Status test_param_list_create_name(void) {
   strcpy(test_type, "Testing: param_list_create_name, non-NULL name");
   Status overall_status = SUCCESS;
-  struct param_list* p = param_list_create("foo", NULL, NULL);
+  struct param_list* p = param_list_create(strdup("foo"), NULL, NULL);
   if (!p) { print_error(test_type, "NOT NULL", "param_list p"); overall_status = FAILURE; }
   else {
     if (strcmp(p->name, "foo")) { print_error(test_type, "foo", "char* p->name"); overall_status = FAILURE; }
     if (p->type) { print_error(test_type, "NULL", "type* p->type"); overall_status = FAILURE; }
     if (p->next) { print_error(test_type, "NULL", "param_list* p->next"); overall_status = FAILURE; }
   }
+  param_list_destroy(&p);
   return overall_status;
 }
 
@@ -156,6 +160,7 @@ Status test_stmt_create_kind(void) {
       if (s->else_body) { print_error(test_type, "NULL", "stmt* s->else_body"); overall_status = FAILURE; }
       if (s->next) { print_error(test_type, "NULL", "stmt* s->next"); overall_status = FAILURE; }
     }
+    stmt_destroy(&s);
   }
   return overall_status;
 }
@@ -176,6 +181,7 @@ Status test_type_create_kind(void) {
       if (t->subtype) { print_error(test_type, "NULL", "type* t->subtype"); overall_status = FAILURE; }
       if (t->params) { print_error(test_type, "NULL", "param_list* params"); overall_status = FAILURE; }
     }
+    type_destroy(&t);
   }
   return overall_status;
 }
@@ -202,6 +208,7 @@ Status test_expr_create_kind(void) {
       }
       if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
     }
+    expr_destroy(&e);
   }
   return overall_status;
 }
@@ -210,7 +217,7 @@ Status test_expr_create_name(void) {
   strcpy(test_type, "Testing: test_expr_create_name");
   Status overall_status = SUCCESS;
   char expect[3], actual[3];
-  struct expr* e = expr_create_name("foo");
+  struct expr* e = expr_create_name(strdup("foo"));
   if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; }
   else {
     if (e->kind != EXPR_NAME) {
@@ -226,6 +233,7 @@ Status test_expr_create_name(void) {
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
   }
+  expr_destroy(&e);
   return overall_status;
 }
 
@@ -249,6 +257,7 @@ Status test_expr_create_int(void) {
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
   }
+  expr_destroy(&e);
   return overall_status;
 }
 
@@ -272,6 +281,7 @@ Status test_expr_create_bool(void) {
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
   }
+  expr_destroy(&e);
   return overall_status;
 }
 
@@ -289,12 +299,13 @@ Status test_expr_create_char(void) {
     if (e->left) { print_error(test_type, "NULL", "expr* e->left"); overall_status = FAILURE; }
     if (e->right) { print_error(test_type, "NULL", "expr* e->right"); overall_status = FAILURE; }
     if (e->name) { print_error(test_type, "NULL", "char* e->name"); overall_status = FAILURE; }
-    if (e->literal_value != (*(int*)&val)) {
+    if (e->literal_value != 'A') {
       sprintf(expect, "%c", val); sprintf(actual, "%c", e->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
   }
+  expr_destroy(&e);
   return overall_status;
 }
 
@@ -318,6 +329,7 @@ Status test_expr_create_str(void) {
     }
     if (strcmp("foo", e->string_literal)) { print_error(test_type, "foo", "char* e->string_literal"); overall_status = FAILURE; }
   }
+  expr_destroy(&e);
   return overall_status;
 }
 
@@ -326,7 +338,7 @@ Status test_expr_create_unary(void) {
   strcpy(test_type, "Testing: test_expr_create_unary");
   Status overall_status = SUCCESS;
   char expect[3], actual[3];
-  struct expr* e = expr_create(EXPR_NOT, expr_create_name("x"), NULL);
+  struct expr* e = expr_create(EXPR_NOT, expr_create_name(strdup("x")), NULL);
   if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; }
   else {
     if (e->kind != EXPR_NOT) {
@@ -347,6 +359,7 @@ Status test_expr_create_unary(void) {
     if (e->left->left) { print_error(test_type, "NULL", "expr* e->left->left"); overall_status = FAILURE; }
     if (e->left->right) { print_error(test_type, "NULL", "expr* e->left->right"); overall_status = FAILURE; }
   }
+  expr_destroy(&e);
   return overall_status;
 }
 
@@ -397,6 +410,7 @@ Status test_expr_create_binary_2_op(void) {
     if (e->right->left) { print_error(test_type, "NULL", "expr* e->right->left"); overall_status = FAILURE; }
     if (e->right->right) { print_error(test_type, "NULL", "expr* e->right->right"); overall_status = FAILURE; }
   }
+  expr_destroy(&e);
   return overall_status;
 }
 
@@ -472,6 +486,7 @@ Status test_expr_create_binary_3_op(void) {
   }
   if (e->right->left) { print_error(test_type, "NULL", "expr* e->right->left"); overall_status = FAILURE; }
   if (e->right->right) { print_error(test_type, "NULL", "expr* e->right->right"); overall_status = FAILURE; }
+  expr_destroy(&e);
   return overall_status;
 }
 
@@ -506,6 +521,7 @@ Status test_stmt_create_print(void) {
     if (s->expr->literal_value) { print_error(test_type, "NULL", "int* s->expr->literal_value"); overall_status = FAILURE; }
     if (strcmp("hello world!:)\n", s->expr->string_literal)) { print_error(test_type, "NULL", "char* s->expr->string_literal"); overall_status = FAILURE; }
   }
+  stmt_destroy(&s);
   return overall_status;
 }
 
@@ -513,7 +529,7 @@ Status test_decl_create_atomic_uninit(void) {
   strcpy(test_type, "Testing: decl_create_atomic_uninit");
   Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
-  struct decl* d = decl_create("foo", type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
     if (strcmp(d->name, "foo")) { print_error(test_type, "foo", "char* d->name"); overall_status = FAILURE; }
@@ -530,6 +546,7 @@ Status test_decl_create_atomic_uninit(void) {
     if (d->type->subtype) { print_error(test_type, "NULL", "type* d->type->subtype"); overall_status = FAILURE; }
     if (d->type->params) { print_error(test_type, "NULL", "param_list* d->type->params"); overall_status = FAILURE; }
   }
+  decl_destroy(&d);
   return overall_status;
 }
 
@@ -537,7 +554,7 @@ Status test_decl_create_atomic_init(void) {
   strcpy(test_type, "Testing: decl_create_atomic_init");
   Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
-  struct decl* d = decl_create("bar", type_create(TYPE_STRING, NULL, NULL, NULL), expr_create_string_literal("hello world!:)\n"), NULL, NULL);
+  struct decl* d = decl_create(strdup("bar"), type_create(TYPE_STRING, NULL, NULL, NULL), expr_create_string_literal("hello world!:)\n"), NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
     if (strcmp(d->name, "bar")) { print_error(test_type, "bar", "char* d->name"); overall_status = FAILURE; }
@@ -565,6 +582,7 @@ Status test_decl_create_atomic_init(void) {
     if (d->value->literal_value) { print_error(test_type, "NULL", "int d->value->literal_value"); overall_status = FAILURE; }
     if (strcmp("hello world!:)\n", d->value->string_literal)) { print_error(test_type, "NULL", "char* d->value->string_literal"); overall_status = FAILURE; }
   }
+  decl_destroy(&d);
   return overall_status;
 }
 
@@ -572,7 +590,7 @@ Status test_decl_create_composite_array(void) {
   strcpy(test_type, "Testing: decl_create_composite_array");
   Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
-  struct decl* d = decl_create("foo", type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL), NULL, NULL, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL), NULL, NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
     if (strcmp(d->name, "foo")) { print_error(test_type, "foo", "char* d->name"); overall_status = FAILURE; }
@@ -597,6 +615,7 @@ Status test_decl_create_composite_array(void) {
     if (d->type->subtype->subtype) { print_error(test_type, "NULL", "type* d->type->subtype->subtype"); overall_status = FAILURE; }
     if (d->type->subtype->params) { print_error(test_type, "NULL", "param_list* d->type->subtype->params"); overall_status = FAILURE; }
   }
+  decl_destroy(&d);
   return overall_status;
 }
 
@@ -605,9 +624,9 @@ Status test_decl_create_composite_function(void) {
   strcpy(test_type, "Testing: decl_create_composite_function");
   Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
-  struct decl* d = decl_create("foo", type_create(TYPE_FUNCTION,
+  struct decl* d = decl_create(strdup("foo"), type_create(TYPE_FUNCTION,
 				      type_create(TYPE_VOID, NULL, NULL, NULL),
-				      param_list_create("x", type_create(TYPE_INTEGER, NULL, NULL,NULL), NULL), NULL),
+				      param_list_create(strdup("x"), type_create(TYPE_INTEGER, NULL, NULL,NULL), NULL), NULL),
 				      NULL, NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
@@ -643,6 +662,7 @@ Status test_decl_create_composite_function(void) {
     if (d->type->params->type->params) { print_error(test_type, "NULL", "param_list* d->type->params->subtype->params"); overall_status = FAILURE; }
     if (d->type->params->next) { print_error(test_type, "NULL", "decl* d->type->params->next"); overall_status = FAILURE; }
   }
+  decl_destroy(&d);
   return overall_status;
 }
 
@@ -663,25 +683,25 @@ Status test_decl_create_program(void) {
   Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   // structs that make up param list
-  struct param_list* p = param_list_create("argc", type_create(TYPE_INTEGER, NULL, NULL,NULL),
-					   param_list_create("argv", type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, NULL), NULL)
+  struct param_list* p = param_list_create(strdup("argc"), type_create(TYPE_INTEGER, NULL, NULL,NULL),
+					   param_list_create(strdup("argv"), type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, NULL), NULL)
 					  );
   // structs that make up stmts in code
   struct stmt* return_stmt = stmt_create(STMT_RETURN, NULL, NULL, expr_create_integer_literal(0), NULL, NULL, NULL, NULL);
   struct stmt* for_body = stmt_create(STMT_PRINT, NULL, NULL, expr_create_string_literal("hello world!:)\n"), NULL, NULL, NULL, NULL);
-  struct stmt* for_stmt = stmt_create(STMT_FOR, NULL, expr_create(EXPR_ASSIGN, expr_create_name("i"), expr_create_integer_literal(0)),
-						      expr_create(EXPR_LESS, expr_create_name("i"), expr_create_name("n")),
-						      expr_create(EXPR_INC, expr_create_name("i"), NULL),
+  struct stmt* for_stmt = stmt_create(STMT_FOR, NULL, expr_create(EXPR_ASSIGN, expr_create_name(strdup("i")), expr_create_integer_literal(0)),
+						      expr_create(EXPR_LESS, expr_create_name(strdup("i")), expr_create_name(strdup("n"))),
+						      expr_create(EXPR_INC, expr_create_name(strdup("i")), NULL),
 						      for_body, NULL, return_stmt);
-  struct stmt* n_init = stmt_create(STMT_DECL, decl_create("n", type_create(TYPE_INTEGER, NULL, NULL, NULL), expr_create_integer_literal(10), NULL, NULL),
+  struct stmt* n_init = stmt_create(STMT_DECL, decl_create(strdup("n"), type_create(TYPE_INTEGER, NULL, NULL, NULL), expr_create_integer_literal(10), NULL, NULL),
 					       NULL, NULL, NULL, NULL, NULL, for_stmt);
 
-  struct stmt* i_init = stmt_create(STMT_DECL, decl_create("i", type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, n_init);
+  struct stmt* i_init = stmt_create(STMT_DECL, decl_create(strdup("i"), type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, n_init);
 
 
 
   // the actual declaration (oh dear lord...)
-  struct decl* d = decl_create("main", type_create(TYPE_FUNCTION,
+  struct decl* d = decl_create(strdup("main"), type_create(TYPE_FUNCTION,
                                       type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL), NULL, i_init, NULL);
 
   // main: function integer(argc: integer, argv: array [] string)
@@ -945,5 +965,6 @@ Status test_decl_create_program(void) {
     }
     if (d->code->next->next->next->expr->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->next->expr->string_literal"); overall_status = FAILURE; }
   }
+  decl_destroy(&d);
   return overall_status;
 }

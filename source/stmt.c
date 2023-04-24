@@ -119,4 +119,17 @@ void stmt_fprint(FILE* fp, struct stmt* s, int indent) {
   if (s->kind != STMT_BLOCK) fprintf(fp, "\n");
   stmt_fprint(fp, s->next, indent);
 }
+
 void stmt_print(struct stmt* s, int indent) { stmt_fprint(stdout, s, indent); }
+
+void stmt_destroy(struct stmt** s) {
+  if (!(*s)) return;
+  decl_destroy(&((*s)->decl));
+  expr_destroy(&((*s)->init_expr));
+  expr_destroy(&((*s)->expr));
+  expr_destroy(&((*s)->next_expr));
+  stmt_destroy(&((*s)->body));
+  stmt_destroy(&((*s)->else_body));
+  stmt_destroy(&((*s)->next));
+  free(*s); *s = NULL;
+}

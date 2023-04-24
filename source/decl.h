@@ -19,5 +19,7 @@ struct decl* decl_create(char* name, struct type* type, struct expr* value, stru
 void decl_fprint(FILE* fp, struct decl* d, int indent);
 void decl_print(struct decl* d, int indent);
 
+void decl_destroy(struct decl** d);
+
 #endif
 
