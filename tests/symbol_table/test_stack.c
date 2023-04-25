@@ -106,7 +106,7 @@ int main(void) {
     test_symbol_table_scope_lookup_empty_table,
     test_symbol_table_scope_lookup_bad_key,
     test_symbol_table_scope_lookup_good_key,
-    test_symbol_table_scope_lookup_multi_table, // THIS TEST HAS A BUG
+    test_symbol_table_scope_lookup_multi_table,
     test_symbol_table_scope_lookup_current_null_stack,
     test_symbol_table_scope_lookup_current_null_items,
     test_symbol_table_scope_lookup_current_empty_stack,
@@ -600,7 +600,7 @@ Status test_symbol_table_scope_lookup_multi_table(void) {
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
   symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, NULL, strdup("bar")));
-  //symbol_table_scope_enter(st);// FIX BUG
+  symbol_table_scope_enter(st);
   symbol_table_scope_bind(st, "duck", symbol_create(SYMBOL_GLOBAL, NULL, strdup("goose")));
 
   struct symbol* ret = symbol_table_scope_lookup(st, "foo");
@@ -608,13 +608,11 @@ Status test_symbol_table_scope_lookup_multi_table(void) {
     print_error(test_type, "NOT NULL", "struct symbol* symbol_table_scope_lookup(Symbol_table* st, const char* name) [foo]");
     status = FAILURE;
   }
-  //printf("[[%s]]\n", ret->name);
   ret = symbol_table_scope_lookup(st, "duck");
   if (!ret) {
     print_error(test_type, "NOT NULL", "struct symbol* symbol_table_scope_lookup(Symbol_table* st, const char* name) [duck]");
     status = FAILURE;
   }
-  //printf("[[%s]]\n", ret->name);
   symbol_table_destroy(&st);
   return status;
 }

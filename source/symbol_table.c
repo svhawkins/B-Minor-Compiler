@@ -90,8 +90,7 @@ Does nothing if:
 */
 void symbol_table_scope_bind(Symbol_table* st, const char* name, struct symbol* sym) {
   if (!st || !st->items || !st->size || !(st->items[st->size - 1])) return;
-  int status = hash_table_insert((struct hash_table*)st->items[st->size - 1], name, (void*)sym);
-  if (status != 1) printf("binding failure...\n");
+  if (hash_table_insert((struct hash_table*)st->items[st->size - 1], name, (void*)sym) != 1) { /* binding failure */ }
 }
 
 /*
@@ -108,10 +107,11 @@ Returns a NULL pointer in the following cases:
 */
 struct symbol* symbol_table_scope_lookup(Symbol_table* st, const char* name) {
   if (!st || !st->items || !st->size) return NULL;
-  struct symbol* found = NULL;
-  for (int i = st->size - 1; i >= 0; i--) {
-    if (!st->items[i] || !hash_table_size(st->items[i])) return NULL;
-    found = (struct symbol*)hash_table_lookup(st->items[i], name);
+  int top = st->size - 1; struct symbol* found = NULL;
+  for (int i = top; i >= 0; i--) {
+    if (!st->items[i] || !hash_table_size(st->items[i])) continue;
+    found = (struct symbol*)hash_table_lookup(*(&st->items[i]), name);
+    if (found) break;
   }
   return found;
 }
@@ -136,5 +136,31 @@ struct symbol* symbol_table_scope_lookup_current(Symbol_table* st, const char* n
 /*
 prints out the key value pairs of the names associated with the symbols for all hash tables within
 */
-//void symbol_table_fprint(FILE* fp, Symbol_table* st);
-//void symbol_table_print(Symbol_table* st) { symbol_table_fprint(stdout, st); }
+
+void hash_table_fprint(FILE* fp, struct hash_table* ht) {
+  if (!ht) { fprintf(fp, "[null table]\n\n"); return; }
+  if (!hash_table_size(ht)) { fprintf(fp, "[empty table]\n\n"); return; }
+  char* key; void* value;
+  hash_table_firstkey(ht);
+  while (hash_table_nextkey(ht, &key, &value)) {
+    fprintf(fp, "%s --> ", key);
+    symbol_fprint(fp, value); fprintf(fp, "\n");
+  }
+  for (int i = 0; i < 50; i++) { fprintf(fp, "-"); } fprintf(fp, "\n");
+}
+
+void symbol_table_fprint(FILE* fp, Symbol_table* st) {
+  int top = st->size - 1;
+  for (int i = top; i >= 0; i--) {
+    // hash table header
+    fprintf(fp, "SCOPE [%d]:", i);
+    if (i == top) fprintf(fp, " CURRENT (TOP)");
+    else if (!i) fprintf(fp, " GLOBAL (BOTTOM)");
+    fprintf(fp, "\n"); for (int j = 0; j < 50; j++) fprintf(fp, "-"); fprintf(fp, "\n");
+
+    // print out hash table
+    hash_table_fprint(fp, st->items[i]);
+  }
+}
+
+void symbol_table_print(Symbol_table* st) { symbol_table_fprint(stdout, st); }

@@ -1,6 +1,13 @@
 COMP 4060 201
 Assignment 4: Symbol Table and Type Checking
 
+
+added things:
+
+- symbol now has a symbol_fprint function. used only as a helper function for symbol_table_fprint
+- symbol_table has symbol_table_fprint and symbol_table_print functions to print out table contents and
+  to indicate scope
+
 BRANCHES:
 
 stack:
@@ -39,6 +46,13 @@ difficulties
   not exactly in behavior of the tests, but how i arranged the structures, ESPECIALLY in the manually created ones.
   there was a lot of debugging done.
 
+- figuring out why 'test_symbol_table_scope_lookup_multi_table' was failing only to realize that
+  i forgot to put a BREAK STATEMENT in the loop once the key was found
+
+  replicating the bug in main helped me realize this by showing that all of the other
+  stack, symbol_table, and hash_table functions were working fine since 'symbol_table_print'
+  printed everything out correctly.
+
 
 caveats
 - my 'delete' functions are called 'destroy' functions but they do the same thing.
@@ -53,12 +67,4 @@ caveats
 
 
 
-
 - BUGS:
-
-1. adding more tables to the stack after binding makes the top one NULL
-   fails test: scope lookup multiple tables
-   if both keys are in the same table it works fine.
-   if the keys are in seperate tables, after scope entry binding makes it null unable to be accessed.
-
-   this is going to cause a lot of problems later...

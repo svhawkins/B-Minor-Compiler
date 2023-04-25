@@ -21,3 +21,9 @@ void symbol_destroy(struct symbol** s) {
   free((*s)->name);
   free(*s); *s = NULL;
 }
+
+void symbol_fprint(FILE* fp, struct symbol* s) {
+  fprintf(fp, "(kind: %d, name: %s, type: ", s->kind, s->name);
+  type_fprint(fp, s->type);
+  fprintf(fp, ")\n");
+}
