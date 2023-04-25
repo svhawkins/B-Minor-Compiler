@@ -83,7 +83,7 @@ void* stack_pop(Stack* s) {
       s->capacity = new_capacity;
     }
   }
-  int top = 0;
+  int top = s->size - 1;
   void* item = s->items[top]; // whatever the topmost value is
   s->items[top] = NULL;
   s->size--;
@@ -100,7 +100,7 @@ int stack_size(Stack* s) { return (s && s->items) ? s->size : -1; }
 
 /*
 Returns to pointer to item specified by position.
-The top of the stack is position 0.
+The top of the stack is final element in items (size - 1)
 If either:
    - out of bounds (negative or above size)
    - stack or items is unallocated

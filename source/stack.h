@@ -50,6 +50,6 @@ int stack_size(Stack* s);
 
 /*
 Returns to pointer to item specified by position.
-The top of the stack is position 0.
+The top of the stack is the final item in the vector (size - 1)
 */
 void* stack_item(Stack* s, int position);
