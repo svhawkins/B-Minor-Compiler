@@ -66,6 +66,14 @@ Status test_symbol_table_scope_lookup_current_bad_key(void);
 Status test_symbol_table_scope_lookup_current_good_key(void);
 Status test_symbol_table_scope_lookup_current_multi_key(void);
 
+// name resolution tests (which uses the symbol table)
+Status test_expr_resolve_name(void);
+Status test_expr_resolve_binary_op(void);
+Status test_decl_resolve_atomic_uninit(void);
+Status test_decl_resolve_atomic_init(void);
+Status test_decl_resolve_function_uninit_no_param(void);
+Status test_decl_resolve_function_uninit_one_param(void);
+Status test_decl_resolve_function_uninit_many_param(void);
 
 int main(void) {
   Status (*tests[])(void) = {
@@ -114,7 +122,14 @@ int main(void) {
     test_symbol_table_scope_lookup_current_empty_table,
     test_symbol_table_scope_lookup_current_bad_key,
     test_symbol_table_scope_lookup_current_good_key,
-    test_symbol_table_scope_lookup_current_multi_key
+    test_symbol_table_scope_lookup_current_multi_key,
+    test_expr_resolve_name,
+    test_expr_resolve_binary_op,
+    test_decl_resolve_atomic_uninit,
+    test_decl_resolve_atomic_init,
+    test_decl_resolve_function_uninit_no_param,
+    test_decl_resolve_function_uninit_one_param,
+    test_decl_resolve_function_uninit_many_param
   };
 
   int n_tests = sizeof(tests)/sizeof(tests[0]);
@@ -726,5 +741,171 @@ Status test_symbol_table_scope_lookup_current_multi_key(void) {
     status = FAILURE;
   }
   symbol_table_destroy(&st);
+  return status;
+}
+
+Status test_expr_resolve_name(void) {
+  strcpy(test_type, "Testing: test_expr_resolve_name");
+  Status status = SUCCESS;
+  struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct expr* e = expr_create_name(strdup("x"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup("x"));
+
+  Symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st);
+  symbol_table_scope_bind(st, "x", s);
+  symbol_table_expr_resolve(st, e);
+
+  symbol_table_scope_lookup(st, "x");
+  if (!e->symbol) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (strcmp(e->symbol->name, e->name)) { print_error(test_type, "0", "strcmp(ret->name, e->name)"); status = FAILURE; }
+  if (!type_equals(integer, e->symbol->type)) { print_error(test_type, "true", "type_equals(integer, ret->type)"); status = FAILURE; }
+  if (e->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int ret->kind"); status = FAILURE; }
+  symbol_table_destroy(&st); expr_destroy(&e); type_destroy(&integer);
+  return status;
+}
+
+Status test_expr_resolve_binary_op(void) {
+  strcpy(test_type, "Testing: test_expr_resolve_binary_op");
+  Status status = SUCCESS;
+  struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct expr* x = expr_create_name(strdup("x"));
+  struct symbol* sx = symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup("x"));
+  struct expr* y = expr_create_name(strdup("y"));
+  struct symbol* sy = symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup("y"));
+  struct expr* e = expr_create(EXPR_ADD, x, y);
+
+  Symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st);
+  symbol_table_scope_bind(st, "x", sx);
+  symbol_table_scope_bind(st, "y", sy);
+  symbol_table_expr_resolve(st, e);
+
+  symbol_table_scope_lookup(st, "x");
+  if (!x->symbol) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (strcmp(x->symbol->name, x->name)) { print_error(test_type, "0", "strcmp(ret->name, e->name) [x]"); status = FAILURE; }
+  if (!type_equals(integer, x->symbol->type)) { print_error(test_type, "true", "type_equals(integer, ret->type)"); status = FAILURE; }
+  if (x->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int ret->kind"); status = FAILURE; }
+
+  symbol_table_scope_lookup(st, "y");
+  if (!y->symbol) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (strcmp(y->symbol->name, y->name)) { print_error(test_type, "0", "strcmp(ret->name, e->name) [y]"); status = FAILURE; }
+  if (!type_equals(integer, y->symbol->type)) { print_error(test_type, "true", "type_equals(integer, ret->type)"); status = FAILURE; }
+  if (y->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int ret->kind"); status = FAILURE; }
+
+  symbol_table_destroy(&st); expr_destroy(&e); type_destroy(&integer);
+  return status;
+}
+
+Status test_decl_resolve_atomic_uninit(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_atomic_uninit");
+  Status status = SUCCESS;
+  struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct decl* d = decl_create(strdup("x"), type_copy(integer), NULL, NULL, NULL);
+
+  Symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st);
+  symbol_table_decl_resolve(st, d);
+
+  if (!symbol_table_scope_lookup(st, "x")) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (!d->symbol) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (strcmp(d->symbol->name, d->name)) { print_error(test_type, "0", "strcmp(ret->name, e->name) [x]"); status = FAILURE; }
+  if (!type_equals(integer, d->symbol->type)) { print_error(test_type, "true", "type_equals(integer, ret->type)"); status = FAILURE; }
+  if (d->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int ret->kind"); status = FAILURE; }
+
+  symbol_table_destroy(&st); decl_destroy(&d); type_destroy(&integer);
+  return status;
+}
+
+Status test_decl_resolve_atomic_init(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_atomic_init");
+  Status status = SUCCESS;
+  struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct expr* y = expr_create_name(strdup("y"));
+  struct decl* d = decl_create(strdup("x"), type_copy(integer), y, NULL, NULL);
+  struct symbol* sy = symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup("y"));
+
+  Symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st);
+  symbol_table_scope_bind(st, "y", sy);
+  symbol_table_decl_resolve(st, d);
+
+  symbol_table_scope_lookup(st, "x");
+  if (!d->symbol) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (strcmp(d->symbol->name, d->name)) { print_error(test_type, "0", "strcmp(ret->name, e->name) [x]"); status = FAILURE; }
+  if (!type_equals(integer, d->symbol->type)) { print_error(test_type, "true", "type_equals(integer, ret->type)"); status = FAILURE; }
+  if (d->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int ret->kind"); status = FAILURE; }
+
+  symbol_table_scope_lookup(st, "y");
+  if (!y->symbol) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (strcmp(y->symbol->name, y->name)) { print_error(test_type, "0", "strcmp(ret->name, e->name) [y]"); status = FAILURE; }
+  if (!type_equals(integer, y->symbol->type)) { print_error(test_type, "true", "type_equals(integer, ret->type)"); status = FAILURE; }
+  if (y->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int ret->kind"); status = FAILURE; }
+
+  symbol_table_destroy(&st); decl_destroy(&d); type_destroy(&integer);
+  return status;
+}
+
+Status test_decl_resolve_function_uninit_no_param(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_function_uninit_no_param");
+  Status status = SUCCESS;
+  struct type* fvoid = type_create(TYPE_FUNCTION, type_create(TYPE_VOID, NULL, NULL, NULL), NULL, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_copy(fvoid), NULL, NULL, NULL);
+
+  Symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st);
+  symbol_table_decl_resolve(st, d);
+
+  if (!symbol_table_scope_lookup(st, "foo")) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (!d->symbol) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (strcmp(d->symbol->name, d->name)) { print_error(test_type, "0", "strcmp(d->symbol->name, d->name) [foo]"); status = FAILURE; }
+  if (!type_equals(fvoid, d->symbol->type)) { print_error(test_type, "true", "type_equals(fvoid, d->symbol->type)"); status = FAILURE; }
+  if (d->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int d->symbol->kind"); status = FAILURE; }
+
+  symbol_table_destroy(&st); decl_destroy(&d); type_destroy(&fvoid);
+  return status;
+}
+
+Status test_decl_resolve_function_uninit_one_param(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_function_uninit_one_param");
+  Status status = SUCCESS;
+  struct param_list* p = param_list_create(strdup("x"), type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL);
+  struct type* fvoid_p = type_create(TYPE_FUNCTION, type_create(TYPE_VOID, NULL, NULL, NULL), p, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_copy(fvoid_p), NULL, NULL, NULL);
+
+  Symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st);
+  symbol_table_decl_resolve(st, d);
+
+  if (!symbol_table_scope_lookup(st, "foo")) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (!d->symbol) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (strcmp(d->symbol->name, d->name)) { print_error(test_type, "0", "strcmp(d->symbol->name, d->name) [foo]"); status = FAILURE; }
+  if (!type_equals(fvoid_p, d->symbol->type)) { print_error(test_type, "true", "type_equals(fvoid, d->symbol->type)"); status = FAILURE; }
+  if (d->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int d->symbol->kind"); status = FAILURE; }
+
+  symbol_table_destroy(&st); decl_destroy(&d); type_destroy(&fvoid_p);
+  return status;
+}
+Status test_decl_resolve_function_uninit_many_param(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_function_uninit_many_param");
+  Status status = SUCCESS;
+
+  struct type* targv = type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, NULL);
+  struct param_list* pend = param_list_create(strdup("argv"), targv, NULL);
+  struct param_list* p = param_list_create(strdup("argc"), type_create(TYPE_INTEGER, NULL, NULL, NULL), pend);
+  struct type* t = type_create(TYPE_FUNCTION, type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL);
+  struct decl* d = decl_create(strdup("main"), type_copy(t), NULL, NULL, NULL);
+
+  Symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st);
+  symbol_table_decl_resolve(st, d);
+
+  if (!symbol_table_scope_lookup(st, "main")) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (!d->symbol) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (strcmp(d->symbol->name, d->name)) { print_error(test_type, "0", "strcmp(d->symbol->name, d->name) [main]"); status = FAILURE; }
+  if (!type_equals(t, d->symbol->type)) { print_error(test_type, "true", "type_equals(fvoid, d->symbol->type)"); status = FAILURE; }
+  if (d->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int d->symbol->kind"); status = FAILURE; }
+
+  symbol_table_destroy(&st); decl_destroy(&d); type_destroy(&t);
   return status;
 }

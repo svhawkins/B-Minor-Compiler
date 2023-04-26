@@ -68,4 +68,6 @@ void expr_print(struct expr* e);
 
 void expr_destroy(struct expr** e);
 
+struct expr* expr_copy(struct expr* e);
+
 #endif

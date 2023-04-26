@@ -30,8 +30,6 @@ struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right )
     e->name = NULL;
     e->literal_value = 0;
     e->string_literal = NULL;
-
-    // TO DO: add to table
     e->symbol = NULL;
   }
   return e;
@@ -128,6 +126,21 @@ void expr_destroy(struct expr** e) {
   expr_destroy(&((*e)->left));
   expr_destroy(&((*e)->right));
   if ((*e)->kind == EXPR_NAME) free((void*)(*e)->name);
-  symbol_destroy(&((*e)->symbol));
+  //symbol_destroy(&((*e)->symbol));
   free(*e); *e = NULL;
+}
+
+struct expr* expr_copy(struct expr* e) {
+  if (!e) return NULL;
+  struct expr* copy = malloc(sizeof(*copy));
+  if (copy) {
+    copy->kind = e->kind;
+    if (e->kind == EXPR_NAME) {
+      copy->name = strdup(e->name);
+      copy->symbol = symbol_copy(e->symbol);
+    }
+    copy->left = expr_copy(e->left);
+    copy->right = expr_copy(e->right);
+  }
+  return copy;
 }

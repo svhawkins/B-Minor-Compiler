@@ -52,3 +52,26 @@ void type_destroy(struct type** t) {
   expr_destroy(&((*t)->size));
   free(*t); *t = NULL;
 }
+
+struct type* type_copy(struct type* t) {
+  if (!t) return NULL;
+  struct type* copy = malloc(sizeof(*copy));
+  if (copy) {
+    copy->kind = t->kind;
+    copy->params = param_list_copy(t->params);
+    copy->subtype = type_copy(t->subtype);
+    copy->size = expr_copy(t->size);
+  }
+  return copy;
+}
+
+bool type_equals(struct type* a, struct type* b) {
+  if ((!a && b) || (a && !b)) return false; if (!a && !b) return true;
+  bool ret = false;
+  if (a->kind == b->kind) {
+    if (a->kind && b->kind == TYPE_ARRAY) ret = type_equals(a->subtype, b->subtype);
+    else if (a->kind && b->kind == TYPE_FUNCTION) ret = type_equals(a->subtype, b->subtype) && param_list_equals(a->params, b->params);
+    else ret = true;
+  }
+  return ret;
+}

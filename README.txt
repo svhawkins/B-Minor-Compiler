@@ -13,10 +13,12 @@ BRANCHES:
 stack:
 (with manually created AST trees)
   DONE- implements basic stack for symbol table
-  - implements name resolution functions for each of the AST structures
+  DONE- implements name resolution functions for each of the AST structures
+	to do: stmt_resolve
   DONE- symbol table stack unit testing (null void pointers)
  DONE - symbol table stack + hash table intgration testing
-  - name resolution function unit + integration testing
+ DONE - name resolution function unit + integration testing
+	to do: stmt_resolve testing
  DONE - hashtable + symbol integration testing (brief)
 
 -overdue task:
@@ -60,11 +62,39 @@ caveats
 
 - symbol table api functions have a 'symbol_table_' prefix added to them to have consistent naming with
   other functions in all the other files.
+  this includes the <struct>_resolve functions.
 
 
 - symbol_table itself is just a wrapper for the void* stack, better handling/manager for hashtables and symbols.
   ('all under one roof' so to speak)
 
+- symbol_table_scope_bind returns an int instead of being void. used to indicate bind success/failure.
+
 
 
 - BUGS:
+RESOLVED1. attempting scope_bind() within symbol_table_decl_resolve() causes a segmentation fault.
+   specifically when calling hash_table_insert()
+   the symbols print fine
+   the hash table is allocated though empty
+   hash_table_lookup works fine. it returns null as it should since empty table.
+   meaning there are no duplicate keys.
+
+
+running only one test gives this output when printing out the symbol table
+Running 1 tests...
+SCOPE [0]: CURRENT (TOP)
+--------------------------------------------------
+x --> (kind: global, name: x, type: integer)
+
+--------------------------------------------------
+free(): double free detected in tcache 2
+Aborted
+
+i double freed somewhere...
+And that was in decl_destroy()
+I was calling symbol_destroy() twice:
+	once during decl_destroy() to destroy the symbol field
+	once during symbol_table_destroy() to delete the table elements.
+        both of these pointers point to the same struct symbol in memory!
+	there are no deep copies.

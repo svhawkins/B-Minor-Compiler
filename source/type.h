@@ -1,6 +1,7 @@
 #ifndef TYPE_H
 #define TYPE_H
 
+#include <stdbool.h>
 #include "param_list.h"
 #include "expr.h"
 
@@ -32,5 +33,9 @@ void type_print(struct type* t);
 void type_subtype_leaf_assign(struct type* t, struct type* subtype);
 
 void type_destroy(struct type** t);
+
+struct type* type_copy(struct type* t);
+
+bool type_equals(struct type* a, struct type* b);
 
 #endif

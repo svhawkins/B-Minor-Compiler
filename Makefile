@@ -2,7 +2,7 @@
 ## -Wall errrors from generated code.
 CFLAGS = -pedantic -Og -Wall -Wextra
 AST = tests/test_factory tests/test_print tests/test_ast
-SYM = tests/test_stack tests/test_typecheck tests/test_symbol_table
+SYM = tests/test_stack tests/test_typecheck
 TESTS = tests/test_scan tests/test_parse $(AST) $(SYM) test
 COMPILER = scan parse print typecheck
 EXEC = $(COMPILER) $(TESTS)
@@ -35,8 +35,6 @@ tests/test_ast: tests/ast/test_ast.o source/scanner.o source/parser.o $(INCLUDES
 tests/test_stack: tests/symbol_table/test_stack.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
 tests/test_typecheck: tests/symbol_table/test_typecheck.o source/scanner.o source/parser.o $(INCLUDES)
-	gcc -o $@ $^
-tests/test_symbol_table: tests/symbol_table/test_symbol_table.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
 
 ## root targets

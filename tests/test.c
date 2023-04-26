@@ -14,7 +14,7 @@ int main(void) {
   int total_pass = 0, total_tests = 0;
 
   // executables list
-  int n_exec = 8;
+  int n_exec = 7;
   char* path[] = {
     "tests/test_scan",
     "tests/test_parse",
@@ -23,7 +23,6 @@ int main(void) {
     "tests/test_ast",
     "tests/test_stack",
     "tests/test_typecheck",
-    "tests/test_symbol_table"
   };
   char* name[] = { "test_scan",
 		   "test_parse",
@@ -32,7 +31,6 @@ int main(void) {
 		   "test_ast",
 		   "test_stack",
 		   "test_typecheck",
-		   "test_symbol_table"
 		  };
 
   // what to print per pre-execution
@@ -42,9 +40,8 @@ int main(void) {
   		    "FACTORY FUNCTIONS",
 		    "PRINT FUNCTIONS",
 		    "ABSTRACT SYNTAX TREE",
-		    "NAME RESOLUTION",
+		    "SYMBOL TABLE",
 		    "TYPECHECKING",
-		    "SYMBOL TABLE"
 		   };
 
   // executions, output is written to pipe

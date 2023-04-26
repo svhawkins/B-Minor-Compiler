@@ -69,13 +69,14 @@ int symbol_table_scope_level(Symbol_table* st);
 
 /*
 Adds <name, sym> as a key-value pair to the topmost hash table in the stack
-Does nothing if:
+Returns 1 upon success, 0 upon failure.
+Failure if:
 	- NULL symbol table
 	- NULL symbol table items array
 	- NULL hash table within symbol table
 	- empty symbol table
 */
-void symbol_table_scope_bind(Symbol_table* st, const char* name, struct symbol* sym);
+int symbol_table_scope_bind(Symbol_table* st, const char* name, struct symbol* sym);
 
 /*
 Searches through the stack from top to bottom for <name>
@@ -109,3 +110,11 @@ prints out the key value pairs of the names associated with the symbols for all 
 */
 void symbol_table_fprint(FILE* fp, Symbol_table* st);
 void symbol_table_print(Symbol_table* st);
+
+
+/* name resolution functions */
+void symbol_table_decl_resolve(Symbol_table* st, struct decl* d);
+void symbol_table_stmt_resolve(Symbol_table* st, struct stmt* s);
+void symbol_table_expr_resolve(Symbol_table* st, struct expr* e);
+void symbol_table_type_resolve(Symbol_table* st, struct type* t);
+void symbol_table_param_list_resolve(Symbol_table* st, struct param_list* p);

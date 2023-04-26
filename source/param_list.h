@@ -1,6 +1,7 @@
 #ifndef PARAM_LIST_H
 #define PARAM_LIST_H
 
+#include <stdbool.h>
 #include "type.h"
 //struct expr;
 
@@ -17,5 +18,9 @@ void param_list_fprint(FILE* fp, struct param_list* p);
 void param_list_print(struct param_list* p);
 
 void param_list_destroy(struct param_list** p);
+
+struct param_list* param_list_copy(struct param_list* p);
+
+bool param_list_equals(struct param_list* a, struct param_list* b);
 
 #endif
