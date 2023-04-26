@@ -182,7 +182,51 @@ void symbol_table_decl_resolve(Symbol_table* st, struct decl* d) {
   symbol_table_decl_resolve(st, d->next);
 }
 
-void symbol_table_stmt_resolve(Symbol_table* st, struct stmt* s){}
+void symbol_table_stmt_resolve(Symbol_table* st, struct stmt* s) {
+  if (!st || !s) return;
+  switch (s->kind) {
+
+    case STMT_DECL: symbol_table_decl_resolve(st, s->decl); break;
+    case STMT_EXPR: symbol_table_expr_resolve(st, s->expr); break;
+
+    // evaluate only the expression
+    case STMT_PRINT: symbol_table_expr_resolve(st, s->expr); break;
+    case STMT_RETURN: symbol_table_expr_resolve(st, s->expr); break;
+
+    // introduces new scope(s)
+    case STMT_BLOCK:
+      symbol_table_scope_enter(st);
+      symbol_table_stmt_resolve(st, s->body);
+      symbol_table_scope_exit(st);
+      break;
+    case STMT_WHILE:
+      symbol_table_expr_resolve(st, s->expr);
+      symbol_table_scope_enter(st);
+      symbol_table_stmt_resolve(st, s->body);
+      symbol_table_scope_exit(st);
+      break;
+    case STMT_IF_ELSE:
+      symbol_table_expr_resolve(st, s->expr);
+      symbol_table_scope_enter(st);
+      symbol_table_stmt_resolve(st, s->body);
+      symbol_table_scope_exit(st);
+      if (s->else_body) {
+        symbol_table_scope_enter(st);
+        symbol_table_stmt_resolve(st, s->else_body);
+        symbol_table_scope_exit(st);
+      } break;
+    case STMT_FOR:
+      // for statements can have declarations or just expressions
+      if (s->init_expr) symbol_table_expr_resolve(st, s->init_expr); else symbol_table_decl_resolve(st, s->decl);
+      symbol_table_expr_resolve(st, s->expr);
+      symbol_table_expr_resolve(st, s->next_expr);
+      symbol_table_scope_enter(st);
+      symbol_table_stmt_resolve(st, s->body);
+      symbol_table_scope_exit(st);
+      break;
+  }
+}
+
 void symbol_table_expr_resolve(Symbol_table* st, struct expr* e) {
   if (!st || !e) return;
   if (e->kind == EXPR_NAME) {
