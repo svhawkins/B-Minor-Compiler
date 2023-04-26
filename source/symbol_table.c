@@ -62,7 +62,8 @@ void symbol_table_destroy(Symbol_table** st) {
     hash_table_destroy((struct hash_table**)&((*st)->stack->items[i]));
     (*st)->stack->size--; (*st)->stack->items[i] = NULL;
   }
-  stack_destroy(&((*st)->stack)); *st = NULL;
+  stack_destroy(&((*st)->stack)); free(*st);
+  *st = NULL;
 }
 
 /*
@@ -221,17 +222,17 @@ void symbol_table_stmt_resolve(Symbol_table* st, struct stmt* s) {
       symbol_table_expr_resolve(st, s->expr);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
       symbol_table_stmt_resolve(st, s->body);
-      symbol_table_scope_exit(st);
+      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
       break;
     case STMT_IF_ELSE:
       symbol_table_expr_resolve(st, s->expr);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
       symbol_table_stmt_resolve(st, s->body);
-      symbol_table_scope_exit(st);
+      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
       if (s->else_body) {
-        if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
+        if (s->else_body && s->else_body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
         symbol_table_stmt_resolve(st, s->else_body);
-        symbol_table_scope_exit(st);
+        if (s->else_body && s->else_body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
       } break;
     case STMT_FOR:
       // for statements can have declarations or just expressions
@@ -240,7 +241,7 @@ void symbol_table_stmt_resolve(Symbol_table* st, struct stmt* s) {
       symbol_table_expr_resolve(st, s->next_expr);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
       symbol_table_stmt_resolve(st, s->body);
-      symbol_table_scope_exit(st);
+      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
       break;
   }
   symbol_table_stmt_resolve(st, s->next);

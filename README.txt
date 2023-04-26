@@ -39,15 +39,9 @@ typecheck:
   - <struct>_typecheck with + <struct>_resolve integration testing
 
 
-symbol_table
-(with automatically created AST trees from parser)
-  - implement main function
-  - stack + typecheck functions full integration testing
-
-
 
 difficulties
-- not exactly difficult, just reallt tedious was implementing the destroy functions for the ast structures.
+- not exactly difficult, just really tedious was implementing the destroy functions for the ast structures.
   implementing the functions themselves was very simple, it was just that i had to change my test code.
   not exactly in behavior of the tests, but how i arranged the structures, ESPECIALLY in the manually created ones.
   there was a lot of debugging done.
@@ -80,6 +74,7 @@ caveats
   ('all under one roof' so to speak)
 
 - symbol_table_scope_bind returns an int instead of being void. used to indicate bind success/failure.
+  this is used for error messages.
 
 
 

@@ -152,7 +152,8 @@ int main(void) {
     test_stmt_resolve_if_else_null,
     test_stmt_resolve_if_else,
     test_stmt_resolve_for_expr,
-    test_stmt_resolve_for_decl
+    test_stmt_resolve_for_decl,
+    test_decl_resolve_program
   };
 
   int n_tests = sizeof(tests)/sizeof(tests[0]);
@@ -1140,15 +1141,12 @@ Status test_stmt_resolve_for_expr(void) {
 Status test_stmt_resolve_for_decl(void) {
   strcpy(test_type, "Testing: test_stmt_resolve_for_decl");
   Status status = SUCCESS;
-  struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
-  struct decl* duck = decl_create(strdup("duck"), tvoid, NULL, NULL, NULL);
-  struct stmt* body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-  struct stmt* s = stmt_create(STMT_FOR, duck, NULL, NULL, NULL, body, NULL, NULL);
-  struct symbol* sym_duck = symbol_create(SYMBOL_GLOBAL, type_copy(tvoid), strdup("duck"));
-
+  struct stmt* s = stmt_create(STMT_FOR, decl_create(strdup("duck"), type_create(TYPE_VOID, NULL, NULL, NULL), NULL, NULL, NULL),
+				NULL, NULL, NULL,
+ 				stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+ 				NULL, NULL);
   Symbol_table* st = symbol_table_verbose_create();
   symbol_table_scope_enter(st); int old_level = symbol_table_scope_level(st);
-  symbol_table_scope_bind(st, "duck", sym_duck);
   symbol_table_stmt_resolve(st, s);
 
   if ((symbol_table_scope_level(st) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
@@ -1184,6 +1182,6 @@ Status test_decl_resolve_program(void) {
   if (!symbol_table_scope_lookup(st, "argc")) { print_error(test_type, "NOT NULL", "scope lookup [argc]"); status = FAILURE; }
   if (!symbol_table_scope_lookup(st, "argv")) { print_error(test_type, "NOT NULL", "scope lookup [argv]"); status = FAILURE; }
   if (!symbol_table_scope_lookup(st, "i")) { print_error(test_type, "NOT NULL", "scope lookup [i]"); status = FAILURE; }
-  symbol_table_destroy(&st);
+  symbol_table_destroy(&st); decl_destroy(&d);
   return status;
 }
