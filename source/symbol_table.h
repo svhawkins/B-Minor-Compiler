@@ -20,19 +20,28 @@ Symbol table itself is a stack wrapper handling
 the casts and allocations of its hash table elements,
 and symbol elements of its element hash tables.
 
-With that being said, the same kind of values will be returned under the same
-conditions, such as failure cases.
+It also has the additional field of verbose, used to indicate if it should exit scopes.
+This is used when printing out (complete) symbol tables (and for testing!)
 */
-typedef Stack Symbol_table;
+
+struct symbol_table {
+  Stack* stack;
+  bool verbose;
+}; typedef struct symbol_table Symbol_table;
 
 
 /*
-Creates a symbol table.
+Creates a symbol table, setting the verbose field to false.
 
 Returns a NULL pointer upon any memory allocation failures.
 */
 Symbol_table* symbol_table_create();
 
+/*
+Creates a symbol table, setting the verbose field to true.
+Returns a NULL pointer upon any memory allocation failures.
+*/
+Symbol_table* symbol_table_verbose_create();
 
 /*
 Destroys a symbol table.
@@ -107,14 +116,35 @@ struct symbol* symbol_table_scope_lookup_current(Symbol_table* st, const char* n
 
 /*
 prints out the key value pairs of the names associated with the symbols for all hash tables within
+
+// show example output
 */
 void symbol_table_fprint(FILE* fp, Symbol_table* st);
 void symbol_table_print(Symbol_table* st);
 
 
 /* name resolution functions */
+
+/*
+Adds symbols to the symbol table
+Error messages:
+*/
 void symbol_table_decl_resolve(Symbol_table* st, struct decl* d);
-void symbol_table_stmt_resolve(Symbol_table* st, struct stmt* s);
+
+/*
+Looks up symbols in the symbol table.
+Error messages:
+*/
 void symbol_table_expr_resolve(Symbol_table* st, struct expr* e);
+
+/*
+Looks up and adds symbols to table based on the statement kind given.
+*/
+void symbol_table_stmt_resolve(Symbol_table* st, struct stmt* s);
+
+/*
+Adds symbols with parameter scopes
+Error messages:
+*/
 void symbol_table_type_resolve(Symbol_table* st, struct type* t);
 void symbol_table_param_list_resolve(Symbol_table* st, struct param_list* p);

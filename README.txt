@@ -7,17 +7,22 @@ added things:
 - symbol now has a symbol_fprint function. used only as a helper function for symbol_table_fprint
 - symbol_table has symbol_table_fprint and symbol_table_print functions to print out table contents and
   to indicate scope
+- symbol_table now has an additional feature: verbose
+  it is by default false, but a symbol table can be created with it set to true
+  by running ./typecheck with -v option
+
+ verbose flag makes it so the symbol table wont exit scopes, so ALL symbols seen throughout
+ the ast remain until destruciton
 
 BRANCHES:
 
-stack:
+DONEstack:
 (with manually created AST trees)
   DONE- implements basic stack for symbol table
   DONE- implements name resolution functions for each of the AST structures
   DONE- symbol table stack unit testing (null void pointers)
  DONE - symbol table stack + hash table intgration testing
  DONE - name resolution function unit + integration testing
-	to do: stmt_resolve testing
  DONE - hashtable + symbol integration testing (brief)
 
 -overdue task:
