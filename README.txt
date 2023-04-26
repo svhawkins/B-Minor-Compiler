@@ -14,7 +14,6 @@ stack:
 (with manually created AST trees)
   DONE- implements basic stack for symbol table
   DONE- implements name resolution functions for each of the AST structures
-	to do: stmt_resolve
   DONE- symbol table stack unit testing (null void pointers)
  DONE - symbol table stack + hash table intgration testing
  DONE - name resolution function unit + integration testing
@@ -55,6 +54,13 @@ difficulties
   stack, symbol_table, and hash_table functions were working fine since 'symbol_table_print'
   printed everything out correctly.
 
+- figuring out why i was getting segfaults with hash_table_insert() in scope_bind in decl_resolve
+  only to realize that after running just the failing test in valgrind was due to a double free.
+  symbols in the symbol table are not deep copies of the symbols in the ast structures. the pointers in the table and
+  the structures point to the same object.
+  so when the <struct>_destroy() functions were called, the symbol field was being destroyed in both the ast object and the table,
+  when it should be just the table (or just the object. whatever, just not both)
+
 
 caveats
 - my 'delete' functions are called 'destroy' functions but they do the same thing.
@@ -73,28 +79,3 @@ caveats
 
 
 - BUGS:
-RESOLVED1. attempting scope_bind() within symbol_table_decl_resolve() causes a segmentation fault.
-   specifically when calling hash_table_insert()
-   the symbols print fine
-   the hash table is allocated though empty
-   hash_table_lookup works fine. it returns null as it should since empty table.
-   meaning there are no duplicate keys.
-
-
-running only one test gives this output when printing out the symbol table
-Running 1 tests...
-SCOPE [0]: CURRENT (TOP)
---------------------------------------------------
-x --> (kind: global, name: x, type: integer)
-
---------------------------------------------------
-free(): double free detected in tcache 2
-Aborted
-
-i double freed somewhere...
-And that was in decl_destroy()
-I was calling symbol_destroy() twice:
-	once during decl_destroy() to destroy the symbol field
-	once during symbol_table_destroy() to delete the table elements.
-        both of these pointers point to the same struct symbol in memory!
-	there are no deep copies.
