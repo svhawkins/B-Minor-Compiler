@@ -29,9 +29,9 @@ void decl_destroy(struct decl** d);
 Adds symbols to the symbol table
 Error messages:
 */
-void decl_resolve(struct symbol_table* st, struct decl* d);
+int decl_resolve(struct symbol_table* st, struct decl* d);
 
-void decl_typecheck(struct symbol_table*, struct decl* d);
+int decl_typecheck(struct symbol_table*, struct decl* d);
 
 #endif
 

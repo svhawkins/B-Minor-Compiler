@@ -52,13 +52,13 @@ bool param_list_equals(struct param_list* a, struct param_list* b) {
   return current && param_list_equals(a->next, b->next);
 }
 
-void param_list_resolve(struct symbol_table* st, struct param_list* p) {
-  if (!st || !p) return;
+int param_list_resolve(struct symbol_table* st, struct param_list* p) {
+  if (!st || !p) return 0; int error_status = 0;
   p->symbol = symbol_create(SYMBOL_PARAM, type_copy(p->type), strdup(p->name));
   type_resolve(st, p->type); // parameters can be functions with their own parameters, put 'em in the table
   if (!symbol_table_scope_bind(st, p->name, p->symbol)) {
     // failed to add to table. many reasons why.
     // TO DO: make error message
   }
-  param_list_resolve(st, p->next);
+  return param_list_resolve(st, p->next);
 }

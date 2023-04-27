@@ -77,10 +77,8 @@ bool type_equals(struct type* a, struct type* b) {
   return ret;
 }
 
-void type_resolve(struct symbol_table* st, struct type* t) {
-  if (!st || !t) return;
-  param_list_resolve(st, t->params);
-  type_resolve(st, t->subtype);
-  expr_resolve(st, t->size);
+int type_resolve(struct symbol_table* st, struct type* t) {
+  if (!st || !t) return 0;
+  return param_list_resolve(st, t->params) + type_resolve(st, t->subtype) + expr_resolve(st, t->size);
 }
 

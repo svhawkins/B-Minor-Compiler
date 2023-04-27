@@ -48,7 +48,7 @@ typecheck:
   - DONEtype_equals, type_copy, type_delete functions implemented
   DONE- expr_typcheck unit testing for primitive types
   DONE- <struct>_typecheck functions implemented
-  - <struct>_typecheck unit testing
+  DONE- <struct>_typecheck unit testing (excluding error cases)
   - expr_typecheck fully implemented
   - error message handler
 
@@ -93,6 +93,21 @@ caveats
   (type_equals with function types works too, type_equals calls param_list_equals)
 
   for determining if argument lists are the proper type a comparision function is called.
+
+- the following functions were changed from a void return type to an int return type:
+      symbol_table:
+	* symbol_table_scope_bind
+      name resolution:
+	* expr_resolve
+	* decl_resolve
+	* stmt_resolve
+	* type_resolve
+	* param_list_resolve
+      typechecking:
+	* decl_typecheck
+	* stmt_typecheck
+   their return types were changed to int so that their error status able to be returned.
+   this error status is the error code that is used by the error message handler.
 
 
 

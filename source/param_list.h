@@ -25,6 +25,6 @@ struct param_list* param_list_copy(struct param_list* p);
 
 bool param_list_equals(struct param_list* a, struct param_list* b);
 
-void param_list_resolve(struct symbol_table* st, struct param_list* p);
+int param_list_resolve(struct symbol_table* st, struct param_list* p);
 
 #endif

@@ -62,33 +62,41 @@ void decl_destroy(struct decl** d) {
 }
 
 
-void decl_resolve(struct symbol_table* st, struct decl* d) {
-  if (!st || !d) return;
+int decl_resolve(struct symbol_table* st, struct decl* d) {
+  if (!st || !d) return 0; int error_status = 0;
   symbol_t kind = symbol_table_scope_level(st) > 1 ? SYMBOL_LOCAL : SYMBOL_GLOBAL;
   d->symbol = symbol_create(kind, type_copy(d->type), strdup(d->name));
-  expr_resolve(st, d->value); // names in the expression should already be defined/declared.
+  error_status = expr_resolve(st, d->value); // names in the expression should already be defined/declared.
 
   // TO DO: error messages
   symbol_table_scope_bind(st, d->name, d->symbol);
   if (d->code) {
     symbol_table_scope_enter(st);
-    param_list_resolve(st, d->type->params); // so d->code won't have undefined references :)
-    stmt_resolve(st, d->code);
+    error_status = param_list_resolve(st, d->type->params); // so d->code won't have undefined references :)
+    error_status = stmt_resolve(st, d->code);
     symbol_table_scope_exit(st);
   }
-  decl_resolve(st, d->next);
+  error_status = decl_resolve(st, d->next);
+  return error_status;
 }
 
-void decl_typecheck(struct symbol_table* st, struct decl* d) {
-  if (!d) return;
-  if (!type_equals(d->type, d->symbol->type)) { /* error message */ }
+int decl_typecheck(struct symbol_table* st, struct decl* d) {
+  if (!d) return 0; int error_status = 0;
   if (d->value) {
     struct type* t = expr_typecheck(st, d->value);
     if (!type_equals(t, d->symbol->type)) { /* TO DO: error message */ }
+
+    // auto declarations update their type to value type.
+    if (d->type->kind == TYPE_AUTO) {
+	type_destroy(&d->type); d->type = type_copy(t);
+	type_destroy(&d->symbol->type); d->symbol->type = type_copy(t);
+    }
+    type_destroy(&t);
   }
   if (d->code) {
   //if (!type_equals(d->type, d->symbol->type)) { /* error message */ }
-  //if (!param_list_equals(d->type->params, d->symbol->type->params)) { /* error message */ }
-    stmt_typecheck(st, d->code); // TO DO: maybe include type/its symbol type as a parameter for return statement typechecking.
+    if (!param_list_equals(d->type->params, d->symbol->type->params)) { /* error message */ }
+    error_status = stmt_typecheck(st, d->code); // TO DO: maybe include type/its symbol type as a parameter for return statement typechecking.
   }
+  return error_status;
 }

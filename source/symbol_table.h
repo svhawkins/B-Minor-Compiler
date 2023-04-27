@@ -55,6 +55,12 @@ Does nothing if NULL symbol table.
 */
 void symbol_table_destroy(struct symbol_table** st);
 
+
+/*
+Destroys then creates a new symbol table
+*/
+struct symbol_table* symbol_table_clear(struct symbol_table* st);
+
 /*
 Pushes a new hashtable to the stack
 Does nothing if:

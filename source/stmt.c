@@ -134,78 +134,80 @@ void stmt_destroy(struct stmt** s) {
   free(*s); *s = NULL;
 }
 
-void stmt_resolve(struct symbol_table* st, struct stmt* s) {
-  if (!st || !s) return;
+int stmt_resolve(struct symbol_table* st, struct stmt* s) {
+  if (!st || !s) return 0; int error_status = 0;
   switch (s->kind) {
 
-    case STMT_DECL: decl_resolve(st, s->decl); break;
-    case STMT_EXPR: expr_resolve(st, s->expr); break;
+    case STMT_DECL: error_status = decl_resolve(st, s->decl); break;
+    case STMT_EXPR: error_status = expr_resolve(st, s->expr); break;
 
     // evaluate only the expression
-    case STMT_PRINT: expr_resolve(st, s->expr); break;
-    case STMT_RETURN: expr_resolve(st, s->expr); break;
+    case STMT_PRINT: error_status = expr_resolve(st, s->expr); break;
+    case STMT_RETURN: error_status = expr_resolve(st, s->expr); break;
 
     // introduces new scope(s)
     case STMT_BLOCK:
       symbol_table_scope_enter(st);
-      stmt_resolve(st, s->body);
+      error_status = stmt_resolve(st, s->body);
       symbol_table_scope_exit(st);
       break;
     case STMT_WHILE:
-      expr_resolve(st, s->expr);
+      error_status = expr_resolve(st, s->expr);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
-      stmt_resolve(st, s->body);
+      error_status = stmt_resolve(st, s->body);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
       break;
     case STMT_IF_ELSE:
-      expr_resolve(st, s->expr);
+      error_status = expr_resolve(st, s->expr);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
-      stmt_resolve(st, s->body);
+      error_status = stmt_resolve(st, s->body);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
       if (s->else_body) {
         if (s->else_body && s->else_body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
-        stmt_resolve(st, s->else_body);
+        error_status = stmt_resolve(st, s->else_body);
         if (s->else_body && s->else_body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
       } break;
     case STMT_FOR:
       // for statements can have declarations or just expressions
-      if (s->init_expr) expr_resolve(st, s->init_expr); else decl_resolve(st, s->decl);
-      expr_resolve(st, s->expr); expr_resolve(st, s->next_expr);
+      error_status = (s->init_expr) ? expr_resolve(st, s->init_expr) : decl_resolve(st, s->decl);
+      error_status = expr_resolve(st, s->expr);
+      error_status = expr_resolve(st, s->next_expr);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
-      stmt_resolve(st, s->body);
+      error_status = stmt_resolve(st, s->body);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
       break;
   }
-  stmt_resolve(st, s->next);
+  return stmt_resolve(st, s->next);
 }
 
-void stmt_typecheck(struct symbol_table* st, struct stmt* s) {
-  if (!s) return;
+int stmt_typecheck(struct symbol_table* st, struct stmt* s) {
+  if (!s) return 0; int error_status = 0;
   struct type* t = NULL;
   switch(s->kind) {
     case STMT_EXPR: t = expr_typecheck(st, s->expr); type_destroy(&t); break;
-    case STMT_DECL: decl_typecheck(st, s->decl); break;
+    case STMT_DECL: error_status = decl_typecheck(st, s->decl); break;
     case STMT_PRINT: t = expr_typecheck(st, s->expr); /* TO DO: compare with return type */ type_destroy(&t); break;
     case STMT_RETURN: t = expr_typecheck(st, s->expr); type_destroy(&t); break;
-    case STMT_BLOCK:  stmt_typecheck(st, s->body); break;
+    case STMT_BLOCK:  error_status = stmt_typecheck(st, s->body); break;
     case STMT_IF_ELSE:
       t = expr_typecheck(st, s->expr);
       if (t->kind != TYPE_BOOLEAN) { /* TO DO: error message */ }
       type_destroy(&t);
-      stmt_typecheck(st, s->body); stmt_typecheck(st, s->else_body);
+      error_status = stmt_typecheck(st, s->body); error_status = stmt_typecheck(st, s->else_body);
       break;
     case STMT_WHILE:
       t = expr_typecheck(st, s->expr);
       if (t->kind != TYPE_BOOLEAN) { /* TO DO: error message */ }
       type_destroy(&t);
-      stmt_typecheck(st, s->body);
+      error_status = stmt_typecheck(st, s->body);
       break;
     case STMT_FOR:
       t = expr_typecheck(st, s->init_expr);
       t = expr_typecheck(st, s->expr);
       if (t && t->kind != TYPE_BOOLEAN) { /* TO DO: error message */ }
       t = expr_typecheck(st, s->next_expr); type_destroy(&t);
-      stmt_typecheck(st, s->body);
+      error_status = stmt_typecheck(st, s->body);
       break;
   }
+  return stmt_typecheck(st, s->next);
 }

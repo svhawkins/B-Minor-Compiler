@@ -81,6 +81,15 @@ void symbol_table_destroy(struct symbol_table** st) {
 }
 
 /*
+Destroys then creates a new symbol table
+*/
+struct symbol_table* symbol_table_clear(struct symbol_table* st) {
+  symbol_table_destroy(&st);
+  st = symbol_table_create();
+  symbol_table_scope_enter(st); // usable global scope
+}
+
+/*
 Pushes a new hashtable to the stack
 Does nothing if:
         - NULL symbol table

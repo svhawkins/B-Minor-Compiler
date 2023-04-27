@@ -76,7 +76,7 @@ struct expr* expr_copy(struct expr* e);
 Looks up symbols in the symbol table.
 Error messages:
 */
-void expr_resolve(struct symbol_table* st, struct expr* e);
+int expr_resolve(struct symbol_table* st, struct expr* e);
 
 /*
 Typechecks an expression

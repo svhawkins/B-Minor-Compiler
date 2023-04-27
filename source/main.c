@@ -29,6 +29,7 @@ int main(int argc, const char* argv[]) {
   if (parser_result) {
     decl_print(parser_result, 0); printf("\n");
     decl_resolve(st, parser_result);
+    decl_typecheck(st, parser_result);
     symbol_table_print(st);
     decl_destroy(&parser_result);
   }

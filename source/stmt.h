@@ -40,8 +40,8 @@ void stmt_destroy(struct stmt** s);
 /*
 Looks up and adds symbols to table based on the statement kind given.
 */
-void stmt_resolve(struct symbol_table* st, struct stmt* s);
+int stmt_resolve(struct symbol_table* st, struct stmt* s);
 
-void stmt_typecheck(struct symbol_table* st, struct stmt* s);
+int stmt_typecheck(struct symbol_table* st, struct stmt* s);
 
 #endif

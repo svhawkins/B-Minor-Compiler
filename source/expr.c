@@ -145,8 +145,9 @@ struct expr* expr_copy(struct expr* e) {
   return copy;
 }
 
-void expr_resolve(struct symbol_table* st, struct expr* e) {
-  if (!st || !e) return;
+int expr_resolve(struct symbol_table* st, struct expr* e) {
+  if (!st || !e) return 0;
+  int error_status = 0;
   if (e->kind == EXPR_NAME) {
     e->symbol = symbol_table_scope_lookup(st, e->name);
     if (!e->symbol) {
@@ -154,16 +155,16 @@ void expr_resolve(struct symbol_table* st, struct expr* e) {
       // TO DO: make error message
     }
   } else {
-    expr_resolve(st, e->left);
-    expr_resolve(st, e->right);
+    error_status = expr_resolve(st, e->left) + expr_resolve(st, e->right);
   }
+  return error_status;
 }
 
 struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
   if (!e) return NULL;
   struct type* left_expr_type = expr_typecheck(st, e->left);
   struct type* right_expr_type = expr_typecheck(st, e->right);
-  struct type* result = NULL;
+  struct type* result = NULL; struct symbol* s = NULL;
   switch (e->kind) {
     // primitive expression kinds
     case EXPR_CH:
@@ -179,7 +180,8 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
      result = type_create(TYPE_INTEGER, NULL, NULL, NULL);
      break;
     case EXPR_NAME:
-     result = type_copy(e->symbol->type); // e->name should already be in table
+     s = symbol_table_scope_lookup(st, e->name);
+     result = type_copy(s->type);
      break;
   }
   type_destroy(&left_expr_type);
