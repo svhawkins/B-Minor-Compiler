@@ -43,13 +43,15 @@ DONEstack:
 
 typecheck:
 (with manually created AST trees)
-  - expr_resolve fully implemented for non-name expression types
-  - type_equals, type_copy, type_delete functions implemented
-  - expr_resolve unit testing
-  - type_equals, type_copy, type_delete unit testing
+
+  - expr_typecheck fully implemented for primitve/list  expression types
+  - DONEtype_equals, type_copy, type_delete functions implemented
+  - expr_typcheck unit testing
   - <struct>_typecheck functions implemented
   - <struct>_typecheck unit testing
+  - expr_typecheck fully implemented
   - <struct>_typecheck with + <struct>_resolve integration testing
+  - error message handler
 
 
 
@@ -80,8 +82,6 @@ caveats
 
 - symbol table api functions have a 'symbol_table_' prefix added to them to have consistent naming with
   other functions in all the other files.
-  this includes the <struct>_resolve functions.
-
 
 - symbol_table itself is just a wrapper for the void* stack, better handling/manager for hashtables and symbols.
   ('all under one roof' so to speak)

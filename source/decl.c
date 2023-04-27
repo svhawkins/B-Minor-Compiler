@@ -61,3 +61,20 @@ void decl_destroy(struct decl** d) {
   free(*d); *d = NULL;
 }
 
+
+void decl_resolve(struct symbol_table* st, struct decl* d) {
+  if (!st || !d) return;
+  symbol_t kind = symbol_table_scope_level(st) > 1 ? SYMBOL_LOCAL : SYMBOL_GLOBAL;
+  d->symbol = symbol_create(kind, type_copy(d->type), strdup(d->name));
+  expr_resolve(st, d->value); // names in the expression should already be defined/declared.
+
+  // TO DO: error messages
+  symbol_table_scope_bind(st, d->name, d->symbol);
+  if (d->code) {
+    symbol_table_scope_enter(st);
+    param_list_resolve(st, d->type->params); // so d->code won't have undefined references :)
+    stmt_resolve(st, d->code);
+    symbol_table_scope_exit(st);
+  }
+  decl_resolve(st, d->next);
+}

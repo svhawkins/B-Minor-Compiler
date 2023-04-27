@@ -19,7 +19,7 @@ void hash_table_destroy(struct hash_table** ht) {
 }
 
 // searches through a symbol table from top to bottom
-struct symbol* symbol_table_search(Symbol_table* st, const char* name, int top) {
+struct symbol* symbol_table_search(struct symbol_table* st, const char* name, int top) {
   if (!st || !st->stack->items || !st->stack->size) return NULL;
   struct symbol* found = NULL;
   for (int i = top; i >= 0; i--) {
@@ -36,8 +36,8 @@ Creates a symbol table.
 
 Returns a NULL pointer upon any memory allocation failures.
 */
-Symbol_table* symbol_table_create() {
-  Symbol_table* st = malloc(sizeof(*st));
+struct symbol_table* symbol_table_create() {
+  struct symbol_table* st = malloc(sizeof(*st));
   if (st) {
     st->stack = stack_create();
     st->verbose = false;
@@ -50,8 +50,8 @@ Symbol_table* symbol_table_create() {
 Creates a symbol table, setting the verbose field to true.
 Returns a NULL pointer upon any memory allocation failures.
 */
-Symbol_table* symbol_table_verbose_create() {
-  Symbol_table* st = symbol_table_create();
+struct symbol_table* symbol_table_verbose_create() {
+  struct symbol_table* st = symbol_table_create();
   if (st) st->verbose = true;
   return st;
 }
@@ -61,7 +61,7 @@ Destroys a symbol table.
 Sets st to NULL upon success.
 Does nothing if NULL symbol table.
 */
-void symbol_table_destroy(Symbol_table** st) {
+void symbol_table_destroy(struct symbol_table** st) {
   /*
   for each hash table:
 	for all elements (iterate over):
@@ -87,7 +87,7 @@ Does nothing if:
         - NULL symbol table items array
         - hash table fails to be created
 */
-void symbol_table_scope_enter(Symbol_table* st) {
+void symbol_table_scope_enter(struct symbol_table* st) {
   stack_push(st->stack, (void*)hash_table_create(0, 0));
   st->top = stack_size(st->stack) - 1;
 }
@@ -100,7 +100,7 @@ Does nothing if:
         - NULL symbol table
         - NULL symbol table items array
 */
-void symbol_table_scope_exit(Symbol_table* st) {
+void symbol_table_scope_exit(struct symbol_table* st) {
   st->top--;
   if (st->verbose) return;
   struct hash_table* ht = (struct hash_table*)stack_pop(st->stack);
@@ -113,7 +113,7 @@ Returns -1 for:
         - NULL symbol table
         - NULL items array in symbol table
 */
-int symbol_table_scope_level(Symbol_table* st) {
+int symbol_table_scope_level(struct symbol_table* st) {
   return (st->verbose) ? st->top + 1 : stack_size(st->stack);
 }
 
@@ -126,7 +126,7 @@ Failure if:
         - NULL hash table within symbol table
         - empty symbol table
 */
-int symbol_table_scope_bind(Symbol_table* st, const char* name, struct symbol* sym) {
+int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct symbol* sym) {
   if (!st || !st->stack->items || !(st->top + 1) || !(st->stack->items[st->top])) return 0;
   return (hash_table_insert((struct hash_table*)st->stack->items[st->top], name, (void*)sym) == 1) ? 1 : 0;
 }
@@ -142,7 +142,7 @@ Returns a NULL pointer in the following cases:
         - empty hash table
         - invalid key
 */
-struct symbol* symbol_table_scope_lookup_at(Symbol_table* st, const char* name, int index) {
+struct symbol* symbol_table_scope_lookup_at(struct symbol_table* st, const char* name, int index) {
   if (!st || !st->stack || !st->stack->items || !st->stack->size) { return NULL; }
   if (index < 0 || index >= stack_size(st->stack)) { return NULL; }
   if (!st->stack->items[index] || !hash_table_size(st->stack->items[index])) { return NULL; }
@@ -161,7 +161,7 @@ Returns a NULL pointer in the following cases:
         - empty hash table
         - invalid key
 */
-struct symbol* symbol_table_scope_lookup(Symbol_table* st, const char* name) {
+struct symbol* symbol_table_scope_lookup(struct symbol_table* st, const char* name) {
   if (!st || !st->stack->items || !st->stack->size) return NULL;
   return symbol_table_search(st, name, st->top);
 }
@@ -178,7 +178,7 @@ Returns a NULL pointer in the following cases:
         - empty hash table
         - invalid key
 */
-struct symbol* symbol_table_scope_lookup_all(Symbol_table* st, const char* name) {
+struct symbol* symbol_table_scope_lookup_all(struct symbol_table* st, const char* name) {
   if (!st || !st->stack->items || !st->stack->size) return NULL;
   return symbol_table_search(st, name, stack_size(st->stack) - 1);
 }
@@ -195,7 +195,7 @@ Returns a NULL pointer in the following cases:
         - empty hash table
         - invalid key
 */
-struct symbol* symbol_table_scope_lookup_current(Symbol_table* st, const char* name) {
+struct symbol* symbol_table_scope_lookup_current(struct symbol_table* st, const char* name) {
   return (st) ? symbol_table_scope_lookup_at(st, name, st->top) : NULL;
 }
 
@@ -215,12 +215,13 @@ void hash_table_fprint(FILE* fp, struct hash_table* ht) {
   for (int i = 0; i < 50; i++) { fprintf(fp, "-"); } fprintf(fp, "\n");
 }
 
-void symbol_table_fprint(FILE* fp, Symbol_table* st) {
-  for (int i = st->top; i >= 0; i--) {
+void symbol_table_fprint(FILE* fp, struct symbol_table* st) {
+  int top = (st->verbose) ? stack_size(st->stack) - 1 : st->top;
+  for (int i = top; i >= 0; i--) {
     // hash table header
     fprintf(fp, "SCOPE [%d]:", i);
     if (i == st->top) fprintf(fp, " CURRENT (TOP)");
-    else if (!i) fprintf(fp, " GLOBAL (BOTTOM)");
+    if (!i) fprintf(fp, " GLOBAL (BOTTOM)");
     fprintf(fp, "\n"); for (int j = 0; j < 50; j++) fprintf(fp, "-"); fprintf(fp, "\n");
 
     // print out hash table
@@ -228,100 +229,4 @@ void symbol_table_fprint(FILE* fp, Symbol_table* st) {
   }
 }
 
-void symbol_table_print(Symbol_table* st) { symbol_table_fprint(stdout, st); }
-
-/* name resolution functions */
-void symbol_table_decl_resolve(Symbol_table* st, struct decl* d) {
-  if (!st || !d) return;
-  symbol_t kind = symbol_table_scope_level(st) > 1 ? SYMBOL_LOCAL : SYMBOL_GLOBAL;
-  d->symbol = symbol_create(kind, type_copy(d->type), strdup(d->name));
-  symbol_table_expr_resolve(st, d->value); // names in the expression should already be defined/declared.
-
-  // TO DO: error messages
-  symbol_table_scope_bind(st, d->name, d->symbol);
-  if (d->code) {
-    symbol_table_scope_enter(st);
-    symbol_table_param_list_resolve(st, d->type->params); // so d->code won't have undefined references :)
-    symbol_table_stmt_resolve(st, d->code);
-    symbol_table_scope_exit(st);
-  }
-  symbol_table_decl_resolve(st, d->next);
-}
-
-void symbol_table_stmt_resolve(Symbol_table* st, struct stmt* s) {
-  if (!st || !s) return;
-  switch (s->kind) {
-
-    case STMT_DECL: symbol_table_decl_resolve(st, s->decl); break;
-    case STMT_EXPR: symbol_table_expr_resolve(st, s->expr); break;
-
-    // evaluate only the expression
-    case STMT_PRINT: symbol_table_expr_resolve(st, s->expr); break;
-    case STMT_RETURN: symbol_table_expr_resolve(st, s->expr); break;
-
-    // introduces new scope(s)
-    case STMT_BLOCK:
-      symbol_table_scope_enter(st);
-      symbol_table_stmt_resolve(st, s->body);
-      symbol_table_scope_exit(st);
-      break;
-    case STMT_WHILE:
-      symbol_table_expr_resolve(st, s->expr);
-      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
-      symbol_table_stmt_resolve(st, s->body);
-      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
-      break;
-    case STMT_IF_ELSE:
-      symbol_table_expr_resolve(st, s->expr);
-      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
-      symbol_table_stmt_resolve(st, s->body);
-      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
-      if (s->else_body) {
-        if (s->else_body && s->else_body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
-        symbol_table_stmt_resolve(st, s->else_body);
-        if (s->else_body && s->else_body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
-      } break;
-    case STMT_FOR:
-      // for statements can have declarations or just expressions
-      if (s->init_expr) symbol_table_expr_resolve(st, s->init_expr); else symbol_table_decl_resolve(st, s->decl);
-      symbol_table_expr_resolve(st, s->expr);
-      symbol_table_expr_resolve(st, s->next_expr);
-      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
-      symbol_table_stmt_resolve(st, s->body);
-      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
-      break;
-  }
-  symbol_table_stmt_resolve(st, s->next);
-}
-
-void symbol_table_expr_resolve(Symbol_table* st, struct expr* e) {
-  if (!st || !e) return;
-  if (e->kind == EXPR_NAME) {
-    e->symbol = symbol_table_scope_lookup(st, e->name);
-    if (!e->symbol) {
-      // not found anywhere. undefined reference to <symbol>
-      // TO DO: make error message
-    }
-  } else {
-    symbol_table_expr_resolve(st, e->left);
-    symbol_table_expr_resolve(st, e->right);
-  }
-}
-
-void symbol_table_type_resolve(Symbol_table* st, struct type* t) {
-  if (!st || !t) return;
-  symbol_table_param_list_resolve(st, t->params);
-  symbol_table_type_resolve(st, t->subtype);
-  symbol_table_expr_resolve(st, t->size);
-}
-
-void symbol_table_param_list_resolve(Symbol_table* st, struct param_list* p) {
-  if (!st || !p) return;
-  p->symbol = symbol_create(SYMBOL_PARAM, type_copy(p->type), strdup(p->name));
-  symbol_table_type_resolve(st, p->type); // parameters can be functions with their own parameters, put 'em in the table
-  if (!symbol_table_scope_bind(st, p->name, p->symbol)) {
-    // failed to add to table. many reasons why.
-    // TO DO: make error message
-  }
-  symbol_table_param_list_resolve(st, p->next);
-}
+void symbol_table_print(struct symbol_table* st) { symbol_table_fprint(stdout, st); }

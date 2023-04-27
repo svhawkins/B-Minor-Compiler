@@ -2,6 +2,8 @@
 #define EXPR_H
 
 #include "symbol.h"
+#include "symbol_table.h"
+struct symbol_table; // forward decl for reasons
 
 typedef enum {
         // unary operators
@@ -69,5 +71,11 @@ void expr_print(struct expr* e);
 void expr_destroy(struct expr** e);
 
 struct expr* expr_copy(struct expr* e);
+
+/*
+Looks up symbols in the symbol table.
+Error messages:
+*/
+void expr_resolve(struct symbol_table* st, struct expr* e);
 
 #endif

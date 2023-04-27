@@ -144,3 +144,17 @@ struct expr* expr_copy(struct expr* e) {
   }
   return copy;
 }
+
+void expr_resolve(struct symbol_table* st, struct expr* e) {
+  if (!st || !e) return;
+  if (e->kind == EXPR_NAME) {
+    e->symbol = symbol_table_scope_lookup(st, e->name);
+    if (!e->symbol) {
+      // not found anywhere. undefined reference to <symbol>
+      // TO DO: make error message
+    }
+  } else {
+    expr_resolve(st, e->left);
+    expr_resolve(st, e->right);
+  }
+}

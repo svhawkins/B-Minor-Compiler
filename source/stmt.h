@@ -2,6 +2,8 @@
 #define STMT_H
 
 #include "decl.h"
+#include "symbol_table.h"
+struct symbol_table; // forward decl for reasons
 
 typedef enum {
 	STMT_DECL,
@@ -34,5 +36,10 @@ void stmt_fprint(FILE* fp, struct stmt* s, int indent);
 void stmt_print(struct stmt* s, int indent);
 
 void stmt_destroy(struct stmt** s);
+
+/*
+Looks up and adds symbols to table based on the statement kind given.
+*/
+void stmt_resolve(struct symbol_table* st, struct stmt* s);
 
 #endif

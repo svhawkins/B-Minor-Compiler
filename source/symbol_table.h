@@ -1,3 +1,4 @@
+#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,20 +40,20 @@ Creates a symbol table, setting the verbose field to false.
 
 Returns a NULL pointer upon any memory allocation failures.
 */
-Symbol_table* symbol_table_create();
+struct symbol_table* symbol_table_create();
 
 /*
 Creates a symbol table, setting the verbose field to true.
 Returns a NULL pointer upon any memory allocation failures.
 */
-Symbol_table* symbol_table_verbose_create();
+struct symbol_table* symbol_table_verbose_create();
 
 /*
 Destroys a symbol table.
 Sets st to NULL upon success.
 Does nothing if NULL symbol table.
 */
-void symbol_table_destroy(Symbol_table** st);
+void symbol_table_destroy(struct symbol_table** st);
 
 /*
 Pushes a new hashtable to the stack
@@ -61,7 +62,7 @@ Does nothing if:
 	- NULL symbol table items array
 	- hash table fails to be created
 */
-void symbol_table_scope_enter(Symbol_table* st);
+void symbol_table_scope_enter(struct symbol_table* st);
 
 /*
 Removes topmost hash table from the stack
@@ -70,7 +71,7 @@ Does nothing if:
 	- NULL symbol table
 	- NULL symbol table items array
 */
-void symbol_table_scope_exit(Symbol_table* st);
+void symbol_table_scope_exit(struct symbol_table* st);
 
 /*
 Returns number of hashtables (scopes) currently on the stack
@@ -78,7 +79,7 @@ Returns -1 for:
 	- NULL symbol table
 	- NULL items array in symbol table
 */
-int symbol_table_scope_level(Symbol_table* st);
+int symbol_table_scope_level(struct symbol_table* st);
 
 /*
 Adds <name, sym> as a key-value pair to the topmost hash table in the stack
@@ -89,7 +90,7 @@ Failure if:
 	- NULL hash table within symbol table
 	- empty symbol table
 */
-int symbol_table_scope_bind(Symbol_table* st, const char* name, struct symbol* sym);
+int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct symbol* sym);
 
 /*
 Searches for <name> only in topmost scope regardless of value in st->top
@@ -102,7 +103,7 @@ Returns a NULL pointer in the following cases:
         - empty hash table
         - invalid key
 */
-struct symbol* symbol_table_scope_lookup_at(Symbol_table* st, const char* name, int index);
+struct symbol* symbol_table_scope_lookup_at(struct symbol_table* st, const char* name, int index);
 
 /*
 Searches through the stack from top to bottom for <name> of all tables within scope.
@@ -116,7 +117,7 @@ Returns a NULL pointer in the following cases:
 	- empty hash table
 	- invalid key
 */
-struct symbol* symbol_table_scope_lookup(Symbol_table* st, const char* name);
+struct symbol* symbol_table_scope_lookup(struct symbol_table* st, const char* name);
 
 /*
 Searches through the entire table for <name>, regardless of scope.
@@ -130,7 +131,7 @@ Returns a NULL pointer in the following cases:
         - empty hash table
         - invalid key
 */
-struct symbol* symbol_table_scope_lookup_all(Symbol_table* st, const char* name);
+struct symbol* symbol_table_scope_lookup_all(struct symbol_table* st, const char* name);
 
 /*
 Searches for <name> only in topmost scope, indicated by st->top
@@ -143,39 +144,12 @@ Returns a NULL pointer in the following cases:
         - invalid key
 Note this is a special case of symbol_table_scope_lookup_at()
 */
-struct symbol* symbol_table_scope_lookup_current(Symbol_table* st, const char* name);
+struct symbol* symbol_table_scope_lookup_current(struct symbol_table* st, const char* name);
 
 /*
 prints out the key value pairs of the names associated with the symbols for all hash tables within
 
 // show example output
 */
-void symbol_table_fprint(FILE* fp, Symbol_table* st);
-void symbol_table_print(Symbol_table* st);
-
-
-/* name resolution functions */
-
-/*
-Adds symbols to the symbol table
-Error messages:
-*/
-void symbol_table_decl_resolve(Symbol_table* st, struct decl* d);
-
-/*
-Looks up symbols in the symbol table.
-Error messages:
-*/
-void symbol_table_expr_resolve(Symbol_table* st, struct expr* e);
-
-/*
-Looks up and adds symbols to table based on the statement kind given.
-*/
-void symbol_table_stmt_resolve(Symbol_table* st, struct stmt* s);
-
-/*
-Adds symbols with parameter scopes
-Error messages:
-*/
-void symbol_table_type_resolve(Symbol_table* st, struct type* t);
-void symbol_table_param_list_resolve(Symbol_table* st, struct param_list* p);
+void symbol_table_fprint(FILE* fp, struct symbol_table* st);
+void symbol_table_print(struct symbol_table* st);

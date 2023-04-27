@@ -12,7 +12,7 @@ extern struct stmt* test_parser_result;
 extern struct decl* parser_result;
 
 int main(int argc, const char* argv[]) {
-  Symbol_table* st = (argc > 1 && !strcmp(argv[1], "-v")) ? symbol_table_verbose_create() : symbol_table_create();
+  struct symbol_table* st = (argc > 1 && !strcmp(argv[1], "-v")) ? symbol_table_verbose_create() : symbol_table_create();
   symbol_table_scope_enter(st); // global scope
 
   for (int i = 0; !eof; i++) {
@@ -20,7 +20,7 @@ int main(int argc, const char* argv[]) {
     if (yyparse() == 0) {
       if (test_parser_result) {
         stmt_print(test_parser_result, 0);
- 	symbol_table_stmt_resolve(st, test_parser_result);
+ 	stmt_resolve(st, test_parser_result);
 	symbol_table_print(st);
 	stmt_destroy(&test_parser_result);
       }
@@ -28,7 +28,7 @@ int main(int argc, const char* argv[]) {
   }
   if (parser_result) {
     decl_print(parser_result, 0); printf("\n");
-    symbol_table_decl_resolve(st, parser_result);
+    decl_resolve(st, parser_result);
     symbol_table_print(st);
     decl_destroy(&parser_result);
   }

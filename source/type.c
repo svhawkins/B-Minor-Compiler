@@ -66,7 +66,8 @@ struct type* type_copy(struct type* t) {
 }
 
 bool type_equals(struct type* a, struct type* b) {
-  if ((!a && b) || (a && !b)) return false; if (!a && !b) return true;
+  if ((!a && b) || (a && !b)) return false;
+  if (!a && !b) return true;
   bool ret = false;
   if (a->kind == b->kind) {
     if (a->kind && b->kind == TYPE_ARRAY) ret = type_equals(a->subtype, b->subtype);
@@ -75,3 +76,11 @@ bool type_equals(struct type* a, struct type* b) {
   }
   return ret;
 }
+
+void type_resolve(struct symbol_table* st, struct type* t) {
+  if (!st || !t) return;
+  param_list_resolve(st, t->params);
+  type_resolve(st, t->subtype);
+  expr_resolve(st, t->size);
+}
+

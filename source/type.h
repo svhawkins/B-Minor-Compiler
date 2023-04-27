@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include "param_list.h"
 #include "expr.h"
+#include "symbol_table.h"
+struct symbol_table; // forward decl for reasons
 
 typedef enum {
 	TYPE_VOID,
@@ -37,5 +39,11 @@ void type_destroy(struct type** t);
 struct type* type_copy(struct type* t);
 
 bool type_equals(struct type* a, struct type* b);
+
+/*
+Adds symbols with parameter scopes
+Error messages:
+*/
+void type_resolve(struct symbol_table* st, struct type* t);
 
 #endif

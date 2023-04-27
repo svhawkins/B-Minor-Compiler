@@ -3,7 +3,9 @@
 
 #include <stdbool.h>
 #include "type.h"
-//struct expr;
+#include "symbol.h"
+#include "symbol_table.h"
+struct symbol_table; // forward decl for reasons
 
 struct param_list {
 	char* name;
@@ -22,5 +24,7 @@ void param_list_destroy(struct param_list** p);
 struct param_list* param_list_copy(struct param_list* p);
 
 bool param_list_equals(struct param_list* a, struct param_list* b);
+
+void param_list_resolve(struct symbol_table* st, struct param_list* p);
 
 #endif
