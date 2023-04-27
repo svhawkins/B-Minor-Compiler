@@ -19,8 +19,8 @@ int main(int argc, const char* argv[]) {
     printf("%d: ", i);
     if (yyparse() == 0) {
       if (test_parser_result) {
-        //stmt_print(test_parser_result, 0);
- 	//symbol_table_stmt_resolve(st, test_parser_result);
+        stmt_print(test_parser_result, 0);
+ 	symbol_table_stmt_resolve(st, test_parser_result);
 	symbol_table_print(st);
 	stmt_destroy(&test_parser_result);
       }
@@ -32,7 +32,6 @@ int main(int argc, const char* argv[]) {
     symbol_table_print(st);
     decl_destroy(&parser_result);
   }
-  symbol_table_scope_exit(st);
   symbol_table_destroy(&st);
   return 0;
 }

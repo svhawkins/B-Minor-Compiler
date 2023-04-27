@@ -22,11 +22,15 @@ and symbol elements of its element hash tables.
 
 It also has the additional field of verbose, used to indicate if it should exit scopes.
 This is used when printing out (complete) symbol tables (and for testing!)
+
+The top field is also used to indicate current scope via its index.
+This ensures for proper scope lookups even with verbose enabled.
 */
 
 struct symbol_table {
   Stack* stack;
   bool verbose;
+  int top;
 }; typedef struct symbol_table Symbol_table;
 
 
@@ -88,7 +92,20 @@ Failure if:
 int symbol_table_scope_bind(Symbol_table* st, const char* name, struct symbol* sym);
 
 /*
-Searches through the stack from top to bottom for <name>
+Searches for <name> only in topmost scope regardless of value in st->top
+Returns a NULL pointer in the following cases:
+        - out of bounds index value
+        - NULL symbol table
+        - NULL symbol table items
+        - NULL hash table within symbol table
+        - empty symbol table
+        - empty hash table
+        - invalid key
+*/
+struct symbol* symbol_table_scope_lookup_at(Symbol_table* st, const char* name, int index);
+
+/*
+Searches through the stack from top to bottom for <name> of all tables within scope.
 Returns associated pointer value to key upon success, otherwise NULL.
 
 Returns a NULL pointer in the following cases:
@@ -102,7 +119,9 @@ Returns a NULL pointer in the following cases:
 struct symbol* symbol_table_scope_lookup(Symbol_table* st, const char* name);
 
 /*
-Searches for <name> only in topmost scope
+Searches through the entire table for <name>, regardless of scope.
+Returns associated pointer value to key upon success, otherwise NULL.
+
 Returns a NULL pointer in the following cases:
         - NULL symbol table
         - NULL symbol table items
@@ -111,8 +130,20 @@ Returns a NULL pointer in the following cases:
         - empty hash table
         - invalid key
 */
-struct symbol* symbol_table_scope_lookup_current(Symbol_table* st, const char* name);
+struct symbol* symbol_table_scope_lookup_all(Symbol_table* st, const char* name);
 
+/*
+Searches for <name> only in topmost scope, indicated by st->top
+Returns a NULL pointer in the following cases:
+        - NULL symbol table
+        - NULL symbol table items
+        - NULL hash table within symbol table
+        - empty symbol table
+        - empty hash table
+        - invalid key
+Note this is a special case of symbol_table_scope_lookup_at()
+*/
+struct symbol* symbol_table_scope_lookup_current(Symbol_table* st, const char* name);
 
 /*
 prints out the key value pairs of the names associated with the symbols for all hash tables within

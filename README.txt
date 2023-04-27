@@ -14,6 +14,19 @@ added things:
  verbose flag makes it so the symbol table wont exit scopes, so ALL symbols seen throughout
  the ast remain until destruciton
 
+- symbol table now has additional field: top
+  top keeps track of the topmost table IN SCOPE regardless of verbose status.
+  also makes the code easier to read/shorter.
+
+  this makes for correct current scope lookups when verbose
+
+- symbol table has the following functions added:
+  symbol_table_scope_lookup_at(Symbol_table* st, const char* name, int index)
+     looks up a name in the symbol table given the index of indicated table.
+  symbol_table_scope_lookup_all(Symbol_table* st, const char* name)
+     looks up a name by going through ALL hash tables (not just the ones in scope!)
+     symbol_table_scope_lookup only goes through the in-scope tables, as indicated by st->top.
+
 BRANCHES:
 
 DONEstack:
