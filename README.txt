@@ -46,10 +46,13 @@ typecheck:
 
   DONE- expr_typecheck fully implemented for primitve  expression types
   - DONEtype_equals, type_copy, type_delete functions implemented
-  DONE- expr_typcheck unit testing for primitive types
+  DONE- expr_typcheck unit testing for primitive expressions
+DONE - expr_typecheck unit testing for logical, arithmetic, relational, and equality expressions
   DONE- <struct>_typecheck functions implemented
   DONE- <struct>_typecheck unit testing (excluding error cases)
-  - expr_typecheck fully implemented
+  DONE- expr_typecheck fully implemented
+	to do: EXPR_FCALL, EXPR_SUBSCRIPT, EXPR_INIT, EXPR_COMMA
+ - expr_typecheck testing for EXPR_FCALL,EXPR_SUBSCRIPT, EXPR_INIT, EXPR_COMMA
   - error message handler
 
 
@@ -97,12 +100,6 @@ caveats
 - the following functions were changed from a void return type to an int return type:
       symbol_table:
 	* symbol_table_scope_bind
-      name resolution:
-	* expr_resolve
-	* decl_resolve
-	* stmt_resolve
-	* type_resolve
-	* param_list_resolve
       typechecking:
 	* decl_typecheck
 	* stmt_typecheck

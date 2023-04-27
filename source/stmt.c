@@ -186,8 +186,8 @@ int stmt_typecheck(struct symbol_table* st, struct stmt* s) {
   switch(s->kind) {
     case STMT_EXPR: t = expr_typecheck(st, s->expr); type_destroy(&t); break;
     case STMT_DECL: error_status = decl_typecheck(st, s->decl); break;
-    case STMT_PRINT: t = expr_typecheck(st, s->expr); /* TO DO: compare with return type */ type_destroy(&t); break;
-    case STMT_RETURN: t = expr_typecheck(st, s->expr); type_destroy(&t); break;
+    case STMT_PRINT: t = expr_typecheck(st, s->expr); /* TO DO: check if not function/array/void */ type_destroy(&t); break;
+    case STMT_RETURN: t = expr_typecheck(st, s->expr); /* TO DO: compare with return type */ type_destroy(&t); break;
     case STMT_BLOCK:  error_status = stmt_typecheck(st, s->body); break;
     case STMT_IF_ELSE:
       t = expr_typecheck(st, s->expr);

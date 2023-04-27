@@ -160,6 +160,7 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
   return error_status;
 }
 
+type_t invalid_type(type_t kind) { return (kind == TYPE_VOID || kind == TYPE_ARRAY || kind == TYPE_FUNCTION); }
 struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
   if (!e) return NULL;
   struct type* left_expr_type = expr_typecheck(st, e->left);
@@ -181,8 +182,84 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
      break;
     case EXPR_NAME:
      s = symbol_table_scope_lookup(st, e->name);
+     if (!s) { /* TO DO: error message, recover by adding it to table */ }
      result = type_copy(s->type);
      break;
+
+    // equality operators
+    case EXPR_EQ:
+    case EXPR_NEQ:
+      if (!type_equals(left_expr_type, right_expr_type)) { /* TO DO: error message, type mismatch */ }
+      else if (invalid_type(left_expr_type->kind) || invalid_type(right_expr_type->kind)) { /* TO DO: error message, incompatible operand type(s) */ }
+      else { result = type_create(TYPE_BOOLEAN, NULL, NULL, NULL); }
+      break;
+
+    // relational operators
+    case EXPR_GREAT:
+    case EXPR_GEQ:
+    case EXPR_LESS:
+    case EXPR_LEQ:
+      if (!type_equals(left_expr_type, right_expr_type)) { /* TO DO: error message, type mismatch*/ }
+      if (left_expr_type->kind != TYPE_INTEGER || right_expr_type->kind != TYPE_INTEGER) { /* TO DO: error message, incompatible operand type(s) */ }
+      else result = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
+      break;
+
+    // logical operators
+    case EXPR_AND:
+    case EXPR_OR:
+      if (!type_equals(left_expr_type, right_expr_type)) { /* TO DO: error message, type mismatch*/ }
+      if (left_expr_type->kind != TYPE_BOOLEAN || right_expr_type->kind != TYPE_BOOLEAN) { /* TO DO: error message, incompatible operand type(s) */ }
+      else result = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
+      break;
+    case EXPR_NOT:
+      if (left_expr_type->kind != TYPE_BOOLEAN ) { /* TO DO: error message, incompatible operand type(s) */ }
+      else result = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
+      break;
+
+    // arithmetic operators (unary)
+    case EXPR_POS:
+    case EXPR_NEG:
+    case EXPR_INC:
+    case EXPR_DEC:
+      if (left_expr_type->kind != TYPE_INTEGER ) { /* TO DO: error message, incompatible operand type(s) */ }
+      else result = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+      break;
+
+    // arithmetic operators (binary)
+    case EXPR_ADD:
+    case EXPR_SUB:
+    case EXPR_MULT:
+    case EXPR_DIV:
+    case EXPR_MOD:
+    case EXPR_EXP:
+      if (!type_equals(left_expr_type, right_expr_type)) { /* TO DO: error message, type mismatch*/ }
+      if (left_expr_type->kind != TYPE_INTEGER || right_expr_type->kind != TYPE_INTEGER) { /* TO DO: error message, incompatible operand type(s) */ }
+      else result = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+      break;
+
+    // subscript
+    case EXPR_SUBSCRIPT:
+      if (left_expr_type->kind != TYPE_ARRAY || right_expr_type->kind != TYPE_INTEGER) { /* TO DO: error message, incompatible operand type(s) */ }
+      else result = type_copy(left_expr_type->subtype);
+      break;
+
+    // function call
+    case EXPR_FCALL:
+      if (left_expr_type->kind != TYPE_FUNCTION) { /* TO DO: error message, incompatible operand type(s) */ }
+      // TO DO: check if the argument list matches parameter list types.
+      else result = type_copy(left_expr_type->subtype);
+      break;
+
+    // intitialization list
+    case EXPR_INIT:
+      // all elements within list must be of the same type.
+      // the type to check for is based on the declared subtype if not auto.
+      // if declared type is auto, the type to check for is the type of the first element.
+      break;
+
+    // comma
+    case EXPR_COMMA: // can be any type.
+      break;
   }
   type_destroy(&left_expr_type);
   type_destroy(&right_expr_type);
