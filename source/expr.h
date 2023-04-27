@@ -78,4 +78,13 @@ Error messages:
 */
 void expr_resolve(struct symbol_table* st, struct expr* e);
 
+/*
+Typechecks an expression
+Returns the type structure the expression ultimately is.
+In cases of error:
+	- failure/null expressions return NULL as a type
+	- errors return the type of the expression in the left branch of the expression tree
+*/
+struct type* expr_typecheck(struct symbol_table* st, struct expr* e);
+
 #endif

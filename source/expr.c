@@ -158,3 +158,31 @@ void expr_resolve(struct symbol_table* st, struct expr* e) {
     expr_resolve(st, e->right);
   }
 }
+
+struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
+  if (!e) return NULL;
+  struct type* left_expr_type = expr_typecheck(st, e->left);
+  struct type* right_expr_type = expr_typecheck(st, e->right);
+  struct type* result = NULL;
+  switch (e->kind) {
+    // primitive expression kinds
+    case EXPR_CH:
+     result = type_create(TYPE_CHARACTER, NULL, NULL, NULL);
+     break;
+    case EXPR_BOOL:
+     result = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
+     break;
+    case EXPR_STR:
+     result = type_create(TYPE_STRING, NULL, NULL, NULL);
+     break;
+    case EXPR_INT:
+     result = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+     break;
+    case EXPR_NAME:
+     result = type_copy(e->symbol->type); // e->name should already be in table
+     break;
+  }
+  type_destroy(&left_expr_type);
+  type_destroy(&right_expr_type);
+  return result;
+}

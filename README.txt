@@ -44,13 +44,12 @@ DONEstack:
 typecheck:
 (with manually created AST trees)
 
-  - expr_typecheck fully implemented for primitve/list  expression types
+  DONE- expr_typecheck fully implemented for primitve  expression types
   - DONEtype_equals, type_copy, type_delete functions implemented
-  - expr_typcheck unit testing
-  - <struct>_typecheck functions implemented
+  DONE- expr_typcheck unit testing for primitive types
+  DONE- <struct>_typecheck functions implemented
   - <struct>_typecheck unit testing
   - expr_typecheck fully implemented
-  - <struct>_typecheck with + <struct>_resolve integration testing
   - error message handler
 
 
@@ -88,6 +87,12 @@ caveats
 
 - symbol_table_scope_bind returns an int instead of being void. used to indicate bind success/failure.
   this is used for error messages.
+
+- param_list_typecheck is NOT IMPLEMENTED.
+  for determining if parameter lists are the same, param_list_equals is called
+  (type_equals with function types works too, type_equals calls param_list_equals)
+
+  for determining if argument lists are the proper type a comparision function is called.
 
 
 

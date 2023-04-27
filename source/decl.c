@@ -78,3 +78,17 @@ void decl_resolve(struct symbol_table* st, struct decl* d) {
   }
   decl_resolve(st, d->next);
 }
+
+void decl_typecheck(struct symbol_table* st, struct decl* d) {
+  if (!d) return;
+  if (!type_equals(d->type, d->symbol->type)) { /* error message */ }
+  if (d->value) {
+    struct type* t = expr_typecheck(st, d->value);
+    if (!type_equals(t, d->symbol->type)) { /* TO DO: error message */ }
+  }
+  if (d->code) {
+  //if (!type_equals(d->type, d->symbol->type)) { /* error message */ }
+  //if (!param_list_equals(d->type->params, d->symbol->type->params)) { /* error message */ }
+    stmt_typecheck(st, d->code); // TO DO: maybe include type/its symbol type as a parameter for return statement typechecking.
+  }
+}

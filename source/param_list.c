@@ -44,6 +44,8 @@ struct param_list* param_list_copy(struct param_list* p) {
   return copy;
 }
 
+
+// TO DO: add error message stuff
 bool param_list_equals(struct param_list* a, struct param_list* b) {
   if ((!a && b) || (a && !b)) return false; if (!a && !b) return true;
   bool current = !strcmp(a->name, b->name) && type_equals(a->type, b->type);

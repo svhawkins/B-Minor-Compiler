@@ -31,5 +31,7 @@ Error messages:
 */
 void decl_resolve(struct symbol_table* st, struct decl* d);
 
+void decl_typecheck(struct symbol_table*, struct decl* d);
+
 #endif
 

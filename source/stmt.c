@@ -178,3 +178,34 @@ void stmt_resolve(struct symbol_table* st, struct stmt* s) {
   }
   stmt_resolve(st, s->next);
 }
+
+void stmt_typecheck(struct symbol_table* st, struct stmt* s) {
+  if (!s) return;
+  struct type* t = NULL;
+  switch(s->kind) {
+    case STMT_EXPR: t = expr_typecheck(st, s->expr); type_destroy(&t); break;
+    case STMT_DECL: decl_typecheck(st, s->decl); break;
+    case STMT_PRINT: t = expr_typecheck(st, s->expr); /* TO DO: compare with return type */ type_destroy(&t); break;
+    case STMT_RETURN: t = expr_typecheck(st, s->expr); type_destroy(&t); break;
+    case STMT_BLOCK:  stmt_typecheck(st, s->body); break;
+    case STMT_IF_ELSE:
+      t = expr_typecheck(st, s->expr);
+      if (t->kind != TYPE_BOOLEAN) { /* TO DO: error message */ }
+      type_destroy(&t);
+      stmt_typecheck(st, s->body); stmt_typecheck(st, s->else_body);
+      break;
+    case STMT_WHILE:
+      t = expr_typecheck(st, s->expr);
+      if (t->kind != TYPE_BOOLEAN) { /* TO DO: error message */ }
+      type_destroy(&t);
+      stmt_typecheck(st, s->body);
+      break;
+    case STMT_FOR:
+      t = expr_typecheck(st, s->init_expr);
+      t = expr_typecheck(st, s->expr);
+      if (t && t->kind != TYPE_BOOLEAN) { /* TO DO: error message */ }
+      t = expr_typecheck(st, s->next_expr); type_destroy(&t);
+      stmt_typecheck(st, s->body);
+      break;
+  }
+}
