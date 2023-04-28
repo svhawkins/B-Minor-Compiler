@@ -18,6 +18,29 @@ void expr_child_fprint(FILE* fp, struct expr* c) {
   else { fprintf(fp, "("); expr_fprint(fp, c); fprintf(fp, ")"); }
 }
 
+// compares a parameter list to its argument list in regard to types
+bool fcall_compare(struct symbol_table* st, struct param_list* p, struct expr* e) {
+  if (!p || !e) { return (!p && !e); } // null cases
+  // comma expression types indicate an expression list
+  bool is_expr_list = (e->kind == EXPR_COMMA);
+  struct type* expr_type = (is_expr_list) ? expr_typecheck(st, e->left) : expr_typecheck(st, e);
+  bool is_type_equal = type_equals(p->type, expr_type); type_destroy(&expr_type);
+  return is_type_equal && ((is_expr_list) ? fcall_compare(st, p->next, e->right) : 1);
+}
+
+// typechecks an initialization list
+// seperate from EXPR_COMMA, since that can be any type
+// initialization lists must have elements all be of the same type.
+struct type* expr_typecheck_init(struct symbol_table* st, struct expr* e) {
+    // compare the expression list within
+    bool is_expr_list = (e->kind == EXPR_COMMA);
+    struct type* lt = (is_expr_list) ? expr_typecheck(st, e->left) : expr_typecheck(st, e);
+    struct type* rt = (is_expr_list) ? expr_typecheck(st, e->right) : NULL;
+    if (is_expr_list && !type_equals(lt, rt)) { /* TO DO: error message, inequal expression types */ }
+    type_destroy(&rt);
+    return lt;
+}
+
 struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right )
 {
   struct expr* e = malloc(sizeof(*e));
@@ -247,19 +270,27 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
     // function call
     case EXPR_FCALL:
       if (left_expr_type->kind != TYPE_FUNCTION) { /* TO DO: error message, incompatible operand type(s) */ }
-      // TO DO: check if the argument list matches parameter list types.
+      struct symbol* fname = symbol_table_scope_lookup(st, e->left->name);
+      if (!fcall_compare(st, fname->type->params, e->right)) { /* TO DO: error message of incompatible arguments for parameters */ }
       else result = type_copy(left_expr_type->subtype);
       break;
 
     // intitialization list
     case EXPR_INIT:
-      // all elements within list must be of the same type.
-      // the type to check for is based on the declared subtype if not auto.
-      // if declared type is auto, the type to check for is the type of the first element.
+      result = expr_typecheck_init(st, e->left);
+      if (e->kind == EXPR_INIT) { result = type_create(TYPE_ARRAY, result, NULL, NULL); }
       break;
 
     // comma
-    case EXPR_COMMA: // can be any type.
+    case EXPR_COMMA:
+      result = type_copy(left_expr_type);
+      break;
+
+    // assignment
+    case EXPR_ASSIGN:
+      if (e->left->kind != EXPR_NAME || e->left->kind != EXPR_SUBSCRIPT) { /* TO DO: error message, left operand must be lvalue */ }
+      if (!type_equals(left_expr_type, right_expr_type)) { /* TO DO: error message */ }
+      else result = type_copy(left_expr_type);
       break;
   }
   type_destroy(&left_expr_type);

@@ -85,13 +85,11 @@ int decl_typecheck(struct symbol_table* st, struct decl* d) {
   if (d->value) {
     struct type* t = expr_typecheck(st, d->value);
     if (!type_equals(t, d->symbol->type)) { /* TO DO: error message */ }
-
     // auto declarations update their type to value type.
     if (d->type->kind == TYPE_AUTO) {
 	type_destroy(&d->type); d->type = type_copy(t);
 	type_destroy(&d->symbol->type); d->symbol->type = type_copy(t);
-    }
-    type_destroy(&t);
+    } type_destroy(&t);
   }
   if (d->code) {
   //if (!type_equals(d->type, d->symbol->type)) { /* error message */ }
