@@ -21,6 +21,10 @@ Status test_expr_typecheck_relational_bad(void);
 Status test_expr_typecheck_relational_good(void);
 Status test_expr_typecheck_equality_bad(void);
 Status test_expr_typecheck_equality_good(void);
+Status test_expr_typecheck_subscript_bad_array(void);
+Status test_expr_typecheck_subscript_bad_integer(void);
+// NOT TESTED: out of bounds integers
+Status test_expr_typecheck_subscript_good(void);
 
 
 // param_list_typecheck -> param_list_equals, param_list_fcall_compare tests
@@ -48,6 +52,9 @@ int main(void) {
     test_expr_typecheck_relational_good,
     test_expr_typecheck_equality_bad,
     test_expr_typecheck_equality_good,
+    test_expr_typecheck_subscript_bad_array,
+    test_expr_typecheck_subscript_bad_integer,
+    test_expr_typecheck_subscript_good,
     test_param_list_equals_both_null,
     test_param_list_equals_left_null,
     test_param_list_equals_right_null,
@@ -449,5 +456,62 @@ Status test_expr_typecheck_equality_good(void) {
   }
   symbol_table_destroy(&st);
   type_destroy(&boolean);
+  return status;
+}
+
+Status test_expr_typecheck_subscript_bad_array(void) {
+  strcpy(test_type, "Testing: test_expr_typecheck_subscript_bad_array");
+  Status status = SUCCESS;
+  struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  //struct type* array_integer = type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  struct expr* left = expr_create_name(strdup("foo"));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup(left->name)));
+
+  struct expr* right = expr_create_integer_literal(493);
+  struct expr* e = expr_create(EXPR_SUBSCRIPT, left, right); expr_resolve(st, e);
+  struct type* t = expr_typecheck(st, e);
+  if (t) { print_error(test_type, "NULL", "struct type* t"); status = FAILURE; }
+  expr_destroy(&e); type_destroy(&t);
+  symbol_table_destroy(&st); type_destroy(&integer);
+  return status;
+}
+
+Status test_expr_typecheck_subscript_bad_integer(void) {
+  strcpy(test_type, "Testing: test_expr_typecheck_subscript_bad_integer");
+  Status status = SUCCESS;
+  struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct type* array_integer = type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  struct expr* left = expr_create_name(strdup("foo"));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(array_integer), strdup(left->name)));
+
+  struct expr* right = expr_create_char_literal('a');
+  struct expr* e = expr_create(EXPR_SUBSCRIPT, left, right); expr_resolve(st, e);
+  struct type* t = expr_typecheck(st, e);
+  if (t) { print_error(test_type, "NULL", "struct type* t"); status = FAILURE; }
+  expr_destroy(&e); type_destroy(&t);
+  symbol_table_destroy(&st); type_destroy(&array_integer); type_destroy(&integer);
+  return status;
+}
+
+Status test_expr_typecheck_subscript_good(void) {
+  strcpy(test_type, "Testing: test_expr_typecheck_subscript_good");
+  Status status = SUCCESS;
+  struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct type* array_integer = type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  struct expr* left = expr_create_name(strdup("foo"));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(array_integer), strdup(left->name)));
+
+  struct expr* right = expr_create_integer_literal(0);
+  struct expr* e = expr_create(EXPR_SUBSCRIPT, left, right); expr_resolve(st, e);
+  struct type* t = expr_typecheck(st, e);
+  if (!type_equals(t, integer)) { print_error(test_type, "true", "bool type_equals(t, integer)"); status = FAILURE; }
+  expr_destroy(&e); type_destroy(&t);
+  symbol_table_destroy(&st); type_destroy(&array_integer); type_destroy(&integer);
   return status;
 }

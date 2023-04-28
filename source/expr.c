@@ -239,7 +239,8 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
 
     // subscript
     case EXPR_SUBSCRIPT:
-      if (left_expr_type->kind != TYPE_ARRAY || right_expr_type->kind != TYPE_INTEGER) { /* TO DO: error message, incompatible operand type(s) */ }
+      if (left_expr_type->kind != TYPE_ARRAY) { /* TO DO: error message, incompatible operand type(s) */ }
+      if (right_expr_type->kind != TYPE_INTEGER) { /* TO DO: error message, incompatible operand type(s) */ }
       else result = type_copy(left_expr_type->subtype);
       break;
 
