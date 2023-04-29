@@ -1,7 +1,6 @@
 COMP 4060 201
 Assignment 4: Symbol Table and Type Checking
 
-
 added things:
 
 - symbol now has a symbol_fprint function. used only as a helper function for symbol_table_fprint
@@ -41,7 +40,7 @@ DONEstack:
 -overdue task:
   DONEdestroy functions for structure types
 
-typecheck:
+DONEtypecheck:
 (with manually created AST trees)
 
   DONE- expr_typecheck fully implemented for primitve  expression types
@@ -51,9 +50,9 @@ DONE - expr_typecheck unit testing for logical, arithmetic, relational, and equa
   DONE- <struct>_typecheck functions implemented
   DONE- <struct>_typecheck unit testing (excluding error cases)
   DONE- expr_typecheck fully implemented
-	to do: EXPR_FCALL, EXPR_SUBSCRIPT, EXPR_INIT, EXPR_COMMA
- - expr_typecheck testing for EXPR_FCALL,EXPR_SUBSCRIPT, EXPR_INIT, EXPR_COMMA
-  - error message handler
+DONE	to do: EXPR_FCALL, EXPR_SUBSCRIPT, EXPR_INIT, EXPR_COMMA
+ DONE- expr_typecheck testing for EXPR_FCALL,EXPR_SUBSCRIPT, EXPR_INIT, EXPR_COMMA
+  DONE- error message handler
 
 
 

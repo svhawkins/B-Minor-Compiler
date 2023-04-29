@@ -277,6 +277,7 @@ Status test_decl_typecheck_auto_primitive(void) {
   symbol_table_destroy(&st); decl_destroy(&d); type_destroy(&integer); type_destroy(&tauto);
   return status;
 }
+
 Status test_decl_typecheck_auto_array(void) {
   strcpy(test_type, "Testing: test_decl_typecheck_auto_array");
   Status status = SUCCESS;
@@ -316,7 +317,9 @@ Status test_expr_typecheck_logical_bad(void) {
       }
       e = expr_create(operators[i], left, right); expr_resolve(st, e);
       struct type* t = expr_typecheck(st, e);
-      if (type_equals(t, boolean)) { print_error(test_type, "false", "bool type_equals(t, boolean)"); status = FAILURE; }
+      //if (type_equals(t, boolean)) { print_error(test_type, "false", "bool type_equals(t, boolean)"); status = FAILURE; }
+      if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+      if (error_status != LOGIC) { print_error(test_type, "LOGIC", "int error_status"); status = FAILURE; }
       expr_destroy(&e); type_destroy(&t);
     }
   }
@@ -336,6 +339,8 @@ Status test_expr_typecheck_logical_good(void) {
     struct expr* e = expr_create(operators[i], left, right); expr_resolve(st, e);
     struct type* t = expr_typecheck(st, e);
     if (!type_equals(t, boolean)) { print_error(test_type, "true", "bool type_equals(t, boolean)"); status = FAILURE; }
+    if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+    if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
     expr_destroy(&e); type_destroy(&t);
   }
   symbol_table_destroy(&st); type_destroy(&boolean);
@@ -362,7 +367,9 @@ Status test_expr_typecheck_arithmetic_bad(void) {
       struct type* t = expr_typecheck(st, e);
 
       //type_print(t); printf(" --> "); expr_print(e); printf("\n");
-      if (type_equals(t, integer)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
+      //if (type_equals(t, integer)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
+      if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+      if (error_status != MATH) { print_error(test_type, "MATH", "int error_status"); status = FAILURE; }
       expr_destroy(&e); type_destroy(&t);
     }
   }
@@ -382,6 +389,8 @@ Status test_expr_typecheck_arithmetic_good(void) {
     struct expr* e = expr_create(operators[i], left, right); expr_resolve(st, e);
     struct type* t = expr_typecheck(st, e);
     if (!type_equals(t, integer)) { print_error(test_type, "true", "bool type_equals(t, integer)"); status = FAILURE; }
+    if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+    if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
     expr_destroy(&e); type_destroy(&t);
   }
   symbol_table_destroy(&st); type_destroy(&integer);
@@ -408,7 +417,9 @@ Status test_expr_typecheck_relational_bad(void) {
       struct type* t = expr_typecheck(st, e);
 
       //type_print(t); printf(" --> "); expr_print(e); printf("\n");
-      if (type_equals(t, boolean)) { print_error(test_type, "false", "bool type_equals(t, boolean)"); status = FAILURE; }
+      //if (type_equals(t, boolean)) { print_error(test_type, "false", "bool type_equals(t, boolean)"); status = FAILURE; }
+      if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+      if (error_status != RELATE) { print_error(test_type, "RELATE", "int error_status"); status = FAILURE; }
       expr_destroy(&e); type_destroy(&t);
     }
   }
@@ -429,6 +440,8 @@ Status test_expr_typecheck_relational_good(void) {
     struct expr* e = expr_create(operators[i], left, right); expr_resolve(st, e);
     struct type* t = expr_typecheck(st, e);
     if (!type_equals(t, boolean)) { print_error(test_type, "true", "bool type_equals(t, boolean)"); status = FAILURE; }
+    if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+    if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
     expr_destroy(&e); type_destroy(&t);
   }
   symbol_table_destroy(&st); type_destroy(&boolean); type_destroy(&integer);
@@ -468,7 +481,9 @@ Status test_expr_typecheck_equality_bad(void) {
 	symbol_table_scope_bind(st, right->name, symbol_create(SYMBOL_LOCAL, type_copy(boolean), strdup(right->name)));
     	struct expr* e = expr_create(operators[i], left, right); expr_resolve(st, e);
     	struct type* t = expr_typecheck(st, e);
-    	if (type_equals(t, boolean)) { print_error(test_type, "false", "bool type_equals(t, boolean)"); status = FAILURE; }
+    	//if (type_equals(t, boolean)) { print_error(test_type, "false", "bool type_equals(t, boolean)"); status = FAILURE; }
+        if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+        if (error_status != EQUAL) { print_error(test_type, "EQUAL", "int error_status"); status = FAILURE; }
 	//symbol_table_print(st);
         //type_print(t); printf(" --> "); expr_print(e); printf("\n");
     	expr_destroy(&e);
@@ -499,6 +514,8 @@ Status test_expr_typecheck_equality_good(void) {
     expr_resolve(st, e);
     struct type* t = expr_typecheck(st, e);
     if (!type_equals(t, boolean)) { print_error(test_type, "true", "bool type_equals(t, boolean)"); status = FAILURE; }
+    if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+    if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
     type_destroy(&t); expr_destroy(&e);
     symbol_table_scope_exit(st);
   }
@@ -520,7 +537,9 @@ Status test_expr_typecheck_subscript_bad_array(void) {
   struct expr* right = expr_create_integer_literal(493);
   struct expr* e = expr_create(EXPR_SUBSCRIPT, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  if (t) { print_error(test_type, "NULL", "struct type* t"); status = FAILURE; }
+  //if (t) { print_error(test_type, "NULL", "struct type* t"); status = FAILURE; }
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != SUBSCRIPT) { print_error(test_type, "SUBSCRIPT", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&integer);
   return status;
@@ -539,7 +558,9 @@ Status test_expr_typecheck_subscript_bad_integer(void) {
   struct expr* right = expr_create_char_literal('a');
   struct expr* e = expr_create(EXPR_SUBSCRIPT, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  if (t) { print_error(test_type, "NULL", "struct type* t"); status = FAILURE; }
+  //if (t) { print_error(test_type, "NULL", "struct type* t"); status = FAILURE; }
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != SUBSCRIPT) { print_error(test_type, "SUBSCRIPT", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&array_integer); type_destroy(&integer);
   return status;
@@ -559,6 +580,8 @@ Status test_expr_typecheck_subscript_good(void) {
   struct expr* e = expr_create(EXPR_SUBSCRIPT, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
   if (!type_equals(t, integer)) { print_error(test_type, "true", "bool type_equals(t, integer)"); status = FAILURE; }
+  if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+  if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&array_integer); type_destroy(&integer);
   return status;
@@ -575,6 +598,8 @@ Status test_expr_typecheck_comma_good(void) {
   struct expr* e = expr_create(EXPR_COMMA, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
   if (!type_equals(t, boolean)) { print_error(test_type, "true", "bool type_equals(t, boolean)"); status = FAILURE; }
+  if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+  if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&boolean); type_destroy(&integer);
   return status;
@@ -590,7 +615,9 @@ Status test_expr_typecheck_assign_bad(void) {
   struct expr* right = expr_create_boolean_literal(true);
   struct expr* e = expr_create(EXPR_ASSIGN, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  if (!type_equals(t, NULL)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
+  //if (!type_equals(t, NULL)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != ASSIGN) { print_error(test_type, "ASSIGN", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&integer);
   return status;
@@ -607,6 +634,8 @@ Status test_expr_typecheck_assign_good(void) {
   struct expr* e = expr_create(EXPR_ASSIGN, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
   if (!type_equals(t, integer)) { print_error(test_type, "true", "bool type_equals(t, integer)"); status = FAILURE; }
+  if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+  if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&integer);
   return status;
@@ -625,7 +654,9 @@ Status test_expr_typecheck_fcall_bad_function(void) {
   struct expr* right = expr_create_integer_literal(493);
   struct expr* e = expr_create(EXPR_FCALL, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  if (type_equals(t, integer)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
+  //if (type_equals(t, integer)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != FCALL) { print_error(test_type, "FCALL", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&function_integer); type_destroy(&integer);
   return status;
@@ -645,7 +676,9 @@ Status test_expr_typecheck_fcall_bad_param(void) {
 
   struct expr* e = expr_create(EXPR_FCALL, left, expr_create_integer_literal(493)); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  if (type_equals(t, integer)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
+  //if (type_equals(t, integer)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != PARAM) { print_error(test_type, "PARAM", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&function_integer); type_destroy(&integer); type_destroy(&boolean);
   return status;
@@ -662,6 +695,8 @@ Status test_expr_typecheck_fcall_good_no_param(void) {
   struct expr* e = expr_create(EXPR_FCALL, left, NULL); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
   if (!type_equals(t, integer)) { print_error(test_type, "true", "bool type_equals(t, integer)"); status = FAILURE; }
+  if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+  if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&function_integer); type_destroy(&integer);
   return status;
@@ -683,6 +718,8 @@ Status test_expr_typecheck_fcall_good_one_param(void) {
   struct expr* e = expr_create(EXPR_FCALL, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
   if (!type_equals(t, integer)) { print_error(test_type, "true", "bool type_equals(t, integer)"); status = FAILURE; }
+  if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+  if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&function_integer); type_destroy(&integer); type_destroy(&boolean);
   return status;
@@ -706,6 +743,8 @@ Status test_expr_typecheck_fcall_good_many_param(void) {
   struct type* t = expr_typecheck(st, e);
 
   if (!type_equals(t, integer)) { print_error(test_type, "true", "bool type_equals(t, integer)"); status = FAILURE; }
+  if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+  if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&function_integer); type_destroy(&integer); type_destroy(&boolean);
   return status;
@@ -723,6 +762,8 @@ Status test_expr_typecheck_init_good_one(void) {
   struct expr* e = expr_create(EXPR_INIT, left, NULL); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
   if (!type_equals(t, array_integer)) { print_error(test_type, "true", "bool type_equals(t, array_integer)"); status = FAILURE; }
+  if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+  if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&array_integer); type_destroy(&integer);
   return status;
@@ -740,7 +781,9 @@ Status test_expr_typecheck_init_bad(void) {
 
   struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, right_left, right_right), NULL); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  if (type_equals(t, array_integer)) { print_error(test_type, "false", "bool type_equals(t, array_integer)"); status = FAILURE; }
+  //if (type_equals(t, array_integer)) { print_error(test_type, "false", "bool type_equals(t, array_integer)"); status = FAILURE; }
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != INIT) { print_error(test_type, "INIT", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&array_integer); type_destroy(&integer);
   return status;
@@ -759,6 +802,8 @@ Status test_expr_typecheck_init_good_many(void) {
   struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, right_left, right_right), NULL); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
   if (!type_equals(t, array_integer)) { print_error(test_type, "true", "bool type_equals(t, array_integer)"); status = FAILURE; }
+  if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+  if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&array_integer); type_destroy(&integer);
   return status;
@@ -779,6 +824,8 @@ Status test_expr_typecheck_init_good_multidim(void) {
   struct expr* e = expr_create(EXPR_INIT, body, NULL);
   expr_resolve(st, e); struct type* t = expr_typecheck(st, e);
   if (!type_equals(t, array_array_integer)) { print_error(test_type, "true", "bool type_equals(t, array_array_integer)"); status = FAILURE; }
+  if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+  if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
   symbol_table_destroy(&st); type_destroy(&array_array_integer); type_destroy(&array_integer); type_destroy(&integer);
   return status;

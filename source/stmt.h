@@ -3,7 +3,10 @@
 
 #include "decl.h"
 #include "symbol_table.h"
+struct type;
 struct symbol_table; // forward decl for reasons
+typedef enum { STMT_BOOLEAN = 1, STMT_TYPE } stmt_error_t;
+int stmt_error_handle(stmt_error_t kind, void* ctx1, void* ctx2);
 
 typedef enum {
 	STMT_DECL,
@@ -42,6 +45,6 @@ Looks up and adds symbols to table based on the statement kind given.
 */
 int stmt_resolve(struct symbol_table* st, struct stmt* s);
 
-int stmt_typecheck(struct symbol_table* st, struct stmt* s);
+int stmt_typecheck(struct symbol_table* st, struct stmt* s, struct type** ret_type);
 
 #endif

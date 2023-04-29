@@ -3,6 +3,94 @@
 #include <stdbool.h>
 #include "expr.h"
 
+// handles error messages
+int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void* ctx2, void* type_ctx2) {
+  fprintf(stderr, "ERROR %d:\n", kind);
+  switch (kind) {
+    case MATH: /* operands must be integers */
+    case RELATE:
+      fprintf(stderr, "Invalid operand type(s).\n");
+      fprintf(stderr, "Operand(s) must be of type INTEGER.\n");
+      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
+      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      if (ctx2) {
+        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
+        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+      }
+    break;
+    case LOGIC: /* operands must be booleans */
+      fprintf(stderr, "Invalid operand type(s).\n");
+      fprintf(stderr, "Operand(s) must be of type BOOLEAN.\n");
+      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
+      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      if (ctx2) {
+        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
+        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+      }
+    break;
+    case EQUAL: /* operands must be the same, cannot be function/array */
+      fprintf(stderr, "Invalid operand type(s).\n");
+      fprintf(stderr, "Operand(s) must be of type INTEGER, CHAR, BOOLEAN, or STRING.\n");
+      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
+      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      if (ctx2) {
+        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
+        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+      }
+    break;
+    case ASSIGN: /* operands must be the same type*/
+      fprintf(stderr, "Invalid operand type(s).\n");
+      fprintf(stderr, "Operand(s) must be of the same type.\n");
+      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
+      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      if (ctx2) {
+        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
+        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+      }
+    break;
+    case LVAL: /* left operand cannot be a literal */
+      fprintf(stderr, "Invalid value of operand(s).\n");
+      fprintf(stderr, "Operand 1 must be NOT be a literal value.\n");
+      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
+    break;
+    case INIT: /* operands within list must be the same */
+      fprintf(stderr, "Invalid operand type(s).\n");
+      fprintf(stderr, "Operand(s) within initializer list must be of the same type.\n");
+      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
+      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      if (ctx2) {
+        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
+        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+      }
+    break;
+    case SUBSCRIPT: /* left must be array, right must be integer */
+      fprintf(stderr, "Invalid operand type(s).\n");
+      fprintf(stderr, "Operand 1 must be of type ARRAY and operand 2 of type INTEGER.\n");
+      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
+      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      if (ctx2) {
+        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
+        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+      }
+    break;
+    case FCALL: /* left must be a function */
+      fprintf(stderr, "Invalid operand type(s).\n");
+      fprintf(stderr, "Operand 1 must be of type FUNCTION.\n");
+      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
+      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+    break;
+    case PARAM: /* argument types must match with parameter list types */
+      fprintf(stderr, "Invalid argument type(s).\n");
+      fprintf(stderr, "Types of expressions with argument list must match declared parameter types");
+      fprintf(stderr, "Of symbol: "); symbol_fprint(stderr, (struct symbol*)ctx1);
+      // too lazy to print argument list
+    break;
+  }
+  fprintf(stderr, "\n");
+  global_error_count++;
+  return kind;
+}
+
 // helper functions
 bool expr_is_primitive(expr_t kind) { return (kind >= EXPR_NAME); }
 bool expr_is_unary(expr_t kind) { return (kind >= EXPR_INC && kind <= EXPR_NOT); }
@@ -36,7 +124,9 @@ struct type* expr_typecheck_init(struct symbol_table* st, struct expr* e) {
     bool is_expr_list = (e->kind == EXPR_COMMA);
     struct type* lt = (is_expr_list) ? expr_typecheck(st, e->left) : expr_typecheck(st, e);
     struct type* rt = (is_expr_list) ? expr_typecheck(st, e->right) : NULL;
-    if (is_expr_list && !type_equals(lt, rt)) { /* TO DO: error message, inequal expression types */ }
+    if (is_expr_list && !type_equals(lt, rt)) {
+      error_status = expr_type_error_handle(INIT, (void*)e->left, (void*)lt, (void*)e->right, (void*)rt);
+    }
     type_destroy(&rt);
     return lt;
 }
@@ -173,12 +263,11 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
   int error_status = 0;
   if (e->kind == EXPR_NAME) {
     e->symbol = symbol_table_scope_lookup(st, e->name);
-    if (!e->symbol) {
-      // not found anywhere. undefined reference to <symbol>
-      // TO DO: make error message
-    }
-  } else {
-    error_status = expr_resolve(st, e->left) + expr_resolve(st, e->right);
+    char buffer[256]; strcpy(buffer, e->name);
+    if (!e->symbol) { error_status = symbol_table_error_handle(SYM_UNDEF, (void*)st, (void*)buffer); }}
+  else {
+    error_status = expr_resolve(st, e->left);
+    error_status = expr_resolve(st, e->right);
   }
   return error_status;
 }
@@ -205,15 +294,17 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
      break;
     case EXPR_NAME:
      s = symbol_table_scope_lookup(st, e->name);
-     if (!s) { /* TO DO: error message, recover by adding it to table */ }
+     //if (!s) { /* TO DO: error message, recover by adding it to table */ }
      result = type_copy(s->type);
      break;
 
     // equality operators
     case EXPR_EQ:
     case EXPR_NEQ:
-      if (!type_equals(left_expr_type, right_expr_type)) { /* TO DO: error message, type mismatch */ }
-      else if (invalid_type(left_expr_type->kind) || invalid_type(right_expr_type->kind)) { /* TO DO: error message, incompatible operand type(s) */ }
+      if (invalid_type(left_expr_type->kind) || invalid_type(right_expr_type->kind) || !type_equals(left_expr_type, right_expr_type)) {
+        error_status = expr_type_error_handle(EQUAL, (void*)e->left, (void*)left_expr_type, (void*)e->right, (void*)right_expr_type);
+        result = type_copy(left_expr_type);
+      }
       else { result = type_create(TYPE_BOOLEAN, NULL, NULL, NULL); }
       break;
 
@@ -222,56 +313,64 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
     case EXPR_GEQ:
     case EXPR_LESS:
     case EXPR_LEQ:
-      if (!type_equals(left_expr_type, right_expr_type)) { /* TO DO: error message, type mismatch*/ }
-      if (left_expr_type->kind != TYPE_INTEGER || right_expr_type->kind != TYPE_INTEGER) { /* TO DO: error message, incompatible operand type(s) */ }
+      if (!type_equals(left_expr_type, right_expr_type) || left_expr_type->kind != TYPE_INTEGER || right_expr_type->kind != TYPE_INTEGER) {
+        error_status = expr_type_error_handle(RELATE, (void*)e->left, (void*)left_expr_type, (void*)e->right, (void*)right_expr_type);
+        result = type_copy(left_expr_type);
+      }
       else result = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
       break;
 
     // logical operators
     case EXPR_AND:
     case EXPR_OR:
-      if (!type_equals(left_expr_type, right_expr_type)) { /* TO DO: error message, type mismatch*/ }
-      if (left_expr_type->kind != TYPE_BOOLEAN || right_expr_type->kind != TYPE_BOOLEAN) { /* TO DO: error message, incompatible operand type(s) */ }
-      else result = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
-      break;
     case EXPR_NOT:
-      if (left_expr_type->kind != TYPE_BOOLEAN ) { /* TO DO: error message, incompatible operand type(s) */ }
+      if (left_expr_type->kind != TYPE_BOOLEAN ||
+	 (e->right && (right_expr_type->kind != TYPE_BOOLEAN || !type_equals(left_expr_type, right_expr_type)))) {
+         error_status = expr_type_error_handle(LOGIC, (void*)e->left, (void*)left_expr_type, (void*)e->right, (void*)right_expr_type);
+         result = type_copy(left_expr_type);
+      }
       else result = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
       break;
 
-    // arithmetic operators (unary)
+    // arithmetic operators
     case EXPR_POS:
     case EXPR_NEG:
     case EXPR_INC:
     case EXPR_DEC:
-      if (left_expr_type->kind != TYPE_INTEGER ) { /* TO DO: error message, incompatible operand type(s) */ }
-      else result = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-      break;
-
-    // arithmetic operators (binary)
     case EXPR_ADD:
     case EXPR_SUB:
     case EXPR_MULT:
     case EXPR_DIV:
     case EXPR_MOD:
     case EXPR_EXP:
-      if (!type_equals(left_expr_type, right_expr_type)) { /* TO DO: error message, type mismatch*/ }
-      if (left_expr_type->kind != TYPE_INTEGER || right_expr_type->kind != TYPE_INTEGER) { /* TO DO: error message, incompatible operand type(s) */ }
+      if (left_expr_type->kind != TYPE_INTEGER ||
+	 (e->right && (right_expr_type->kind != TYPE_INTEGER || !type_equals(left_expr_type, right_expr_type)))) {
+	 error_status = expr_type_error_handle(MATH, (void*)e->left, (void*)left_expr_type, (void*)e->right, (void*)right_expr_type);
+         result = type_copy(left_expr_type);
+      }
       else result = type_create(TYPE_INTEGER, NULL, NULL, NULL);
       break;
 
     // subscript
     case EXPR_SUBSCRIPT:
-      if (left_expr_type->kind != TYPE_ARRAY) { /* TO DO: error message, incompatible operand type(s) */ }
-      if (right_expr_type->kind != TYPE_INTEGER) { /* TO DO: error message, incompatible operand type(s) */ }
+      if (left_expr_type->kind != TYPE_ARRAY || right_expr_type->kind != TYPE_INTEGER) {
+         error_status = expr_type_error_handle(SUBSCRIPT, (void*)e->left, (void*)left_expr_type, (void*)e->right, (void*)right_expr_type);
+         result = type_copy(left_expr_type);
+      }
       else result = type_copy(left_expr_type->subtype);
       break;
 
     // function call
     case EXPR_FCALL:
-      if (left_expr_type->kind != TYPE_FUNCTION) { /* TO DO: error message, incompatible operand type(s) */ }
+      if (left_expr_type->kind != TYPE_FUNCTION) {
+       error_status = expr_type_error_handle(FCALL, (void*)e->left, (void*)left_expr_type, (void*)e->right, (void*)right_expr_type);
+       result = type_copy(left_expr_type); break;
+      }
       struct symbol* fname = symbol_table_scope_lookup(st, e->left->name);
-      if (!fcall_compare(st, fname->type->params, e->right)) { /* TO DO: error message of incompatible arguments for parameters */ }
+       if (!fcall_compare(st, fname->type->params, e->right)) {
+       error_status = expr_type_error_handle(PARAM, (void*)fname, (void*)e->right, NULL, NULL);
+       if (!result) result = type_copy(left_expr_type);
+      }
       else result = type_copy(left_expr_type->subtype);
       break;
 
@@ -288,8 +387,12 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
 
     // assignment
     case EXPR_ASSIGN:
-      if (e->left->kind != EXPR_NAME || e->left->kind != EXPR_SUBSCRIPT) { /* TO DO: error message, left operand must be lvalue */ }
-      if (!type_equals(left_expr_type, right_expr_type)) { /* TO DO: error message */ }
+      if (!type_equals(left_expr_type, right_expr_type)) {
+       error_status = expr_type_error_handle(ASSIGN, (void*)e->left, (void*)left_expr_type, (void*)e->right, (void*)right_expr_type);
+      }
+      if (e->left->kind != EXPR_NAME && e->left->kind != EXPR_SUBSCRIPT) {
+       error_status = expr_type_error_handle(LVAL, e->left, left_expr_type, NULL, NULL);
+      }
       else result = type_copy(left_expr_type);
       break;
   }

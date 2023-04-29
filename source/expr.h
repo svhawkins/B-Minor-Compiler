@@ -4,7 +4,7 @@
 #include "symbol.h"
 #include "symbol_table.h"
 struct symbol_table; // forward decl for reasons
-
+typedef enum { MATH = 1, RELATE, LOGIC, EQUAL, ASSIGN, LVAL, INIT, SUBSCRIPT, FCALL, PARAM } type_error_t;
 typedef enum {
         // unary operators
 	EXPR_INC = 0, // l++

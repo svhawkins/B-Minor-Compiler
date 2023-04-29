@@ -68,8 +68,10 @@ int decl_resolve(struct symbol_table* st, struct decl* d) {
   d->symbol = symbol_create(kind, type_copy(d->type), strdup(d->name));
   error_status = expr_resolve(st, d->value); // names in the expression should already be defined/declared.
 
-  // TO DO: error messages
-  symbol_table_scope_bind(st, d->name, d->symbol);
+  struct symbol* sym = symbol_table_scope_lookup_current(st, d->name);
+  if (sym) error_status = symbol_table_error_handle(SYM_REDEF, (void*)d->symbol, (void*)sym);
+  else symbol_table_scope_bind(st, d->name, d->symbol);
+
   if (d->code) {
     symbol_table_scope_enter(st);
     error_status = param_list_resolve(st, d->type->params); // so d->code won't have undefined references :)
@@ -84,7 +86,9 @@ int decl_typecheck(struct symbol_table* st, struct decl* d) {
   if (!d) return 0; int error_status = 0;
   if (d->value) {
     struct type* t = expr_typecheck(st, d->value);
-    if (!type_equals(t, d->symbol->type)) { /* TO DO: error message */ }
+    if (!type_equals(t, d->symbol->type)) {
+    error_status = symbol_table_error_handle(SYM_TYPE, (void*)d->symbol, (void*)t);
+    }
     // auto declarations update their type to value type.
     if (d->type->kind == TYPE_AUTO) {
 	type_destroy(&d->type); d->type = type_copy(t);
@@ -92,9 +96,12 @@ int decl_typecheck(struct symbol_table* st, struct decl* d) {
     } type_destroy(&t);
   }
   if (d->code) {
-  //if (!type_equals(d->type, d->symbol->type)) { /* error message */ }
-    if (!param_list_equals(d->type->params, d->symbol->type->params)) { /* error message */ }
-    error_status = stmt_typecheck(st, d->code); // TO DO: maybe include type/its symbol type as a parameter for return statement typechecking.
+    struct type* ret_type = NULL;
+    if (!param_list_equals(d->type->params, d->symbol->type->params)) {
+      error_status = symbol_table_error_handle(SYM_PARAM, (void*)d->symbol->type, (void*)d->type);
+    }
+    error_status = stmt_typecheck(st, d->code, &ret_type);
+    if (!type_equals(d->type->subtype, ret_type)) { error_status = symbol_table_error_handle(SYM_TYPE, (void*)d->symbol, (void*)ret_type); }
   }
-  return error_status;
+  return decl_typecheck(st, d->next);
 }

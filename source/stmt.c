@@ -3,6 +3,26 @@
 #include "stmt.h"
 
 extern const char* SPACE;
+
+int stmt_error_handle(stmt_error_t kind, void* ctx1, void* ctx2) {
+ fprintf(stderr, "ERROR %d: ", kind);
+  switch(kind) {
+    case STMT_BOOLEAN: /* resulting expression type is not of boolean type */
+      fprintf(stderr, "Invalid expression type of conditional:\n");
+      fprintf(stderr, "Expected type boolean, recieved: "); type_fprint(stderr, (struct type*)ctx2);
+      fprintf(stderr, "\n in statement:\n\t"); stmt_fprint(stderr, (struct stmt*)ctx1, 0);
+      break;
+    case STMT_TYPE: /* invalid type for printing */
+      fprintf(stderr, "Invalid expression type(s) for print:\t");
+      fprintf(stderr, "Expression type(s) must not be of void, array, or boolean.");
+      stmt_fprint(stderr, (struct stmt*)ctx1, 0); fprintf(stderr, "\n");
+      break;
+  }
+  fprintf(stderr, "\n");
+  global_error_count++;
+  return kind;
+}
+
 struct stmt* stmt_create(stmt_t kind, struct decl* decl,
 			 struct expr* init_expr, struct expr* expr, struct expr* next_expr,
                          struct stmt* body, struct stmt* else_body, struct stmt* next)
@@ -180,34 +200,42 @@ int stmt_resolve(struct symbol_table* st, struct stmt* s) {
   return stmt_resolve(st, s->next);
 }
 
-int stmt_typecheck(struct symbol_table* st, struct stmt* s) {
+int stmt_typecheck(struct symbol_table* st, struct stmt* s, struct type** ret_type) {
   if (!s) return 0; int error_status = 0;
   struct type* t = NULL;
   switch(s->kind) {
     case STMT_EXPR: t = expr_typecheck(st, s->expr); type_destroy(&t); break;
     case STMT_DECL: error_status = decl_typecheck(st, s->decl); break;
-    case STMT_PRINT: t = expr_typecheck(st, s->expr); /* TO DO: check if not function/array/void */ type_destroy(&t); break;
-    case STMT_RETURN: t = expr_typecheck(st, s->expr); /* TO DO: compare with return type */ type_destroy(&t); break;
-    case STMT_BLOCK:  error_status = stmt_typecheck(st, s->body); break;
+    case STMT_PRINT:
+      t = expr_typecheck(st, s->expr);
+      if (t->kind == TYPE_VOID || t->kind == TYPE_FUNCTION || t->kind == TYPE_ARRAY) {
+        error_status = stmt_error_handle(STMT_TYPE, (void*)s, (void*)t);
+      }
+      type_destroy(&t); break;
+    case STMT_RETURN:
+      t = expr_typecheck(st, s->expr);
+      *ret_type = (!t) ? type_create(TYPE_VOID, NULL, NULL, NULL) : type_copy(t);
+      type_destroy(&t); break;
+    case STMT_BLOCK:  error_status = stmt_typecheck(st, s->body, ret_type); break;
     case STMT_IF_ELSE:
       t = expr_typecheck(st, s->expr);
-      if (t->kind != TYPE_BOOLEAN) { /* TO DO: error message */ }
+      if (t->kind != TYPE_BOOLEAN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
       type_destroy(&t);
-      error_status = stmt_typecheck(st, s->body); error_status = stmt_typecheck(st, s->else_body);
+      error_status = stmt_typecheck(st, s->body, ret_type); error_status = stmt_typecheck(st, s->else_body, ret_type);
       break;
     case STMT_WHILE:
       t = expr_typecheck(st, s->expr);
-      if (t->kind != TYPE_BOOLEAN) { /* TO DO: error message */ }
+      if (t->kind != TYPE_BOOLEAN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
       type_destroy(&t);
-      error_status = stmt_typecheck(st, s->body);
+      error_status = stmt_typecheck(st, s->body, ret_type);
       break;
     case STMT_FOR:
       t = expr_typecheck(st, s->init_expr);
       t = expr_typecheck(st, s->expr);
-      if (t && t->kind != TYPE_BOOLEAN) { /* TO DO: error message */ }
+      if (t && t->kind != TYPE_BOOLEAN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
       t = expr_typecheck(st, s->next_expr); type_destroy(&t);
-      error_status = stmt_typecheck(st, s->body);
+      error_status = stmt_typecheck(st, s->body, ret_type);
       break;
   }
-  return stmt_typecheck(st, s->next);
+  return stmt_typecheck(st, s->next, ret_type);
 }

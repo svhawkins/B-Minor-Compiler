@@ -16,6 +16,12 @@
 /* header file for the symbol table : a stack of hash tables (void pointers actually but casting can be done) */
 
 
+// for error handling for everything related
+int global_error_count;
+int error_status;
+typedef enum { SYM_UNDEF = 1, SYM_REDEF, SYM_TYPE, SYM_PARAM } symbol_error_t;
+int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2);
+
 /*
 Symbol table itself is a stack wrapper handling
 the casts and allocations of its hash table elements,
