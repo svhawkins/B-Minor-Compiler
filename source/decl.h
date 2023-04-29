@@ -27,7 +27,6 @@ void decl_destroy(struct decl** d);
 
 /*
 Adds symbols to the symbol table
-Error messages:
 */
 int decl_resolve(struct symbol_table* st, struct decl* d);
 

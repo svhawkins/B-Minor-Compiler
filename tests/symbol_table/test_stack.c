@@ -13,6 +13,11 @@ char output[MAX_BUFFER];
 void print_error(char* test, char* expect, char* value);
 
 // test functions
+/*
+NOT TESTED:
+error codes from <struct>_resolve functions
+in the circumstances that trigger them
+*/
 
 // unit tests for the stack
 Status test_stack_create(void);

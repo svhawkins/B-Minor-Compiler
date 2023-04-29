@@ -186,9 +186,7 @@ struct expr* expr_create_string_literal(const char* str)
 }
 
 void expr_fprint(FILE* fp, struct expr* e) {
-  // what is printed is kind dependent
   if (!e) return;
-
   switch(e->kind) {
     // primitives
     case EXPR_NAME: fprintf(fp, "%s", e->name); break;
@@ -239,7 +237,6 @@ void expr_destroy(struct expr** e) {
   expr_destroy(&((*e)->left));
   expr_destroy(&((*e)->right));
   if ((*e)->kind == EXPR_NAME) free((void*)(*e)->name);
-  //symbol_destroy(&((*e)->symbol));
   free(*e); *e = NULL;
 }
 
@@ -294,7 +291,6 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
      break;
     case EXPR_NAME:
      s = symbol_table_scope_lookup(st, e->name);
-     //if (!s) { /* TO DO: error message, recover by adding it to table */ }
      result = type_copy(s->type);
      break;
 

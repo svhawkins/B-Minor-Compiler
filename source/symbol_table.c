@@ -17,8 +17,8 @@ int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
     symbol_table_scope_bind((struct symbol_table*)ctx1, (char*)ctx2, s);
     break;
     case SYM_REDEF: /* symbol name is already being used in current scope */
-    fprintf(stderr, "Symbol "); symbol_fprint(stderr, (struct symbol*)ctx2);
-    fprintf(stderr, "\n\talready defined in current scope as: "); symbol_fprint(stderr, (struct symbol*)ctx1);
+    fprintf(stderr, "Symbol "); symbol_fprint(stderr, (struct symbol*)ctx1);
+    fprintf(stderr, "\n\talready defined in current scope as: "); symbol_fprint(stderr, (struct symbol*)ctx2);
     break;
     case SYM_TYPE: /* symbol type does not match its value/return type */
     if (((struct symbol*)ctx1)->type->kind == TYPE_FUNCTION) {
@@ -40,6 +40,19 @@ int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
   return kind;
 }
 
+// prints out the key value pairs within a hash table
+void hash_table_fprint(FILE* fp, struct hash_table* ht) {
+  if (!ht) { fprintf(fp, "\t\t[null table]\n\n"); return; }
+  if (!hash_table_size(ht)) { fprintf(fp, "\t\t[empty table]\n\n"); return; }
+  char* key; void* value;
+  hash_table_firstkey(ht);
+  while (hash_table_nextkey(ht, &key, &value)) {
+    fprintf(fp, "%s --> ", key);
+    symbol_fprint(fp, value); fprintf(fp, "\n");
+  }
+  fprintf(fp, "\n"); for (int i = 0; i < 50; i++) { fprintf(fp, "-"); }
+}
+
 // destroys a hash table and its contained symbols.
 void hash_table_destroy(struct hash_table** ht) {
     if (!(*ht)) return;
@@ -57,8 +70,6 @@ struct symbol* symbol_table_search(struct symbol_table* st, const char* name, in
   if (!st || !st->stack->items || !st->stack->size) return NULL;
   struct symbol* found = NULL;
   for (int i = top; i >= 0; i--) {
-    //if (!st->stack->items[i] || !hash_table_size(st->stack->items[i])) continue;
-    //found = (struct symbol*)hash_table_lookup(*(&st->stack->items[i]), name);
     found = symbol_table_scope_lookup_at(st, name, i); if (found) break;
   }
   return found;
@@ -67,7 +78,6 @@ struct symbol* symbol_table_search(struct symbol_table* st, const char* name, in
 
 /*
 Creates a symbol table.
-
 Returns a NULL pointer upon any memory allocation failures.
 */
 struct symbol_table* symbol_table_create() {
@@ -123,7 +133,7 @@ Destroys then creates a new symbol table
 struct symbol_table* symbol_table_clear(struct symbol_table* st) {
   symbol_table_destroy(&st);
   st = symbol_table_create();
-  symbol_table_scope_enter(st); // usable global scope
+  symbol_table_scope_enter(st); // global scope
   return st;
 }
 
@@ -244,22 +254,6 @@ Returns a NULL pointer in the following cases:
 */
 struct symbol* symbol_table_scope_lookup_current(struct symbol_table* st, const char* name) {
   return (st) ? symbol_table_scope_lookup_at(st, name, st->top) : NULL;
-}
-
-/*
-prints out the key value pairs of the names associated with the symbols for all hash tables within
-*/
-
-void hash_table_fprint(FILE* fp, struct hash_table* ht) {
-  if (!ht) { fprintf(fp, "\t\t[null table]\n\n"); return; }
-  if (!hash_table_size(ht)) { fprintf(fp, "\t\t[empty table]\n\n"); return; }
-  char* key; void* value;
-  hash_table_firstkey(ht);
-  while (hash_table_nextkey(ht, &key, &value)) {
-    fprintf(fp, "%s --> ", key);
-    symbol_fprint(fp, value); fprintf(fp, "\n");
-  }
-  for (int i = 0; i < 50; i++) { fprintf(fp, "-"); } fprintf(fp, "\n");
 }
 
 void symbol_table_fprint(FILE* fp, struct symbol_table* st) {

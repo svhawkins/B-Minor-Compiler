@@ -25,7 +25,7 @@
   struct decl* parser_result = NULL;
   
 %}
-
+%expect 3
 %define parse.error verbose
 
 /* tokens */

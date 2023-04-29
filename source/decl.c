@@ -56,26 +56,26 @@ void decl_destroy(struct decl** d) {
   type_destroy(&((*d)->type));
   expr_destroy(&((*d)->value));
   stmt_destroy(&((*d)->code));
-  //symbol_destroy(&((*d)->symbol));
   decl_destroy(&((*d)->next));
   free(*d); *d = NULL;
 }
 
 
 int decl_resolve(struct symbol_table* st, struct decl* d) {
-  if (!st || !d) return 0; int error_status = 0;
+  int error_status = 0;
+  if (!st || !d) return error_status;
   symbol_t kind = symbol_table_scope_level(st) > 1 ? SYMBOL_LOCAL : SYMBOL_GLOBAL;
   d->symbol = symbol_create(kind, type_copy(d->type), strdup(d->name));
-  error_status = expr_resolve(st, d->value); // names in the expression should already be defined/declared.
+  error_status = expr_resolve(st, d->value); // names in the expression should already be defined/declared by now.
 
   struct symbol* sym = symbol_table_scope_lookup_current(st, d->name);
   if (sym) error_status = symbol_table_error_handle(SYM_REDEF, (void*)d->symbol, (void*)sym);
   else symbol_table_scope_bind(st, d->name, d->symbol);
 
-  if (d->code) {
+  if (d->type->kind == TYPE_FUNCTION) {
     symbol_table_scope_enter(st);
     error_status = param_list_resolve(st, d->type->params); // so d->code won't have undefined references :)
-    error_status = stmt_resolve(st, d->code);
+    if (d->code) { error_status = stmt_resolve(st, d->code); }
     symbol_table_scope_exit(st);
   }
   error_status = decl_resolve(st, d->next);
@@ -83,16 +83,17 @@ int decl_resolve(struct symbol_table* st, struct decl* d) {
 }
 
 int decl_typecheck(struct symbol_table* st, struct decl* d) {
-  if (!d) return 0; int error_status = 0;
+  int error_status = 0;
+  if (!d) return error_status;
   if (d->value) {
     struct type* t = expr_typecheck(st, d->value);
-    if (!type_equals(t, d->symbol->type)) {
-    error_status = symbol_table_error_handle(SYM_TYPE, (void*)d->symbol, (void*)t);
-    }
     // auto declarations update their type to value type.
     if (d->type->kind == TYPE_AUTO) {
 	type_destroy(&d->type); d->type = type_copy(t);
 	type_destroy(&d->symbol->type); d->symbol->type = type_copy(t);
+    }
+    if (!type_equals(t, d->symbol->type)) {
+    error_status = symbol_table_error_handle(SYM_TYPE, (void*)d->symbol, (void*)t);
     } type_destroy(&t);
   }
   if (d->code) {

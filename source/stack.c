@@ -8,12 +8,12 @@ returns NULL upon failure:
 */
 Stack* stack_create() {
   Stack* s = (Stack*)malloc(sizeof(s));
-  if (!s) { /* display error message....*/ }
+  if (!s) { fprintf(stderr, "WARNING: Failed to allocate memory space for stack!\n"); }
   if (s) {
    s->size = 0;
    s->capacity = 1<<3;
    s->items = (void**)calloc(s->capacity, sizeof(void*));
-   if (!s->items) { free(s); /* display error message...*/ }
+   if (!s->items) { free(s); fprintf(stderr, "WARNING: Failed to allocate memory space for stack contents!\n"); }
   }
   return s;
 }
@@ -24,7 +24,6 @@ sets stack pointer to NULL once done
 */
 void stack_destroy(Stack** s) {
   if (*s) {
-    // clear all elements?
     free((*s)->items);
     free(*s); *s = NULL;
   }
@@ -34,7 +33,6 @@ void stack_destroy(Stack** s) {
 /*
 Adds item to the stack, increasing its size
 Memory may have to be reallocated if above capacity (left shift)
-
 if in any case of failure:
   - unallocated stack
   - unallocated items
@@ -84,7 +82,7 @@ void* stack_pop(Stack* s) {
     }
   }
   int top = s->size - 1;
-  void* item = s->items[top]; // whatever the topmost value is
+  void* item = s->items[top];
   s->items[top] = NULL;
   s->size--;
   return item;

@@ -42,7 +42,6 @@ bool type_equals(struct type* a, struct type* b);
 
 /*
 Adds symbols with parameter scopes
-Error messages:
 */
 int type_resolve(struct symbol_table* st, struct type* t);
 

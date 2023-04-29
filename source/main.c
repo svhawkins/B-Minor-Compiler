@@ -12,7 +12,16 @@ extern struct stmt* test_parser_result;
 extern struct decl* parser_result;
 
 int main(int argc, const char* argv[]) {
-  struct symbol_table* st = (argc > 1 && !strcmp(argv[1], "-v")) ? symbol_table_verbose_create() : symbol_table_create();
+  struct symbol_table* st = NULL;
+  bool refresh = false;
+  switch (argc) {
+    case 1: st = symbol_table_create(); break;
+    case 2: st =  (!strcmp(argv[1], "-v")) ? symbol_table_verbose_create() : symbol_table_create(); break;
+    case 3:
+      st = (!strcmp(argv[1], "-v") || !strcmp(argv[2], "-v")) ? symbol_table_verbose_create() : symbol_table_create();
+      if (!strcmp(argv[1], "-c") || !strcmp(argv[2], "-c")) { refresh = true; }
+    break;
+  }
   symbol_table_scope_enter(st); // global scope
 
   for (int i = 0; !eof; i++) {
@@ -23,7 +32,9 @@ int main(int argc, const char* argv[]) {
  	stmt_resolve(st, test_parser_result);
 	stmt_typecheck(st, test_parser_result, NULL);
 	symbol_table_print(st);
+        printf("Total errors: %d\n", global_error_count);
 	stmt_destroy(&test_parser_result);
+        if (refresh) { st = symbol_table_clear(st); }
       }
     } else { print_error_message(); }
   }
@@ -33,6 +44,7 @@ int main(int argc, const char* argv[]) {
     decl_typecheck(st, parser_result);
     symbol_table_print(st);
     decl_destroy(&parser_result);
+    printf("Total errors: %d\n", global_error_count);
   }
   symbol_table_destroy(&st);
   return 0;

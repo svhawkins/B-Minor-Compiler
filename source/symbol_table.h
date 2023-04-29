@@ -13,7 +13,7 @@
 #include "symbol.h"
 #include "type.h"
 
-/* header file for the symbol table : a stack of hash tables (void pointers actually but casting can be done) */
+/* header file for the symbol table : a stack of hash tables (void pointers cast to hash tables) */
 
 
 // for error handling for everything related
@@ -43,7 +43,6 @@ struct symbol_table {
 
 /*
 Creates a symbol table, setting the verbose field to false.
-
 Returns a NULL pointer upon any memory allocation failures.
 */
 struct symbol_table* symbol_table_create();
@@ -159,9 +158,33 @@ Note this is a special case of symbol_table_scope_lookup_at()
 struct symbol* symbol_table_scope_lookup_current(struct symbol_table* st, const char* name);
 
 /*
-prints out the key value pairs of the names associated with the symbols for all hash tables within
+Prints out all of the hash tables in the stack.
+Each hash table prints out the all of their key value pairs:
 
-// show example output
+example using function definition:
+foo: function void(x: integer, z: boolean, y: char) = {
+  s: string;
+}
+
+SCOPE [2]:
+--------------------------------------------------
+s --> (kind: local, name: s, type: string)
+--------------------------------------------------
+
+SCOPE [1]:
+--------------------------------------------------
+x --> (kind: parameter, name: x, type: integer)
+
+z --> (kind: parameter, name: z, type: boolean)
+
+y --> (kind: parameter, name: y, type: char)
+--------------------------------------------------
+
+SCOPE [0]: CURRENT (TOP) GLOBAL (BOTTOM)
+--------------------------------------------------
+foo --> (kind: global, name: foo, type: function void (x: integer, y: char, z: boolean))
+--------------------------------------------------
+
 */
 void symbol_table_fprint(FILE* fp, struct symbol_table* st);
 void symbol_table_print(struct symbol_table* st);

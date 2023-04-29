@@ -11,6 +11,11 @@ char output[MAX_BUFFER];
 void print_error(char* test, char* expect, char* value);
 enum { INT = 0, BOOL, CHAR, STRING, VOID, AUTO, N_TYPES };
 
+/*
+NOT TESTED:
+error states for stmt_typecheck, param_list
+*/
+
 // expr_typecheck tests
 Status test_expr_typecheck_primitive(void);
 Status test_expr_typecheck_logical_bad(void);
@@ -23,7 +28,6 @@ Status test_expr_typecheck_equality_bad(void);
 Status test_expr_typecheck_equality_good(void);
 Status test_expr_typecheck_subscript_bad_array(void);
 Status test_expr_typecheck_subscript_bad_integer(void);
-// NOT TESTED: out of bounds integers
 Status test_expr_typecheck_subscript_good(void);
 Status test_expr_typecheck_comma_good(void);
 Status test_expr_typecheck_assign_bad(void);
@@ -51,8 +55,6 @@ Status test_decl_typecheck(void);
 Status test_decl_typecheck_name(void);
 Status test_decl_typecheck_auto_primitive(void);
 Status test_decl_typecheck_auto_array(void);
-
-// stmt_typecheck tests
 
 int main(void) {
   Status (*tests[])(void) = {
@@ -124,7 +126,6 @@ Status test_expr_typecheck_primitive(void) {
 			  };
   struct type* t = NULL; struct symbol* s = NULL;
   for (int i = 0; i < 5; i++) {
-    // testing name types will be void.
     if (i == VOID) { s = symbol_create(SYMBOL_GLOBAL, type_copy(types[i]), strdup("foo")); symbol_table_scope_bind(st, "foo", s); }
     expr_resolve(st, exprs[i]); t = expr_typecheck(st, exprs[i]);
     if (!exprs[i]) { print_error(test_type, "NOT NULL", "struct expr* e"); return FAILURE; }
@@ -317,7 +318,6 @@ Status test_expr_typecheck_logical_bad(void) {
       }
       e = expr_create(operators[i], left, right); expr_resolve(st, e);
       struct type* t = expr_typecheck(st, e);
-      //if (type_equals(t, boolean)) { print_error(test_type, "false", "bool type_equals(t, boolean)"); status = FAILURE; }
       if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
       if (error_status != LOGIC) { print_error(test_type, "LOGIC", "int error_status"); status = FAILURE; }
       expr_destroy(&e); type_destroy(&t);
@@ -365,9 +365,6 @@ Status test_expr_typecheck_arithmetic_bad(void) {
       }
       e = expr_create(operators[i], left, right); expr_resolve(st, e);
       struct type* t = expr_typecheck(st, e);
-
-      //type_print(t); printf(" --> "); expr_print(e); printf("\n");
-      //if (type_equals(t, integer)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
       if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
       if (error_status != MATH) { print_error(test_type, "MATH", "int error_status"); status = FAILURE; }
       expr_destroy(&e); type_destroy(&t);
@@ -415,9 +412,6 @@ Status test_expr_typecheck_relational_bad(void) {
       }
       e = expr_create(operators[i], left, right); expr_resolve(st, e);
       struct type* t = expr_typecheck(st, e);
-
-      //type_print(t); printf(" --> "); expr_print(e); printf("\n");
-      //if (type_equals(t, boolean)) { print_error(test_type, "false", "bool type_equals(t, boolean)"); status = FAILURE; }
       if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
       if (error_status != RELATE) { print_error(test_type, "RELATE", "int error_status"); status = FAILURE; }
       expr_destroy(&e); type_destroy(&t);
@@ -481,11 +475,8 @@ Status test_expr_typecheck_equality_bad(void) {
 	symbol_table_scope_bind(st, right->name, symbol_create(SYMBOL_LOCAL, type_copy(boolean), strdup(right->name)));
     	struct expr* e = expr_create(operators[i], left, right); expr_resolve(st, e);
     	struct type* t = expr_typecheck(st, e);
-    	//if (type_equals(t, boolean)) { print_error(test_type, "false", "bool type_equals(t, boolean)"); status = FAILURE; }
         if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
         if (error_status != EQUAL) { print_error(test_type, "EQUAL", "int error_status"); status = FAILURE; }
-	//symbol_table_print(st);
-        //type_print(t); printf(" --> "); expr_print(e); printf("\n");
     	expr_destroy(&e);
 	type_destroy(&t);
 	symbol_table_scope_exit(st);
@@ -528,16 +519,12 @@ Status test_expr_typecheck_subscript_bad_array(void) {
   strcpy(test_type, "Testing: test_expr_typecheck_subscript_bad_array");
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  //struct type* array_integer = type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL);
-
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   struct expr* left = expr_create_name(strdup("foo"));
   symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup(left->name)));
-
   struct expr* right = expr_create_integer_literal(493);
   struct expr* e = expr_create(EXPR_SUBSCRIPT, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  //if (t) { print_error(test_type, "NULL", "struct type* t"); status = FAILURE; }
   if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (error_status != SUBSCRIPT) { print_error(test_type, "SUBSCRIPT", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
@@ -550,15 +537,12 @@ Status test_expr_typecheck_subscript_bad_integer(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* array_integer = type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL);
-
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   struct expr* left = expr_create_name(strdup("foo"));
   symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(array_integer), strdup(left->name)));
-
   struct expr* right = expr_create_char_literal('a');
   struct expr* e = expr_create(EXPR_SUBSCRIPT, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  //if (t) { print_error(test_type, "NULL", "struct type* t"); status = FAILURE; }
   if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (error_status != SUBSCRIPT) { print_error(test_type, "SUBSCRIPT", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
@@ -615,7 +599,6 @@ Status test_expr_typecheck_assign_bad(void) {
   struct expr* right = expr_create_boolean_literal(true);
   struct expr* e = expr_create(EXPR_ASSIGN, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  //if (!type_equals(t, NULL)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
   if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (error_status != ASSIGN) { print_error(test_type, "ASSIGN", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
@@ -654,7 +637,6 @@ Status test_expr_typecheck_fcall_bad_function(void) {
   struct expr* right = expr_create_integer_literal(493);
   struct expr* e = expr_create(EXPR_FCALL, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  //if (type_equals(t, integer)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
   if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (error_status != FCALL) { print_error(test_type, "FCALL", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
@@ -676,7 +658,6 @@ Status test_expr_typecheck_fcall_bad_param(void) {
 
   struct expr* e = expr_create(EXPR_FCALL, left, expr_create_integer_literal(493)); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  //if (type_equals(t, integer)) { print_error(test_type, "false", "bool type_equals(t, integer)"); status = FAILURE; }
   if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (error_status != PARAM) { print_error(test_type, "PARAM", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);
@@ -781,7 +762,6 @@ Status test_expr_typecheck_init_bad(void) {
 
   struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, right_left, right_right), NULL); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
-  //if (type_equals(t, array_integer)) { print_error(test_type, "false", "bool type_equals(t, array_integer)"); status = FAILURE; }
   if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (error_status != INIT) { print_error(test_type, "INIT", "int error_status"); status = FAILURE; }
   expr_destroy(&e); type_destroy(&t);

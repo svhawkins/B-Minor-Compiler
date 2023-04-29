@@ -12,8 +12,6 @@ struct stack {
 }; typedef struct stack Stack;
 
 
-
-
 /*
 creates and allocates memory for a stack
 returns NULL upon failure.

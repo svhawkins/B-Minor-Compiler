@@ -155,9 +155,9 @@ void stmt_destroy(struct stmt** s) {
 }
 
 int stmt_resolve(struct symbol_table* st, struct stmt* s) {
-  if (!st || !s) return 0; int error_status = 0;
+  int error_status = 0;
+  if (!st || !s) return error_status;
   switch (s->kind) {
-
     case STMT_DECL: error_status = decl_resolve(st, s->decl); break;
     case STMT_EXPR: error_status = expr_resolve(st, s->expr); break;
 
@@ -201,7 +201,8 @@ int stmt_resolve(struct symbol_table* st, struct stmt* s) {
 }
 
 int stmt_typecheck(struct symbol_table* st, struct stmt* s, struct type** ret_type) {
-  if (!s) return 0; int error_status = 0;
+  int error_status = 0;
+  if (!s) return error_status;
   struct type* t = NULL;
   switch(s->kind) {
     case STMT_EXPR: t = expr_typecheck(st, s->expr); type_destroy(&t); break;

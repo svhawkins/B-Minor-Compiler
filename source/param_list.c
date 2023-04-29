@@ -27,7 +27,6 @@ void param_list_destroy(struct param_list** p) {
   if (!(*p)) return;
   free((*p)->name);
   type_destroy(&((*p)->type));
-  //symbol_destroy(&((*p)->symbol));
   param_list_destroy(&((*p)->next));
   free(*p); *p = NULL;
 }
@@ -44,21 +43,21 @@ struct param_list* param_list_copy(struct param_list* p) {
   return copy;
 }
 
-
-// TO DO: add error message stuff
 bool param_list_equals(struct param_list* a, struct param_list* b) {
-  if ((!a && b) || (a && !b)) return false; if (!a && !b) return true;
+  if ((!a && b) || (a && !b)) return false;
+  if (!a && !b) return true;
   bool current = !strcmp(a->name, b->name) && type_equals(a->type, b->type);
   return current && param_list_equals(a->next, b->next);
 }
 
 int param_list_resolve(struct symbol_table* st, struct param_list* p) {
-  if (!st || !p) return 0; int error_status = 0;
+  int error_status = 0;
+  if (!st || !p) return error_status;
   p->symbol = symbol_create(SYMBOL_PARAM, type_copy(p->type), strdup(p->name));
   type_resolve(st, p->type); // parameters can be functions with their own parameters, put 'em in the table
-  if (!symbol_table_scope_bind(st, p->name, p->symbol)) {
-    // failed to add to table. many reasons why.
-    // TO DO: make error message
-  }
+
+  struct symbol* already_used_sym = symbol_table_scope_lookup(st, p->name);
+  if (already_used_sym) error_status = symbol_table_error_handle(SYM_REDEF, (void*)p->symbol, (void*)already_used_sym);
+  else symbol_table_scope_bind(st, p->name, p->symbol);
   return param_list_resolve(st, p->next);
 }
