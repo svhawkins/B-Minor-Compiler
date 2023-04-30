@@ -1,3 +1,6 @@
+COMP 4060 201
+Assignment 4: Typechecker
+04.30.2023
 
 *********************
 Files
