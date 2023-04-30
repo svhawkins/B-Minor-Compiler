@@ -70,13 +70,13 @@ int decl_resolve(struct symbol_table* st, struct decl* d) {
 
   struct symbol* sym = symbol_table_scope_lookup_current(st, d->name);
   if (sym) error_status = symbol_table_error_handle(SYM_REDEF, (void*)d->symbol, (void*)sym);
-  else symbol_table_scope_bind(st, d->name, d->symbol);
+  else { symbol_table_scope_bind(st, d->name, d->symbol); }
 
   if (d->type->kind == TYPE_FUNCTION) {
     symbol_table_scope_enter(st);
     error_status = param_list_resolve(st, d->type->params); // so d->code won't have undefined references :)
     if (d->code) { error_status = stmt_resolve(st, d->code); }
-    symbol_table_scope_exit(st);
+    st->top--;  //symbol_table_scope_exit(st); // to keep the table in memory, but out of scope
   }
   error_status = decl_resolve(st, d->next);
   return error_status;
@@ -96,13 +96,18 @@ int decl_typecheck(struct symbol_table* st, struct decl* d) {
     error_status = symbol_table_error_handle(SYM_TYPE, (void*)d->symbol, (void*)t);
     } type_destroy(&t);
   }
-  if (d->code) {
-    struct type* ret_type = NULL;
+  if (d->type->kind == TYPE_FUNCTION) {
+    st->top++;
     if (!param_list_equals(d->type->params, d->symbol->type->params)) {
       error_status = symbol_table_error_handle(SYM_PARAM, (void*)d->symbol->type, (void*)d->type);
-    }
+   }
+  if (d->code) {
+    struct type* ret_type = NULL;
     error_status = stmt_typecheck(st, d->code, &ret_type);
+    if (!ret_type) ret_type = type_create(TYPE_VOID, NULL, NULL, NULL);
     if (!type_equals(d->type->subtype, ret_type)) { error_status = symbol_table_error_handle(SYM_TYPE, (void*)d->symbol, (void*)ret_type); }
+    type_destroy(&ret_type);
+  } symbol_table_scope_exit(st);
   }
   return decl_typecheck(st, d->next);
 }

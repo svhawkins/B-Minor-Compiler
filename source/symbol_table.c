@@ -45,10 +45,10 @@ void hash_table_fprint(FILE* fp, struct hash_table* ht) {
   if (!ht) { fprintf(fp, "\t\t[null table]\n\n"); return; }
   if (!hash_table_size(ht)) { fprintf(fp, "\t\t[empty table]\n\n"); return; }
   char* key; void* value;
-  hash_table_firstkey(ht);
+  hash_table_firstkey(ht); fprintf(fp, "\n");
   while (hash_table_nextkey(ht, &key, &value)) {
     fprintf(fp, "%s --> ", key);
-    symbol_fprint(fp, value); fprintf(fp, "\n");
+    symbol_fprint(fp, value);
   }
   fprintf(fp, "\n"); for (int i = 0; i < 50; i++) { fprintf(fp, "-"); }
 }
@@ -260,7 +260,7 @@ void symbol_table_fprint(FILE* fp, struct symbol_table* st) {
   int top = (st->verbose) ? stack_size(st->stack) - 1 : st->top;
   for (int i = top; i >= 0; i--) {
     // hash table header
-    fprintf(fp, "SCOPE [%d]:", i);
+    fprintf(fp, "\nSCOPE [%d]:", i);
     if (i == st->top) fprintf(fp, " CURRENT (TOP)");
     if (!i) fprintf(fp, " GLOBAL (BOTTOM)");
     fprintf(fp, "\n"); for (int j = 0; j < 50; j++) fprintf(fp, "-"); fprintf(fp, "\n");
@@ -268,6 +268,7 @@ void symbol_table_fprint(FILE* fp, struct symbol_table* st) {
     // print out hash table
     hash_table_fprint(fp, st->stack->items[i]);
   }
+  fprintf(fp, "\n");
 }
 
 void symbol_table_print(struct symbol_table* st) { symbol_table_fprint(stdout, st); }

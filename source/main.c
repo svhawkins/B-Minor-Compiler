@@ -16,14 +16,17 @@ int main(int argc, const char* argv[]) {
   bool refresh = false;
   switch (argc) {
     case 1: st = symbol_table_create(); break;
-    case 2: st =  (!strcmp(argv[1], "-v")) ? symbol_table_verbose_create() : symbol_table_create(); break;
+    case 2:
+        st =  (!strcmp(argv[1], "-v")) ? symbol_table_verbose_create() : symbol_table_create();
+        if (!strcmp(argv[1], "-c")) refresh = true;
+        break;
     case 3:
       st = (!strcmp(argv[1], "-v") || !strcmp(argv[2], "-v")) ? symbol_table_verbose_create() : symbol_table_create();
       if (!strcmp(argv[1], "-c") || !strcmp(argv[2], "-c")) { refresh = true; }
     break;
   }
-  symbol_table_scope_enter(st); // global scope
 
+  symbol_table_scope_enter(st); // global scope
   for (int i = 0; !eof; i++) {
     printf("%d: ", i);
     if (yyparse() == 0) {

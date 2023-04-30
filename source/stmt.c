@@ -169,23 +169,23 @@ int stmt_resolve(struct symbol_table* st, struct stmt* s) {
     case STMT_BLOCK:
       symbol_table_scope_enter(st);
       error_status = stmt_resolve(st, s->body);
-      symbol_table_scope_exit(st);
+      st->top--; //symbol_table_scope_exit(st);
       break;
     case STMT_WHILE:
       error_status = expr_resolve(st, s->expr);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
       error_status = stmt_resolve(st, s->body);
-      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
+      if (s->body && s->body->kind != STMT_BLOCK) st->top--; //symbol_table_scope_exit(st);
       break;
     case STMT_IF_ELSE:
       error_status = expr_resolve(st, s->expr);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
       error_status = stmt_resolve(st, s->body);
-      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
+      if (s->body && s->body->kind != STMT_BLOCK) st->top--; //symbol_table_scope_exit(st);
       if (s->else_body) {
         if (s->else_body && s->else_body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
         error_status = stmt_resolve(st, s->else_body);
-        if (s->else_body && s->else_body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
+        if (s->else_body && s->else_body->kind != STMT_BLOCK) st->top--; //symbol_table_scope_exit(st);
       } break;
     case STMT_FOR:
       // for statements can have declarations or just expressions
@@ -194,7 +194,7 @@ int stmt_resolve(struct symbol_table* st, struct stmt* s) {
       error_status = expr_resolve(st, s->next_expr);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
       error_status = stmt_resolve(st, s->body);
-      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
+      if (s->body && s->body->kind != STMT_BLOCK) st->top--; //symbol_table_scope_exit(st);
       break;
   }
   return stmt_resolve(st, s->next);
@@ -215,27 +215,42 @@ int stmt_typecheck(struct symbol_table* st, struct stmt* s, struct type** ret_ty
       type_destroy(&t); break;
     case STMT_RETURN:
       t = expr_typecheck(st, s->expr);
-      *ret_type = (!t) ? type_create(TYPE_VOID, NULL, NULL, NULL) : type_copy(t);
-      type_destroy(&t); break;
-    case STMT_BLOCK:  error_status = stmt_typecheck(st, s->body, ret_type); break;
+      *ret_type = type_copy(t);
+      type_destroy(&t);
+      break;
+    case STMT_BLOCK:
+      st->top++;  //symbol_table_scope_enter(st);
+      error_status = stmt_typecheck(st, s->body, ret_type);
+      symbol_table_scope_exit(st);
+      break;
     case STMT_IF_ELSE:
       t = expr_typecheck(st, s->expr);
       if (t->kind != TYPE_BOOLEAN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
       type_destroy(&t);
-      error_status = stmt_typecheck(st, s->body, ret_type); error_status = stmt_typecheck(st, s->else_body, ret_type);
-      break;
+      if (s->body && s->body->kind != STMT_BLOCK) st->top++; //symbol_table_scope_enter(st);
+      error_status = stmt_typecheck(st, s->body, ret_type);
+      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
+      if (s->else_body) {
+        if (s->else_body && s->else_body->kind != STMT_BLOCK) st->top++; //symbol_table_scope_enter(st);
+        error_status = stmt_typecheck(st, s->else_body, ret_type);
+        if (s->else_body && s->else_body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
+      } break;
     case STMT_WHILE:
       t = expr_typecheck(st, s->expr);
       if (t->kind != TYPE_BOOLEAN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
       type_destroy(&t);
+      if (s->body && s->body->kind != STMT_BLOCK) st->top++; //symbol_table_scope_enter(st);
       error_status = stmt_typecheck(st, s->body, ret_type);
+      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
       break;
     case STMT_FOR:
       t = expr_typecheck(st, s->init_expr);
       t = expr_typecheck(st, s->expr);
       if (t && t->kind != TYPE_BOOLEAN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
       t = expr_typecheck(st, s->next_expr); type_destroy(&t);
+      if (s->body && s->body->kind != STMT_BLOCK) st->top++; //symbol_table_scope_enter(st);
       error_status = stmt_typecheck(st, s->body, ret_type);
+      if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_exit(st);
       break;
   }
   return stmt_typecheck(st, s->next, ret_type);
