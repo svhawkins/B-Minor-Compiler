@@ -13,11 +13,6 @@ char output[MAX_BUFFER];
 void print_error(char* test, char* expect, char* value);
 
 // test functions
-/*
-NOT TESTED:
-error codes from <struct>_resolve functions
-in the circumstances that trigger them
-*/
 
 // unit tests for the stack
 Status test_stack_create(void);
@@ -74,11 +69,19 @@ Status test_symbol_table_scope_lookup_current_multi_key(void);
 // name resolution tests (which uses the symbol table)
 Status test_expr_resolve_name(void);
 Status test_expr_resolve_binary_op(void);
+Status test_expr_resolve_sym_undef(void);
 Status test_decl_resolve_atomic_uninit(void);
 Status test_decl_resolve_atomic_init(void);
 Status test_decl_resolve_function_uninit_no_param(void);
 Status test_decl_resolve_function_uninit_one_param(void);
 Status test_decl_resolve_function_uninit_many_param(void);
+Status test_decl_resolve_sym_redef(void);
+Status test_decl_resolve_function_sym_redef_undef_undef(void);
+Status test_decl_resolve_function_sym_redef_undef_def(void);
+Status test_decl_resolve_function_sym_redef_def_undef(void);
+Status test_decl_resolve_function_sym_redef_def_def(void);
+Status test_decl_resolve_function_param_redef(void);
+Status test_decl_resolve_function_param_mismatch(void);
 Status test_stmt_resolve_expr(void);
 Status test_stmt_resolve_print(void);
 Status test_stmt_resolve_return(void);
@@ -90,6 +93,7 @@ Status test_stmt_resolve_if_else_null(void);
 Status test_stmt_resolve_if_else(void);
 Status test_stmt_resolve_for_expr(void);
 Status test_stmt_resolve_for_decl(void);
+Status test_stmt_resolve_shadow_no_redef(void);
 Status test_decl_resolve_program(void);
 
 int main(void) {
@@ -142,11 +146,19 @@ int main(void) {
     test_symbol_table_scope_lookup_current_multi_key,
     test_expr_resolve_name,
     test_expr_resolve_binary_op,
+    test_expr_resolve_sym_undef,
     test_decl_resolve_atomic_uninit,
     test_decl_resolve_atomic_init,
     test_decl_resolve_function_uninit_no_param,
     test_decl_resolve_function_uninit_one_param,
     test_decl_resolve_function_uninit_many_param,
+    test_decl_resolve_sym_redef,
+    test_decl_resolve_function_param_redef,
+    test_decl_resolve_function_sym_redef_undef_undef,
+    test_decl_resolve_function_sym_redef_undef_def,
+    test_decl_resolve_function_sym_redef_def_undef,
+    test_decl_resolve_function_sym_redef_def_def,
+    test_decl_resolve_function_param_mismatch,
     test_stmt_resolve_expr,
     test_stmt_resolve_print,
     test_stmt_resolve_return,
@@ -158,6 +170,7 @@ int main(void) {
     test_stmt_resolve_if_else,
     test_stmt_resolve_for_expr,
     test_stmt_resolve_for_decl,
+    test_stmt_resolve_shadow_no_redef,
     test_decl_resolve_program
   };
 
@@ -461,7 +474,7 @@ Status test_symbol_table_scope_level(void) {
   if (!st) { print_error(test_type, "NOT NULL", "Symbol_table* st"); status = FAILURE; }
   if (!ht) { print_error(test_type, "NOT NULL", "struct hash_table* ht"); status = FAILURE; }
 
-  stack_push(st->stack, ht);
+  stack_push(st->stack, ht); st->top++;
   if (symbol_table_scope_level(st) != 1) { print_error(test_type, "1", "int symbol_table_scope_level(Symbol_table* st)"); status = FAILURE; }
   if (hash_table_size(ht)) { print_error(test_type, "0", "int hash_table_size(struct hash_table* ht)"); status = FAILURE; }
   symbol_table_destroy(&st);
@@ -1107,7 +1120,6 @@ Status test_stmt_resolve_if_else(void) {
   symbol_table_scope_enter(st); int old_level = stack_size(st->stack);
   symbol_table_scope_bind(st, "duck", sym);
   stmt_resolve(st, s);
-
   if ((stack_size(st->stack) - old_level) != 2) { print_error(test_type, "3", "scope level"); status = FAILURE; }
   if (hash_table_size(st->stack->items[stack_size(st->stack) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
   if (!symbol_table_scope_lookup(st, "duck")) { print_error(test_type, "NOT NULL", "scope lookup [duck]"); status = FAILURE; }
@@ -1186,5 +1198,188 @@ Status test_decl_resolve_program(void) {
   if (!symbol_table_scope_lookup_all(st, "argv")) { print_error(test_type, "NOT NULL", "scope lookup [argv]"); status = FAILURE; }
   if (!symbol_table_scope_lookup_all(st, "i")) { print_error(test_type, "NOT NULL", "scope lookup [i]"); status = FAILURE; }
   symbol_table_destroy(&st); decl_destroy(&d);
+  return status;
+}
+
+Status test_expr_resolve_sym_undef(void) {
+  strcpy(test_type, "Testing: test_expr_resolve_sym_undef");
+  Status status = SUCCESS;
+  struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct expr* e = expr_create_name(strdup("x"));
+
+  Symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st);
+  if (e->symbol) { print_error(test_type, "NULL", "e->symbol"); status = FAILURE; }
+  if (symbol_table_scope_lookup(st, "x")) { print_error(test_type, "NULL", "struct symbol* symbol_table_scope_lookup(st, \"x\""); status = FAILURE; }
+
+  error_status = expr_resolve(st, e);
+  symbol_table_scope_lookup_current(st, "x");
+
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != SYM_UNDEF) { print_error(test_type, "SYM_UNDEF", "int error_status"); status = FAILURE; }
+  if (!e->symbol) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (strcmp(e->symbol->name, e->name)) { print_error(test_type, "0", "strcmp(e->symbol->name, e->name)"); status = FAILURE; }
+  if (!type_equals(integer, e->symbol->type)) { print_error(test_type, "true", "type_equals(integer, ret->type)"); status = FAILURE; }
+  if (e->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int ret->kind"); status = FAILURE; }
+  symbol_table_destroy(&st); expr_destroy(&e); type_destroy(&integer);
+  return status;
+}
+
+Status test_decl_resolve_sym_redef(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_sym_redef");
+  Status status = SUCCESS;
+  struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct type* character = type_create(TYPE_CHARACTER, NULL, NULL, NULL);
+  struct decl* d = decl_create(strdup("x"), type_copy(integer), NULL, NULL, NULL);
+  struct decl* d2 = decl_create(strdup("x"), type_copy(character), NULL, NULL, d);
+
+  Symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st);
+  error_status = decl_resolve(st, d2);
+
+  if (!symbol_table_scope_lookup(st, "x")) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (!d2->symbol) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (strcmp(d2->symbol->name, d2->name)) { print_error(test_type, "0", "strcmp(ret->name, e->name) [x]"); status = FAILURE; }
+  if (!type_equals(character, d2->symbol->type)) { print_error(test_type, "true", "type_equals(character, ret->type)"); status = FAILURE; }
+  if (d2->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int ret->kind"); status = FAILURE; }
+
+  if (d->symbol) { print_error(test_type, "NULL", "d->symbol"); status = FAILURE; }
+  if (global_error_count != 1) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != SYM_REDEF) { print_error(test_type, "SYM_REDEF", "int error_status"); status = FAILURE; }
+  symbol_table_destroy(&st); decl_destroy(&d2); type_destroy(&integer); type_destroy(&character);
+  return status;
+}
+
+Status test_decl_resolve_function_param_redef(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_function_param_redef");
+  Status status = SUCCESS;
+  struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct type* character = type_create(TYPE_CHARACTER, NULL, NULL, NULL);
+  struct param_list* pend = param_list_create(strdup("x"), type_copy(integer), NULL);
+  struct param_list* p = param_list_create(strdup("x"), type_copy(character), pend);
+  struct type* tfuncv = type_create(TYPE_FUNCTION, type_create(TYPE_VOID, NULL, NULL, NULL), p, NULL);
+  struct decl* d = decl_create(strdup("foo"), tfuncv, NULL, NULL, NULL);
+
+  Symbol_table* st = symbol_table_verbose_create();
+  symbol_table_scope_enter(st);
+  error_status = decl_resolve(st, d);
+
+  if (!symbol_table_scope_lookup(st, "foo")) { print_error(test_type, "NOT NULL", "symbol_table_scope_lookup(Symbol_table* st)"); return FAILURE; }
+  if (!d->symbol) { print_error(test_type, "NOT NULL", "d->symbol"); return FAILURE; }
+  if (strcmp(d->symbol->name, d->name)) { print_error(test_type, "0", "strcmp(ret->name, e->name) [x]"); status = FAILURE; }
+  if (!type_equals(tfuncv, d->symbol->type)) { print_error(test_type, "true", "type_equals(character, ret->type)"); status = FAILURE; }
+  if (d->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int ret->kind"); status = FAILURE; }
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status!= SYM_REDEF) { print_error(test_type, "SYM_REDEF", "int error_status"); status = FAILURE; }
+  symbol_table_destroy(&st); decl_destroy(&d); type_destroy(&integer); type_destroy(&character);
+  return status;
+}
+
+Status test_decl_resolve_function_sym_redef_undef_undef(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_function_sym_redef_undef_undef");
+  Status status = SUCCESS;
+  struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
+  struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL);
+  struct decl* dend = decl_create(strdup("foo"), type_copy(tfuncv), NULL, NULL, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv), NULL, NULL, dend);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  error_status = decl_resolve(st, d);
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != SYM_REDEF) { print_error(test_type, "SYM_REDEF", "int error_status"); status = FAILURE; }
+  symbol_table_destroy(&st); type_destroy(&tfuncv); type_destroy(&tvoid); decl_destroy(&d);
+  return status;
+}
+
+Status test_decl_resolve_function_sym_redef_undef_def(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_function_sym_redef_undef_def");
+  Status status = SUCCESS;
+  struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
+  struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL);
+  struct stmt* function_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+  struct decl* dend = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv), NULL, NULL, dend);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  error_status = decl_resolve(st, d);
+
+  if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+  if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
+  symbol_table_destroy(&st);
+  type_destroy(&tfuncv); type_destroy(&tvoid);
+  decl_destroy(&d);
+  return status;
+}
+
+Status test_decl_resolve_function_sym_redef_def_undef(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_function_sym_redef_def_undef");
+  Status status = SUCCESS;
+  struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
+  struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL);
+  struct stmt* function_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+  struct decl* dend = decl_create(strdup("foo"), type_copy(tfuncv), NULL, NULL, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body, dend);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  error_status = decl_resolve(st, d);
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != SYM_REDEF) { print_error(test_type, "SYM_REDEF", "int error_status"); status = FAILURE; }
+  symbol_table_destroy(&st); type_destroy(&tfuncv); decl_destroy(&d); type_destroy(&tvoid);
+
+  return status;
+}
+
+Status test_decl_resolve_function_sym_redef_def_def(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_function_sym_redef_def_def");
+  Status status = SUCCESS;
+  struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
+  struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL);
+  struct stmt* function_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* function_body2 = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+  struct decl* dend = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body2, dend);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  error_status = decl_resolve(st, d);
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != SYM_REDEF) { print_error(test_type, "SYM_REDEF", "int error_status"); status = FAILURE; }
+  symbol_table_destroy(&st); type_destroy(&tfuncv); decl_destroy(&d); type_destroy(&tvoid);
+  return status;
+}
+
+Status test_stmt_resolve_shadow_no_redef(void) {
+  strcpy(test_type, "Testing: test_stmt_resolve_shadow_no_redef");
+  Status status = SUCCESS;
+  struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
+  struct stmt* inner_decl = stmt_create(STMT_DECL, decl_create(strdup("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* inner_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, inner_decl, NULL, NULL);
+  struct stmt* body = stmt_create(STMT_DECL, decl_create(strdup("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, inner_body);
+  struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, body, NULL, NULL);
+
+  Symbol_table* st = symbol_table_verbose_create();
+  symbol_table_scope_enter(st);
+  error_status = stmt_resolve(st, s);
+  if (global_error_count) { print_error(test_type,"0", "int global_error_count"); status = FAILURE; }
+  if (!symbol_table_scope_lookup_at(st, "duck", 2)) { print_error(test_type, "NOT NULL", "topmost (2) scope lookup [duck]"); status = FAILURE; }
+  if (!symbol_table_scope_lookup_at(st, "duck", 1)) { print_error(test_type, "NOT NULL", "previous (1) scope lookup [duck]"); status = FAILURE; }
+  symbol_table_destroy(&st); stmt_destroy(&s); type_destroy(&tvoid);
+  return status;
+}
+
+Status test_decl_resolve_function_param_mismatch(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_function_param_mismatch");
+  Status status = SUCCESS;
+  struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
+  struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL);
+  struct type* tfuncv2 = type_create(TYPE_FUNCTION, type_copy(tvoid), param_list_create(strdup("x"), type_copy(tvoid), NULL), NULL);
+  struct stmt* function_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+  struct decl* dend = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv2), NULL, NULL, dend);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  error_status = decl_resolve(st, d);
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != SYM_PARAM) { print_error(test_type, "SYM_PARAM", "int error_status"); status = FAILURE; }
+  symbol_table_destroy(&st); type_destroy(&tfuncv); type_destroy(&tvoid); type_destroy(&tfuncv2); decl_destroy(&d);
   return status;
 }

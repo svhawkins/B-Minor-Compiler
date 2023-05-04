@@ -1,6 +1,14 @@
 COMP 4060 201
-Assignment 4: Typechecker
-04.30.2023
+Assignment 4: Typechecker (UPDATED)
+05.04.2023
+
+***********************
+Updates:
+1. Added unit tests for (now) all error messages
+2. Added error messages for function prototype/definiton redefinitons
+3. Added typechecking for array types (their size fields) (with associated error messages)
+4. Argument lists are now printed
+5. Declaration lists of function declarations containing prototype and definition no longer cause segmentation faults
 
 *********************
 Files
@@ -129,7 +137,7 @@ The new executable is [typecheck]
 ERROR MESSAGES
 
 This typechecker also has various error messages, grouped together based on the structures that trigger them:
-	symbol_table, stmt, and expr.
+	symbol_table, stmt, expr, and decl
 
 These structures are used as prefixes for the error_handle() functions, which take the error kind and a various amount
 of void pointer parameters, acting as contexts.
@@ -138,6 +146,7 @@ All of them return the passed in error kind as an error code.
 int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2);
 int stmt_error_handle(stmt_error_t kind, void* ctx1, void* ctx2);
 int expr_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void* ctx2, void* type_ctx2);
+int decl_error_handel(decl_error_t kind, void* ctx1, void* ctx2);
 
 All of these functions do is print the corresponding error message given the kind and context(s). Recovery may also be done.
 They also all increment the global error counter and print to file pointer stderr.
@@ -145,6 +154,10 @@ They also all increment the global error counter and print to file pointer stder
 Symbol table errors:
     - SYM_UNDEF (1): undefined symbol used (found in no scope). Recover by adding it to table with default type integer 
     - SYM_REDEF (2): symbol name is already being used in current scope
+		     Triggered also by with these function declaration situations:
+		     1. function prototype followed by another function prototype of the same name
+		     2. function definition followed by another function definition of the same name
+		     3. function definition followed by its function prototype
     - SYM_TYPE (3):  symbol type does not match its value/return type
     - SYM_PARAM (4): parameter types do not match definiton
 
@@ -163,13 +176,13 @@ Expression (type) errors:
     - SUBSCRIPT (8): left type must be array, right type must be integer
     - FCALL (9): left type must be a function
     - PARAM (10): argument types must match with parameter list types
-	** this does NOT print the argument list
+
+Declaration (array) errors:
+    - DECL_NULL (1): given size field of an array type is a NULL expression
+    - DECL_NINT (2) : given size field of an array type does not evaulate to INTEGER (NINT: not integer)
 
 Improvements can obviously be made, such as passing an array of pointers, only using one function, better naming,
-printing argument lists, etc., but that is for another time.
-Another major shortcoming is that I did not have the time/motivation to test out ALL of the error messages
-(only the expression type errors are tested really), so there
-may be a chance that error(s) may incorrectly appear or not appear at all (maybe even a segfault...).
+etc., but that is for another time.
 
 ****************************************************************************************************************************************************
 SYMBOL TABLE
@@ -240,14 +253,15 @@ test_stack.c
 	- tests out hash table with symbol intgeration
 	- tests out symbol table implementaiton (which automates all of the above)
 	- tests out name resolution (which automates the symbol table implementation)
+	- tests out symbol table error messages (all but SYM_TYPE)
+	- tests shadowing
 
 test_typecheck:
-	tests out typechecking and error messages
-	**Does not provide full coverage for the following:
-		- statement error messages
-		- symbol table error messages (and recovery)
-		- return statement type checking
-		- parameter list typechecking/redefinition
+	- tests out typechecking and error messages
+	- tests statement error messages
+        - tests symbol table error messages (SYM_TYPE)
+	- tests out array declaration errors
+	- tests return statements
 
 ******************************************************************************************************************
 CAVEATS:
@@ -255,15 +269,12 @@ CAVEATS:
  - 'delete' functions are called 'destroy' functions but they do the same thing.
  - symbol table API functions have a 'symbol_table_' prefix added to them to have consistent naming scheme with
    other functions in all the other files.
- - symbol_table_scope_bind() has return type of int
  - param_list_typecheck is NOT IMPLEMENTED.
      for determining if parameter lists are the same, param_list_equals() is called
      for determining if argument lists are the proper type, fcall_compare() is called
  - the following functions were changed from a void return type to an int return type:
-      symbol_table:
-        * symbol_table_scope_bind
-      typechecking:
-        * decl_typecheck
-        * stmt_typecheck
+    * symbol_table_scope_bind()
+    * <struct>_resolve()
+    * <struct>_typecheck() (all but expr_typecheck)
     their return types were changed to int so that their error status able to be returned.
     this error status is the error code that is used by their corresponding error message handler.

@@ -77,7 +77,6 @@ void symbol_table_scope_enter(struct symbol_table* st);
 
 /*
 Removes topmost hash table from the stack
-Also removes it from memory.
 Does nothing if:
 	- NULL symbol table
 	- NULL symbol table items array

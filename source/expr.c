@@ -82,8 +82,8 @@ int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void*
     case PARAM: /* argument types must match with parameter list types */
       fprintf(stderr, "Invalid argument type(s).\n");
       fprintf(stderr, "Types of expressions with argument list must match declared parameter types");
-      fprintf(stderr, "Of symbol: "); symbol_fprint(stderr, (struct symbol*)ctx1);
-      // too lazy to print argument list
+      fprintf(stderr, "\nOf symbol: "); symbol_fprint(stderr, (struct symbol*)ctx1);
+      fprintf(stderr, "\nWith argument(s): "); expr_fprint(stderr, (struct expr*)type_ctx1);
     break;
   }
   fprintf(stderr, "\n");
@@ -245,12 +245,18 @@ struct expr* expr_copy(struct expr* e) {
   struct expr* copy = malloc(sizeof(*copy));
   if (copy) {
     copy->kind = e->kind;
-    if (e->kind == EXPR_NAME) {
+    switch(e->kind) {
+    case EXPR_NAME:
       copy->name = strdup(e->name);
       copy->symbol = symbol_copy(e->symbol);
+      break;
+    case EXPR_INT: case EXPR_BOOL: case EXPR_CH: copy->literal_value = e->literal_value; break;
+    case EXPR_STR: copy->string_literal = strdup(e->string_literal); break;
+    default:
+      copy->left = expr_copy(e->left);
+      copy->right = expr_copy(e->right);
+    break;
     }
-    copy->left = expr_copy(e->left);
-    copy->right = expr_copy(e->right);
   }
   return copy;
 }
@@ -260,9 +266,9 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
   int error_status = 0;
   if (e->kind == EXPR_NAME) {
     e->symbol = symbol_table_scope_lookup(st, e->name);
-    char buffer[256]; strcpy(buffer, e->name);
-    if (!e->symbol) { error_status = symbol_table_error_handle(SYM_UNDEF, (void*)st, (void*)buffer); }}
-  else {
+    if (!e->symbol) {
+      error_status = symbol_table_error_handle(SYM_UNDEF, (void*)st, (void*)e); }
+  } else {
     error_status = expr_resolve(st, e->left);
     error_status = expr_resolve(st, e->right);
   }

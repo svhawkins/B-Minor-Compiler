@@ -14,6 +14,7 @@ struct symbol {
 	struct type* type;
 	char* name;
 	int which;
+	bool defined; // for function definitons
 };
 
 struct symbol* symbol_create(symbol_t kind, struct type *type, char *name);

@@ -10,6 +10,7 @@ struct symbol* symbol_create(symbol_t kind, struct type* type, char* name) {
     sym->kind = kind;
     sym->name = name;
     sym->type = type;
+    sym->defined = false;
   }
   return sym;
 }

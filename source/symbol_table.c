@@ -11,10 +11,11 @@ int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
   fprintf(stderr, "ERROR %d:\n", kind);
   switch(kind) {
     case SYM_UNDEF: /* undefined symbol used. recover by adding it to table with default type integer */
-    fprintf(stderr, "Undefined symbol by name %s\n. Adding symbol as INTEGER.", (char*)ctx2);
-    int scope = (!symbol_table_scope_level((struct symbol_table*)ctx1)) ? SYMBOL_GLOBAL : SYMBOL_LOCAL;
-    struct symbol* s = symbol_create(scope, type_create(TYPE_INTEGER, NULL, NULL, NULL), strdup((const char*)ctx2));
-    symbol_table_scope_bind((struct symbol_table*)ctx1, (char*)ctx2, s);
+    fprintf(stderr, "Undefined symbol by name %s.\n Adding symbol as INTEGER.", ((struct expr*)ctx2)->name);
+    int scope = (symbol_table_scope_level((struct symbol_table*)ctx1) == 1) ? SYMBOL_GLOBAL : SYMBOL_LOCAL;
+    struct symbol* s = symbol_create(scope, type_create(TYPE_INTEGER, NULL, NULL, NULL), strdup(((struct expr*)ctx2)->name));
+    symbol_table_scope_bind((struct symbol_table*)ctx1, ((struct expr*)ctx2)->name, s);
+    ((struct expr*)ctx2)->symbol = s;
     break;
     case SYM_REDEF: /* symbol name is already being used in current scope */
     fprintf(stderr, "Symbol "); symbol_fprint(stderr, (struct symbol*)ctx1);
@@ -119,8 +120,8 @@ void symbol_table_destroy(struct symbol_table** st) {
   if (!(*st)) return;
   int top = (*st)->stack->size;
   for (int i = top - 1; i >= 0; i--) {
-    hash_table_destroy((struct hash_table**)&((*st)->stack->items[i]));
-    (*st)->stack->size--; (*st)->stack->items[i] = NULL;
+    struct hash_table* ht = stack_pop((*st)->stack);
+    hash_table_destroy(&ht);
   }
   stack_destroy(&((*st)->stack)); free(*st);
   *st = NULL;
@@ -145,23 +146,19 @@ Does nothing if:
         - hash table fails to be created
 */
 void symbol_table_scope_enter(struct symbol_table* st) {
-  stack_push(st->stack, (void*)hash_table_create(0, 0));
-  st->top = stack_size(st->stack) - 1;
+  st->top++;
+  if ((st->top) >= stack_size(st->stack)) { stack_push(st->stack, (void*)hash_table_create(0, 0)); }
 }
 
 
 /*
 Removes topmost hash table from the stack
-Also removes it from memory.
 Does nothing if:
         - NULL symbol table
         - NULL symbol table items array
 */
 void symbol_table_scope_exit(struct symbol_table* st) {
   st->top--;
-  if (st->verbose) return;
-  struct hash_table* ht = (struct hash_table*)stack_pop(st->stack);
-  hash_table_destroy(&(ht));
 }
 
 /*
@@ -171,7 +168,7 @@ Returns -1 for:
         - NULL items array in symbol table
 */
 int symbol_table_scope_level(struct symbol_table* st) {
-  return (st->verbose) ? st->top + 1 : stack_size(st->stack);
+  return st->top + 1;
 }
 
 /*
