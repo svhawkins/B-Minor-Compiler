@@ -122,7 +122,9 @@ int main(void) {
   return 0;
 }
 
-void print_error(char* test, char* expect, char* value) { printf("Error:\t[%s]:\n\tExpected a value of %s for value: [%s]\n", test, expect, value); }
+void print_error(char* test, char* expect, char* value) {
+  printf("Error:\t[%s]:\n\tExpected a value of %s for value: [%s]\n", test, expect, value);
+}
 
 Status test_expr_typecheck_primitive(void) {
   strcpy(test_type, "Testing: test_expr_typecheck_primitve");

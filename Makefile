@@ -1,8 +1,8 @@
 CFLAGS = -pedantic -Og #-Wall -Wextra
 AST = tests/test_factory tests/test_print tests/test_ast
 SYM = tests/test_stack tests/test_typecheck
-TESTS = tests/test_scan tests/test_parse $(AST) $(SYM) test
-COMPILER = scan parse print typecheck
+TESTS = tests/test_scan tests/test_parse $(AST) $(SYM) tests/test_codegen test
+COMPILER = scan parse print typecheck codegen
 EXEC = $(COMPILER) $(TESTS)
 OBJECTS = source/*.o tests/scanner/*.o tests/parser/*.o tests/ast/*.o tests/symbol_table/*.o
 GEN = source/scanner.c source/parser.c
@@ -34,6 +34,8 @@ tests/test_stack: tests/symbol_table/test_stack.o source/scanner.o source/parser
 	gcc -o $@ $^
 tests/test_typecheck: tests/symbol_table/test_typecheck.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
+tests/test_codegen: tests/codegen/test_codegen.o source/scanner.o source/parser.o $(INCLUDES)
+	gcc -o $@ $^
 
 ## root targets
 scan: source/scan.o source/scanner.o
@@ -42,7 +44,9 @@ parse: source/parse.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
 print: source/print.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
-typecheck: source/main.o source/scanner.o source/parser.o $(INCLUDES)
+typecheck: source/typecheck.o source/scanner.o source/parser.o $(INCLUDES)
+	gcc -o $@ $^
+codegen: source/main.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
 
 ## generated code
@@ -52,13 +56,15 @@ source/parser.c: source/grammar.bison
 	bison --output=$@ -t -W -k -v --feature=caret --report-file=source/grammar.txt $<
 
 ## directory tests code
-tests/scanner/test_scanner.o: tests/scanner/test_scanner.c source/parser.h
+%tests/scanner/.o: %tests/scanner/.c source/parser.h
 	gcc $(CFLAGS) -c -g $< -o $@
-tests/parser/test_parser.o: tests/parser/test_parser.c source/parser.h
+%tests/parser/.o: %tests/parser/.c source/parser.h
 	gcc $(CFLAGS) -c -g $< -o $@
 %tests/ast/.o: %tests/ast/.c source/parser.h
 	gcc $(CFLAGS) -c -g $< $@
 %tests/symbol_table/.o: %tests/symbol_table/.c source/parser.h source/symbol_table.h
+	gcc $(CFLAGS) -c -g $< $@
+%tests/codegen/.o: %tests/codegen/.c source/parser.h source/symbol_table.h
 	gcc $(CFLAGS) -c -g $< $@
 
 ## directory source code
