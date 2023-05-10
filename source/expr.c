@@ -144,6 +144,7 @@ struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right )
     e->literal_value = 0;
     e->string_literal = NULL;
     e->symbol = NULL;
+    //e->reg = -1;
   }
   return e;
 }
@@ -267,7 +268,8 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
   if (e->kind == EXPR_NAME) {
     e->symbol = symbol_table_scope_lookup(st, e->name);
     if (!e->symbol) {
-      error_status = symbol_table_error_handle(SYM_UNDEF, (void*)st, (void*)e); }
+      error_status = symbol_table_error_handle(SYM_UNDEF, (void*)st, (void*)e);
+    }
   } else {
     error_status = expr_resolve(st, e->left);
     error_status = expr_resolve(st, e->right);

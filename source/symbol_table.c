@@ -132,8 +132,9 @@ void symbol_table_destroy(struct symbol_table** st) {
 Destroys then creates a new symbol table
 */
 struct symbol_table* symbol_table_clear(struct symbol_table* st) {
+  bool is_verbose = st->verbose;
   symbol_table_destroy(&st);
-  st = symbol_table_create();
+  st = (is_verbose) ? symbol_table_verbose_create() : symbol_table_create();
   symbol_table_scope_enter(st); // global scope
   return st;
 }
@@ -148,6 +149,8 @@ Does nothing if:
 void symbol_table_scope_enter(struct symbol_table* st) {
   st->top++;
   if ((st->top) >= stack_size(st->stack)) { stack_push(st->stack, (void*)hash_table_create(0, 0)); }
+  // start which count
+  if (st->top == 1) { which_count = -1; }
 }
 
 
@@ -159,6 +162,8 @@ Does nothing if:
 */
 void symbol_table_scope_exit(struct symbol_table* st) {
   st->top--;
+  // reset which count to previous (or 0 if global)
+  which_count = (st->top > 0) ? hash_table_size((struct hash_table*)st->stack->items[st->top]) - 1: 0;
 }
 
 /*
@@ -182,7 +187,12 @@ Failure if:
 */
 int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct symbol* sym) {
   if (!st || !st->stack->items || !(st->top + 1) || !(st->stack->items[st->top])) return 0;
-  return (hash_table_insert((struct hash_table*)st->stack->items[st->top], name, (void*)sym) == 1) ? 1 : 0;
+  int status = (hash_table_insert((struct hash_table*)st->stack->items[st->top], name, (void*)sym) == 1) ? 1 : 0;
+  // update which for successful binding of non-globals
+  if (status && (stack_size(st->stack) > 1) && sym && sym->kind != SYMBOL_GLOBAL) {
+    which_count++; sym->which = which_count;
+  }
+  return status;
 }
 
 /*

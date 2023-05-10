@@ -1,4 +1,4 @@
-CFLAGS = -pedantic -Og #-Wall -Wextra
+CFLAGS = -pedantic -Og -Wall -Wextra
 AST = tests/test_factory tests/test_print tests/test_ast
 SYM = tests/test_stack tests/test_typecheck
 TESTS = tests/test_scan tests/test_parse $(AST) $(SYM) tests/test_codegen test

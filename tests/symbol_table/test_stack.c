@@ -95,6 +95,8 @@ Status test_stmt_resolve_for_expr(void);
 Status test_stmt_resolve_for_decl(void);
 Status test_stmt_resolve_shadow_no_redef(void);
 Status test_decl_resolve_program(void);
+Status test_decl_resolve_which_scope_enter(void);
+Status test_stmt_resolve_which_scope_exit(void);
 
 int main(void) {
   Status (*tests[])(void) = {
@@ -171,7 +173,9 @@ int main(void) {
     test_stmt_resolve_for_expr,
     test_stmt_resolve_for_decl,
     test_stmt_resolve_shadow_no_redef,
-    test_decl_resolve_program
+    test_decl_resolve_program,
+    test_decl_resolve_which_scope_enter,
+    test_stmt_resolve_which_scope_exit
   };
 
   int n_tests = sizeof(tests)/sizeof(tests[0]);
@@ -1132,9 +1136,10 @@ Status test_stmt_resolve_for_expr(void) {
   strcpy(test_type, "Testing: test_stmt_resolve_for_expr");
   Status status = SUCCESS;
   struct expr* duck = expr_create_name(strdup("duck"));
+  struct expr* duck2 = expr_create_name(strdup("duck"));
   struct expr* goose = expr_create_name(strdup("goose"));
   struct stmt* body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-  struct stmt* s = stmt_create(STMT_FOR, NULL, duck, expr_copy(duck), goose, body, NULL, NULL);
+  struct stmt* s = stmt_create(STMT_FOR, NULL, duck, duck2, goose, body, NULL, NULL);
   struct symbol* sym_duck = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), strdup("duck"));
   struct symbol* sym_goose = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), strdup("goose"));
 
@@ -1150,7 +1155,8 @@ Status test_stmt_resolve_for_expr(void) {
   if (symbol_table_scope_lookup_at(st, "duck", old_level)) { print_error(test_type, "NULL", "current scope lookup [duck]"); status = FAILURE; }
   if (!symbol_table_scope_lookup(st, "goose")) { print_error(test_type, "NOT NULL", "scope lookup [goose]"); status = FAILURE; }
   if (symbol_table_scope_lookup_at(st, "goose", old_level)) { print_error(test_type, "NULL", "current scope lookup [goose]"); status = FAILURE; }
-  symbol_table_destroy(&st); stmt_destroy(&s);
+  symbol_table_destroy(&st);
+  stmt_destroy(&s);
   return status;
 }
 
@@ -1381,5 +1387,63 @@ Status test_decl_resolve_function_param_mismatch(void) {
   if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (error_status != SYM_PARAM) { print_error(test_type, "SYM_PARAM", "int error_status"); status = FAILURE; }
   symbol_table_destroy(&st); type_destroy(&tfuncv); type_destroy(&tvoid); type_destroy(&tfuncv2); decl_destroy(&d);
+  return status;
+}
+
+
+Status test_decl_resolve_which_scope_enter(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_which_scope_enter");
+  Status status = SUCCESS;
+  struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
+  struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct param_list* p = param_list_create(strdup("x"), type_copy(integer), param_list_create(strdup("y"), type_copy(integer), NULL));
+  struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), p, NULL);
+  struct stmt* s = stmt_create(STMT_DECL, decl_create(strdup("z"), type_copy(integer), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* function_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, s, NULL, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body, NULL);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  error_status = decl_resolve(st, d);
+
+  struct symbol* sym_x = symbol_table_scope_lookup_all(st, "x");
+  struct symbol* sym_y = symbol_table_scope_lookup_all(st, "y");
+  struct symbol* sym_z = symbol_table_scope_lookup_all(st, "z");
+  if (!sym_x) { print_error(test_type, "NOT NULL", "struct symbol* sym_x"); return FAILURE; }
+  if (!sym_y) { print_error(test_type, "NOT NULL", "struct symbol* sym_y"); return FAILURE; }
+  if (!sym_z) { print_error(test_type, "NOT NULL", "struct symbol* sym_z"); return FAILURE; }
+  if (sym_x->which != 0) { print_error(test_type, "0", "int sym_x->which"); status = FAILURE; }
+  if (sym_y->which != 1) { print_error(test_type, "1", "int sym_y->which"); status = FAILURE; }
+  if (sym_z->which != 2) { print_error(test_type, "2", "int sym_z->which"); status = FAILURE; }
+
+  symbol_table_destroy(&st); type_destroy(&tfuncv); type_destroy(&tvoid); type_destroy(&integer); decl_destroy(&d);
+  return status;
+}
+
+Status test_stmt_resolve_which_scope_exit(void) {
+  strcpy(test_type, "Testing: test_stmt_resolve_which_scope_exit");
+  Status status = SUCCESS;
+  struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
+  struct stmt* stend = stmt_create(STMT_DECL, decl_create(strdup("goose"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* inner_decl = stmt_create(STMT_DECL, decl_create(strdup("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* inner_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, inner_decl, NULL, stend);
+  struct stmt* body = stmt_create(STMT_DECL, decl_create(strdup("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, inner_body);
+  struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, body, NULL, NULL);
+
+  Symbol_table* st = symbol_table_verbose_create();
+  symbol_table_scope_enter(st);
+  error_status = stmt_resolve(st, s);
+
+  struct symbol* sym_duck_in = symbol_table_scope_lookup_at(st, "duck", 2); // innermost scope
+  struct symbol* sym_duck_out = symbol_table_scope_lookup_at(st, "duck", 1);
+  struct symbol* sym_goose = symbol_table_scope_lookup_at(st, "goose", 1);
+
+  if (!sym_duck_out) { print_error(test_type, "NOT NULL", "struct symbol* sym_duck_out"); return FAILURE; }
+  if (!sym_duck_in) { print_error(test_type, "NOT NULL", "struct symbol* sym_duck_in"); return FAILURE; }
+  if (!sym_goose) { print_error(test_type, "NOT NULL", "struct symbol* sym_goose"); return FAILURE; }
+  if (sym_duck_out->which != 0) { print_error(test_type, "0", "int sym_duck_out->which"); status = FAILURE; }
+  if (sym_duck_in->which != 1) { print_error(test_type, "1", "int sym_duck_in->which"); status = FAILURE; }
+  if (sym_goose->which != 1) { print_error(test_type, "1", "int sym_goose->which"); status = FAILURE; }
+  if (which_count) { print_error(test_type, "0", "int which_count (global reset)"); status = FAILURE; }
+  symbol_table_destroy(&st); stmt_destroy(&s); type_destroy(&tvoid);
   return status;
 }

@@ -22,6 +22,9 @@ int error_status;
 typedef enum { SYM_UNDEF = 1, SYM_REDEF, SYM_TYPE, SYM_PARAM } symbol_error_t;
 int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2);
 
+// for which assignment
+int which_count;
+
 /*
 Symbol table itself is a stack wrapper handling
 the casts and allocations of its hash table elements,

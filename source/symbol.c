@@ -11,6 +11,7 @@ struct symbol* symbol_create(symbol_t kind, struct type* type, char* name) {
     sym->name = name;
     sym->type = type;
     sym->defined = false;
+    sym->which = -1;
   }
   return sym;
 }
@@ -32,6 +33,7 @@ void symbol_fprint(FILE* fp, struct symbol* s) {
   }
   fprintf(fp, "(kind: %s, name: %s, type: ", str, s->name);
   type_fprint(fp, s->type);
+  if (s->which >= 0) { fprintf(fp, ", which: %d", s->which); }
   fprintf(fp, ")\n");
 }
 
@@ -40,7 +42,7 @@ struct symbol* symbol_copy(struct symbol* s) {
   struct symbol* copy = malloc(sizeof(*copy));
   if (copy) {
     copy->kind = s->kind;
-    //copy->which = s->which;
+    copy->which = s->which;
     copy->name = strdup(s->name);
     copy->type = type_copy(s->type);
   }

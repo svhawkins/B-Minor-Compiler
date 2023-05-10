@@ -2,6 +2,7 @@
 #define EXPR_H
 
 #include "symbol.h"
+#include "register.h"
 #include "symbol_table.h"
 struct symbol_table; // forward decl for reasons
 typedef enum { MATH = 1, RELATE, LOGIC, EQUAL, ASSIGN, LVAL, INIT, SUBSCRIPT, FCALL, PARAM } type_error_t;
@@ -55,6 +56,9 @@ struct expr {
 	int literal_value;
 	const char* string_literal;
 	struct symbol* symbol;
+
+	/* register allocation */
+	int reg; // index for scratch registers
 };
 
 struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right);
