@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "symbol.h"
-
+#define MAX_LENGTH 256 // maximum length of variable name and more than enough digits!
+char symbol_address[MAX_LENGTH];
 
 struct symbol* symbol_create(symbol_t kind, struct type* type, char* name) {
   struct symbol* sym = malloc(sizeof(*sym));
@@ -12,6 +13,7 @@ struct symbol* symbol_create(symbol_t kind, struct type* type, char* name) {
     sym->type = type;
     sym->defined = false;
     sym->which = -1;
+    sym->address = NULL;
   }
   return sym;
 }
@@ -21,6 +23,7 @@ void symbol_destroy(struct symbol** s) {
   if (!s || !(*s)) return;
   type_destroy(&((*s)->type));
   free((*s)->name);
+  if ((*s)->address) free((*s)->address);
   free(*s); *s = NULL;
 }
 
@@ -48,3 +51,15 @@ struct symbol* symbol_copy(struct symbol* s) {
   }
   return copy;
 }
+
+/* generates the proper address/label for a symbol */
+const char* symbol_codegen(struct symbol* s) {
+  if (!s) { /* TO DO: error message, null, failed to generate address */ return NULL; }
+  switch (s->kind) {
+    case SYMBOL_GLOBAL: strcpy(symbol_address, s->name); break;
+    default: strcpy(symbol_address, "\0"); sprintf(symbol_address, "-%d(%%rbp)", (s->which + 1) * QUAD); break;
+  }
+  s->address = strdup(symbol_address);
+  return symbol_address;
+}
+

@@ -3,10 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <stdbool.h>
 
 // important enums
-enum { CALLER = 0, CALLEE = 1, NSCRATCH = 7, NFARG = 6 };
+enum { CALLER = 0, CALLEE = 1, FARG = 3, NSCRATCH = 7, NFARG = 6 };
 enum { BYTE = 1, WORD = 2, LONG = 4, QUAD = 8 };
+typedef enum { REG_INVALID = 1, REG_AINUSE, REG_NINUSE, LABEL_MAX } reg_error_t;
 
 // register structure
 struct reg {
@@ -22,9 +24,26 @@ Register farg_register[NFARG];
 
 // other globals
 int label_count;
-
+int register_error_count;
+int register_error_status;
+bool is_test;
 
 // functions
+
+/*
+Handles register/code generation errors
+*/
+void register_error_handle(reg_error_t kind, int ctx);
+
+/*
+Sets up the registers and label counter for code generation.
+*/
+void register_codegen_init(bool test);
+
+/*
+Clears label count and resets registers for code generation.
+*/
+void register_codegen_clear(void);
 
 /*
 Marks a register as inuse.

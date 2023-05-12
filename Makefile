@@ -6,7 +6,7 @@ COMPILER = scan parse print typecheck codegen
 EXEC = $(COMPILER) $(TESTS)
 OBJECTS = source/*.o tests/scanner/*.o tests/parser/*.o tests/ast/*.o tests/symbol_table/*.o
 GEN = source/scanner.c source/parser.c
-INCLUDES = source/decl.o source/expr.o source/param_list.o source/stmt.o source/symbol.o source/type.o source/hash_table.o source/symbol_table.o source/stack.o
+INCLUDES = source/decl.o source/expr.o source/param_list.o source/stmt.o source/symbol.o source/type.o source/hash_table.o source/symbol_table.o source/stack.o source/register.o
 
 ## compiles all targets
 all: $(EXEC)
