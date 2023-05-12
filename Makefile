@@ -4,7 +4,7 @@ SYM = tests/test_stack tests/test_typecheck
 TESTS = tests/test_scan tests/test_parse $(AST) $(SYM) tests/test_codegen test
 COMPILER = scan parse print typecheck codegen
 EXEC = $(COMPILER) $(TESTS)
-OBJECTS = source/*.o tests/scanner/*.o tests/parser/*.o tests/ast/*.o tests/symbol_table/*.o
+OBJECTS = source/*.o tests/scanner/*.o tests/parser/*.o tests/ast/*.o tests/symbol_table/*.o tests/codegen/*.o
 GEN = source/scanner.c source/parser.c
 INCLUDES = source/decl.o source/expr.o source/param_list.o source/stmt.o source/symbol.o source/type.o source/hash_table.o source/symbol_table.o source/stack.o source/register.o
 
