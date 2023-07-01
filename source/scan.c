@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <getopt.h>
+#include <stdlib.h>
 #include "parser.h"
 #define YYLMAX 256
 
@@ -22,23 +24,14 @@ char token_name[64];
 void token_to_str(token_t t);
 int n_tokens;
 
-typedef enum { DEFAULT = 0, COLUMN, ALL, VERBOSE } mode_t;
-mode_t mode;
-mode_t determine_mode(const char* flag);
-int main(int argc, const char* argv[]) {
-  switch(argc) {
-    case 1: yyin = stdin; break;
-    case 2:
-      mode = determine_mode(argv[1]); yyin = stdin; strcpy(filename, "stdin");
-      if (mode == DEFAULT) { yyin = fopen(argv[1], "r"); strcpy(filename, argv[1]); }
-      break;
-    case 3:
-      mode = determine_mode(argv[1]); yyin = fopen(argv[2], "r"); strcpy(filename, argv[2]);
-      break;
-  } if (!yyin) { fprintf(stderr, "Failed to open source file. Unable to proceed.\n"); return -1; }
 
-  n_tokens = 0;
-  n_col = 1;
+// command line stuff
+typedef enum { DEFAULT = 0, COLUMN, ALL, VERBOSE } scanmode_t;
+scanmode_t mode;
+scanmode_t get_options(int argc, const char** argv);
+int main(int argc, const char** argv) {
+  mode = get_options(argc, argv);
+  n_tokens = 0; n_col = 1;
 
   print_header();
   while (1) {
@@ -51,13 +44,34 @@ int main(int argc, const char* argv[]) {
   return 0;
 }
 
-mode_t determine_mode(const char* flag) {
-  mode_t m = DEFAULT;
-  if (strcmp(flag, "-c") == 0) m = COLUMN;
-  else if (strcmp(flag, "-a") == 0) m = ALL;
-  else if (strcmp(flag, "-v") == 0) m = VERBOSE;
-  return m;
+scanmode_t get_options(int argc, const char** argv) {
+  struct option long_opts [] = {
+    {"column", no_argument, NULL, 'c'},
+    {"help", no_argument, NULL, 'h'},
+    {"all", no_argument, NULL, 'a'},
+    {"verbose", no_argument, NULL, 'v'},
+    {"file", optional_argument, NULL, 'f'},
+    {0, 0, 0, 0}
+  };
+
+  int c, option_index;
+  yyin = stdin; strcpy(filename, "stdin");
+  while(1) {
+    c = getopt_long(argc, argv, "acf:hv", long_opts, &option_index);
+    if (c == -1) { break; }
+    switch(c) {
+      case 'a': mode = ALL; break;
+      case 'c': mode = COLUMN; break;
+      case 'v': mode = VERBOSE; break;
+      case 'f': if (optarg) { yyin = fopen(argv[optind - 1], "r"); strcpy(filename, argv[optind -1]); } break;
+      case 'h': exit(0); // TO DO: print help stuff, return instead.
+      case '?': default: exit(-1); // TO DO: invalid
+    }
+  }
+  if (!yyin) {} // TO DO: also error */
+  return mode;
 }
+
 void print_header(void) {
   char str [128];
 

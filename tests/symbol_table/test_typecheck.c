@@ -63,6 +63,8 @@ Status test_decl_typecheck_array_nint_size(void);
 Status test_stmt_typecheck_print(void);
 Status test_stmt_typecheck_expr_good(void);
 Status test_stmt_typecheck_expr_bad(void);
+Status test_stmt_typecheck_expr_bad_comma(void);
+Status test_stmt_typecheck_expr_bad_assign(void);
 
 int main(void) {
   Status (*tests[])(void) = {
@@ -109,7 +111,9 @@ int main(void) {
     test_decl_typecheck_array_nint_size,
     test_stmt_typecheck_print,
     test_stmt_typecheck_expr_good,
-    test_stmt_typecheck_expr_bad
+    test_stmt_typecheck_expr_bad,
+    test_stmt_typecheck_expr_bad_comma,
+    test_stmt_typecheck_expr_bad_assign
   };
 
   int n_tests = sizeof(tests)/sizeof(tests[0]);
@@ -1030,3 +1034,36 @@ Status test_stmt_typecheck_expr_bad(void) {
   return status;
 }
 
+Status test_stmt_typecheck_expr_bad_comma(void) {
+  strcpy(test_type, "Testing: test_stmt_typecheck_expr_bad_comma");
+  Status status = SUCCESS;
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  struct expr* e = expr_create(EXPR_COMMA, expr_create_boolean_literal(true), expr_create_integer_literal(493));
+  struct stmt* s = stmt_create(STMT_IF_ELSE, NULL, NULL, e, NULL, NULL, NULL, NULL);
+  error_status = stmt_resolve(st, s);
+  error_status = stmt_typecheck(st, s, NULL);
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != STMT_BOOLEAN) { print_error(test_type, "STMT_BOOLEAN", "int error_status"); status = FAILURE; }
+  stmt_destroy(&s);
+  global_error_count = 0; error_status = 0;
+  symbol_table_destroy(&st);
+  return status;
+}
+
+Status test_stmt_typecheck_expr_bad_assign(void) {
+  strcpy(test_type, "Testing: test_stmt_typecheck_expr_bad_assign");
+  Status status = SUCCESS;
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  struct expr* e = expr_create(EXPR_ASSIGN, expr_create_name(strdup("x")), expr_create_boolean_literal(true));
+  struct stmt* s = stmt_create(STMT_IF_ELSE, NULL, NULL, e, NULL, NULL, NULL, NULL);
+  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_BOOLEAN, NULL, NULL, NULL), strdup("x"));
+  symbol_table_scope_bind(st, "x", sym);
+  error_status = stmt_resolve(st, s);
+  error_status = stmt_typecheck(st, s, NULL);
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != STMT_BOOLEAN) { print_error(test_type, "STMT_BOOLEAN", "int error_status"); status = FAILURE; }
+  stmt_destroy(&s);
+  global_error_count = 0; error_status = 0;
+  symbol_table_destroy(&st);
+  return status;
+}

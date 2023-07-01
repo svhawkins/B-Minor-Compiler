@@ -19,8 +19,8 @@ tests: $(TESTS)
 
 ## test targets
 test: tests/test.c
-	gcc -o $@ $^
-tests/test_scan: tests/scanner/test_scanner.o source/scanner.o
+	gcc -o $@ $^; ./test;
+tests/test_scan: tests/scanner/test_scanner.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
 tests/test_parse: tests/parser/test_parser.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
@@ -38,7 +38,7 @@ tests/test_codegen: tests/codegen/test_codegen.o source/scanner.o source/parser.
 	gcc -o $@ $^
 
 ## root targets
-scan: source/scan.o source/scanner.o
+scan: source/scan.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
 parse: source/parse.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
@@ -56,11 +56,11 @@ source/parser.c: source/grammar.bison
 	bison --output=$@ -t -W -k -v --feature=caret --report-file=source/grammar.txt $<
 
 ## directory tests code
-%tests/scanner/.o: %tests/scanner/.c source/parser.h
+%tests/scanner/.o: %tests/scanner/.c source/parser.h source/symbol_table.h
 	gcc $(CFLAGS) -c -g $< -o $@
-%tests/parser/.o: %tests/parser/.c source/parser.h
+%tests/parser/.o: %tests/parser/.c source/parser.h source/symbol_table.h
 	gcc $(CFLAGS) -c -g $< -o $@
-%tests/ast/.o: %tests/ast/.c source/parser.h
+%tests/ast/.o: %tests/ast/.c source/parser.h source/symbol_table.h
 	gcc $(CFLAGS) -c -g $< $@
 %tests/symbol_table/.o: %tests/symbol_table/.c source/parser.h source/symbol_table.h
 	gcc $(CFLAGS) -c -g $< $@

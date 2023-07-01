@@ -404,3 +404,4 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
   type_destroy(&right_expr_type);
   return result;
 }
+

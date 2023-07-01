@@ -7,9 +7,9 @@ extern const char* SPACE;
 int stmt_error_handle(stmt_error_t kind, void* ctx1, void* ctx2) {
  fprintf(stderr, "ERROR %d: ", kind);
   switch(kind) {
-    case STMT_BOOLEAN: /* resulting expression type is not of boolean type */
-      fprintf(stderr, "Invalid expression type of conditional:\n");
-      fprintf(stderr, "Expected type boolean, recieved: "); type_fprint(stderr, (struct type*)ctx2);
+    case STMT_BOOLEAN: /* resulting expression type is not of boolean type/bad expression */
+      fprintf(stderr, "Invalid conditional expression:\n");
+      fprintf(stderr, "Expected boolean expression (not comma nor assign): "); type_fprint(stderr, (struct type*)ctx2);
       fprintf(stderr, "\n in statement:\n\t"); stmt_fprint(stderr, (struct stmt*)ctx1, 0);
       break;
     case STMT_TYPE: /* invalid type for printing */
@@ -226,6 +226,7 @@ int stmt_typecheck(struct symbol_table* st, struct stmt* s, struct type** ret_ty
     case STMT_IF_ELSE:
       t = expr_typecheck(st, s->expr);
       if (t->kind != TYPE_BOOLEAN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
+      if (s->expr->kind == EXPR_COMMA || s->expr->kind == EXPR_ASSIGN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
       type_destroy(&t);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
       error_status = stmt_typecheck(st, s->body, ret_type);
@@ -239,6 +240,7 @@ int stmt_typecheck(struct symbol_table* st, struct stmt* s, struct type** ret_ty
     case STMT_WHILE:
       t = expr_typecheck(st, s->expr);
       if (t->kind != TYPE_BOOLEAN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
+      if (s->expr->kind == EXPR_COMMA || s->expr->kind == EXPR_ASSIGN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
       type_destroy(&t);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);
       error_status = stmt_typecheck(st, s->body, ret_type);
@@ -248,6 +250,7 @@ int stmt_typecheck(struct symbol_table* st, struct stmt* s, struct type** ret_ty
       t = expr_typecheck(st, s->init_expr); type_destroy(&t);
       t = expr_typecheck(st, s->expr);
       if (t && t->kind != TYPE_BOOLEAN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
+      if (s->expr->kind == EXPR_COMMA || s->expr->kind == EXPR_ASSIGN) { error_status = stmt_error_handle(STMT_BOOLEAN, (void*)s, (void*)t); }
       type_destroy(&t);
       t = expr_typecheck(st, s->next_expr); type_destroy(&t);
       if (s->body && s->body->kind != STMT_BLOCK) symbol_table_scope_enter(st);

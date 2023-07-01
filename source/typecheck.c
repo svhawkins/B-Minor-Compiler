@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 #include "symbol_table.h"
 
 extern int yyparse();
@@ -11,21 +12,10 @@ extern void print_error_message();
 extern struct stmt* test_parser_result;
 extern struct decl* parser_result;
 
+// command line stuff
+bool refresh = false;
+struct symbol_table* st = NULL;
 int main(int argc, const char* argv[]) {
-  struct symbol_table* st = NULL;
-  bool refresh = false;
-  switch (argc) {
-    case 1: st = symbol_table_create(); break;
-    case 2:
-        st =  (!strcmp(argv[1], "-v")) ? symbol_table_verbose_create() : symbol_table_create();
-        if (!strcmp(argv[1], "-c")) refresh = true;
-        break;
-    case 3:
-      st = (!strcmp(argv[1], "-v") || !strcmp(argv[2], "-v")) ? symbol_table_verbose_create() : symbol_table_create();
-      if (!strcmp(argv[1], "-c") || !strcmp(argv[2], "-c")) { refresh = true; }
-    break;
-  }
-
   symbol_table_scope_enter(st); // global scope
   for (int i = 0; !eof; i++) {
     printf("%d: ", i);
@@ -53,3 +43,24 @@ int main(int argc, const char* argv[]) {
   return 0;
 }
 
+
+void get_options(int argc, const char* argv[]) {
+  struct option long_opts [] = {
+    {"refresh", no_argument, NULL, 'r'},
+    {"verbose", no_argument, NULL, 'v'},
+    {"help", no_argument, NULL, 'h'},
+    {0, 0, 0, 0}
+  };
+  int c, option_index;
+  while(1) {
+    c = getopt_long(argc, argv, "th", long_opts, &option_index);
+    if (c == -1) { break; }
+    switch(c) {
+      case 'r': refresh = true; break;
+      case 'v': st = symbol_table_verbose_create(); break;
+      case 'h': exit(0); // TO DO: print help stuff, return instead.
+      case '?': default: exit(-1); // TO DO: invalid
+    }
+  }
+  if (!st) { st = symbol_table_create(); }
+}
