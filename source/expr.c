@@ -405,3 +405,77 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
   return result;
 }
 
+
+/*
+Generates the corresponding (unoptimized) assembly code for the given expression e.
+If any error occurs that is NOT due to register allocation such as but not limited to:
+        - division by 0
+        - modulus by 0
+        - integer underflow
+        - integer overflow
+An error code is emitted and send to the error message handler.
+*/
+int expr_codegen(struct expr* e) {
+  if (!e) { return 0; } // basis reached.
+
+  // post order traversal, left child, right child, then parent
+  error_status = expr_codegen(e->left);
+  error_status = expr_codegen(e->right);
+
+  // parent
+  switch(e->kind) {
+    // leaf nodes/primitive types
+    // load the literal
+    case EXPR_INT:
+    case EXPR_CH:
+    case EXPR_BOOL:
+      e->reg = register_scratch_alloc();
+      printf("MOVQ $%d, %s\n", e->literal_value, register_scratch_name(e->reg));
+      break;
+    // load the address
+    case EXPR_STR:
+      // TO DO: this solution only works for strings stored as variables. what about string literals?
+      e->reg = register_scratch_alloc();
+      printf("LEAQ %s, %s\n", symbol_codegen(e->symbol), register_scratch_name(e->reg));
+      break;
+    // load the symbol
+    case EXPR_NAME:
+      // TO DO: what if the symbol is an array or string? then LEAQ!
+      e->reg = register_scratch_alloc();
+      printf("MOVQ %s, %s\n", symbol_codegen(e->symbol), register_scratch_name(e->reg));
+      break;
+
+    // arithmetic + logical operations
+    case EXPR_ASSIGN:
+    case EXPR_ADD:
+    case EXPR_SUB:
+    case EXPR_INC:
+    case EXPR_DEC:
+    case EXPR_POS:
+    case EXPR_NEG:
+    case EXPR_NOT:
+    case EXPR_AND:
+    case EXPR_OR:
+
+    // bit harder
+    case EXPR_MULT:
+    case EXPR_DIV:
+    case EXPR_MOD:
+    case EXPR_SUBSCRIPT:
+
+   // comparisions
+   case EXPR_EQ:
+   case EXPR_NEQ:
+   case EXPR_LESS:
+   case EXPR_LEQ:
+   case EXPR_GREAT:
+   case EXPR_GEQ:
+
+
+   // may need their own helper functions
+   case EXPR_EXP:
+   case EXPR_INIT:
+   case EXPR_COMMA:
+   default: break; // shouldnt come here but throw error?????
+  }
+}

@@ -3,6 +3,7 @@
 
 #include "decl.h"
 #include "symbol_table.h"
+#include "register.h"
 struct type;
 struct symbol_table; // forward decl for reasons
 typedef enum { STMT_BOOLEAN = 1, STMT_TYPE } stmt_error_t;

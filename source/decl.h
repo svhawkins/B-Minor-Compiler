@@ -6,6 +6,7 @@
 #include "expr.h"
 #include "symbol.h"
 #include "symbol_table.h"
+#include "register.h"
 struct symbol_table; // forward decl for reasons
 typedef enum { DECL_NULL = 1, DECL_NINT } decl_error_t;
 int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2);

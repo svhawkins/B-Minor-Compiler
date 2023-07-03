@@ -19,7 +19,7 @@ tests: $(TESTS)
 
 ## test targets
 test: tests/test.c
-	gcc -o $@ $^; ./test;
+	gcc -o $@ $^
 tests/test_scan: tests/scanner/test_scanner.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
 tests/test_parse: tests/parser/test_parser.o source/scanner.o source/parser.o $(INCLUDES)

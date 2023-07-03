@@ -90,4 +90,16 @@ In cases of error:
 */
 struct type* expr_typecheck(struct symbol_table* st, struct expr* e);
 
+
+/*
+Generates the corresponding (unoptimized) assembly code for the given expression e.
+If any error occurs that is NOT due to register allocation such as but not limited to:
+	- division by 0
+	- modulus by 0
+	- integer underflow
+	- integer overflow
+An error code is emitted and send to the error message handler.
+*/
+int expr_codegen(struct expr* e);
+
 #endif
