@@ -158,7 +158,7 @@ struct expr* expr_create_name(const char* n)
   return e;
 }
 
-struct expr* expr_create_integer_literal(int c)
+struct expr* expr_create_integer_literal(int64_t c)
 {
   struct expr* e = expr_create(EXPR_INT, NULL, NULL);
   if (e) { e->literal_value = c; }
@@ -191,10 +191,10 @@ void expr_fprint(FILE* fp, struct expr* e) {
   switch(e->kind) {
     // primitives
     case EXPR_NAME: fprintf(fp, "%s", e->name); break;
-    case EXPR_CH: fprintf(fp, "'%c'", e->literal_value); break;
+    case EXPR_CH: fprintf(fp, "'%c'", (int)e->literal_value); break;
     case EXPR_BOOL: fprintf(fp, "%s", (e->literal_value) ? "true" : "false"); break;
     case EXPR_STR: fprintf(fp, "\"%s\"", e->string_literal); break;
-    case EXPR_INT: fprintf(fp, "%d", e->literal_value); break;
+    case EXPR_INT: fprintf(fp, "%ld", e->literal_value); break;
 
     // operators
     // unary operators
@@ -430,7 +430,7 @@ int expr_codegen(struct expr* e) {
     case EXPR_CH:
     case EXPR_BOOL:
       e->reg = register_scratch_alloc();
-      printf("MOVQ $%d, %s\n", e->literal_value, register_scratch_name(e->reg));
+      printf("MOVQ $%ld, %s\n", e->literal_value, register_scratch_name(e->reg));
       break;
     // load the address
     case EXPR_STR:
