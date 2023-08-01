@@ -8,6 +8,7 @@
 typedef enum { FAILURE = 0, SUCCESS = 1 } Status;
 char test_type[MAX_BUFFER];
 char output[MAX_BUFFER];
+extern FILE* ERR_OUT;
 
 // helper functions
 void print_error(char* test, char* expect, char* value);
@@ -99,6 +100,9 @@ Status test_decl_resolve_which_scope_enter(void);
 Status test_stmt_resolve_which_scope_exit(void);
 
 int main(void) {
+  ERR_OUT = fopen("error_output_st.txt", "w");
+  if (!ERR_OUT) { ERR_OUT = stderr; }
+
   Status (*tests[])(void) = {
     test_stack_create,
     test_stack_destroy,
@@ -187,6 +191,7 @@ int main(void) {
   printf("Passed: %d/%d\n", n_pass, n_tests);
   printf("Failed: %d/%d\n", (n_tests - n_pass), n_tests);
 
+  fclose(ERR_OUT);
   return 0;
 }
 // pointers so use strings for expected types

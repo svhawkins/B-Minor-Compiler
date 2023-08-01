@@ -8,35 +8,35 @@
 
 // handles symbol table errors and recovery
 int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
-  fprintf(stderr, "ERROR %d:\n", kind);
+  fprintf(ERR_OUT, "ERROR %d:\n", kind);
   switch(kind) {
     case SYM_UNDEF: /* undefined symbol used. recover by adding it to table with default type integer */
-    fprintf(stderr, "Undefined symbol by name %s.\n Adding symbol as INTEGER.", ((struct expr*)ctx2)->name);
+    fprintf(ERR_OUT, "Undefined symbol by name %s.\n Adding symbol as INTEGER.", ((struct expr*)ctx2)->name);
     int scope = (symbol_table_scope_level((struct symbol_table*)ctx1) == 1) ? SYMBOL_GLOBAL : SYMBOL_LOCAL;
     struct symbol* s = symbol_create(scope, type_create(TYPE_INTEGER, NULL, NULL, NULL), strdup(((struct expr*)ctx2)->name));
     symbol_table_scope_bind((struct symbol_table*)ctx1, ((struct expr*)ctx2)->name, s);
     ((struct expr*)ctx2)->symbol = s;
     break;
     case SYM_REDEF: /* symbol name is already being used in current scope */
-    fprintf(stderr, "Symbol "); symbol_fprint(stderr, (struct symbol*)ctx1);
-    fprintf(stderr, "\n\talready defined in current scope as: "); symbol_fprint(stderr, (struct symbol*)ctx2);
+    fprintf(ERR_OUT, "Symbol "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
+    fprintf(ERR_OUT, "\n\talready defined in current scope as: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx2);
     break;
     case SYM_TYPE: /* symbol type does not match its value/return type */
     if (((struct symbol*)ctx1)->type->kind == TYPE_FUNCTION) {
-      fprintf(stderr, "Return type: "); type_fprint(stderr, (struct type*)ctx2);
-      fprintf(stderr, " does not match declared type: "); type_fprint(stderr, ((struct symbol*)ctx1)->type->subtype);
-      fprintf(stderr, "\nin symbol: "); symbol_fprint(stderr, (struct symbol*)ctx1);
+      fprintf(ERR_OUT, "Return type: "); type_fprint(ERR_OUT, (struct type*)ctx2);
+      fprintf(ERR_OUT, " does not match declared type: "); type_fprint(ERR_OUT, ((struct symbol*)ctx1)->type->subtype);
+      fprintf(ERR_OUT, "\nin symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
     } else {
-      fprintf(stderr, "Value type: "); type_fprint(stderr, (struct type*)ctx2);
-      fprintf(stderr, " does not match declared type in symbol: "); symbol_fprint(stderr, (struct symbol*)ctx1);
+      fprintf(ERR_OUT, "Value type: "); type_fprint(ERR_OUT, (struct type*)ctx2);
+      fprintf(ERR_OUT, " does not match declared type in symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
     }
     break;
     case SYM_PARAM: /* parameter types do not match definiton */
-    fprintf(stderr, "Parameter list declared by symbol: "); symbol_fprint(stderr, (struct symbol*)ctx1);
-    fprintf(stderr, " does not match definition: "); type_fprint(stderr, (struct type*)ctx2);
+    fprintf(ERR_OUT, "Parameter list declared by symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
+    fprintf(ERR_OUT, " does not match definition: "); type_fprint(ERR_OUT, (struct type*)ctx2);
     break;
   }
-  fprintf(stderr, "\n");
+  fprintf(ERR_OUT, "\n");
   global_error_count++;
   return kind;
 }
@@ -48,6 +48,8 @@ void hash_table_fprint(FILE* fp, struct hash_table* ht) {
   char* key; void* value;
   hash_table_firstkey(ht); fprintf(fp, "\n");
   while (hash_table_nextkey(ht, &key, &value)) {
+    // printing of hidden labels is command line parameter.
+    // if (!show_hidden && ((struct symbol*)value)->kind == SYMBOL_HIDDEN) { continue; }
     fprintf(fp, "%s --> ", key);
     symbol_fprint(fp, value);
   }
@@ -189,7 +191,7 @@ int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct sy
   if (!st || !st->stack->items || !(st->top + 1) || !(st->stack->items[st->top])) return 0;
   int status = (hash_table_insert((struct hash_table*)st->stack->items[st->top], name, (void*)sym) == 1) ? 1 : 0;
   // update which for successful binding of non-globals
-  if (status && (stack_size(st->stack) > 1) && sym && sym->kind != SYMBOL_GLOBAL) {
+  if (status && (stack_size(st->stack) > 1) && sym && (sym->kind != SYMBOL_GLOBAL || sym->kind != SYMBOL_HIDDEN)) {
     which_count++; sym->which = which_count;
   }
   return status;

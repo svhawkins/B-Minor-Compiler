@@ -29,6 +29,7 @@ int label_count;
 int register_error_count;
 int register_error_status;
 bool is_test;
+FILE* REG_ERR_OUT;
 
 // functions
 

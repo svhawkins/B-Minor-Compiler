@@ -5,88 +5,88 @@
 
 // handles error messages
 int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void* ctx2, void* type_ctx2) {
-  fprintf(stderr, "ERROR %d:\n", kind);
+  fprintf(ERR_OUT, "ERROR %d:\n", kind);
   switch (kind) {
     case MATH: /* operands must be integers */
     case RELATE:
-      fprintf(stderr, "Invalid operand type(s).\n");
-      fprintf(stderr, "Operand(s) must be of type INTEGER.\n");
-      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
-      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      fprintf(ERR_OUT, "Invalid operand type(s).\n");
+      fprintf(ERR_OUT, "Operand(s) must be of type INTEGER.\n");
+      fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
+      fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
       if (ctx2) {
-        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
-        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+        fprintf(ERR_OUT, "\nOperand 2: "); expr_fprint(ERR_OUT, (struct expr*)ctx2);
+        fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx2);
       }
     break;
     case LOGIC: /* operands must be booleans */
-      fprintf(stderr, "Invalid operand type(s).\n");
-      fprintf(stderr, "Operand(s) must be of type BOOLEAN.\n");
-      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
-      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      fprintf(ERR_OUT, "Invalid operand type(s).\n");
+      fprintf(ERR_OUT, "Operand(s) must be of type BOOLEAN.\n");
+      fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
+      fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
       if (ctx2) {
-        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
-        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+        fprintf(ERR_OUT, "\nOperand 2: "); expr_fprint(ERR_OUT, (struct expr*)ctx2);
+        fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx2);
       }
     break;
     case EQUAL: /* operands must be the same, cannot be function/array */
-      fprintf(stderr, "Invalid operand type(s).\n");
-      fprintf(stderr, "Operand(s) must be of type INTEGER, CHAR, BOOLEAN, or STRING.\n");
-      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
-      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      fprintf(ERR_OUT, "Invalid operand type(s).\n");
+      fprintf(ERR_OUT, "Operand(s) must be of type INTEGER, CHAR, BOOLEAN, or STRING.\n");
+      fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
+      fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
       if (ctx2) {
-        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
-        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+        fprintf(ERR_OUT, "\nOperand 2: "); expr_fprint(ERR_OUT, (struct expr*)ctx2);
+        fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx2);
       }
     break;
     case ASSIGN: /* operands must be the same type*/
-      fprintf(stderr, "Invalid operand type(s).\n");
-      fprintf(stderr, "Operand(s) must be of the same type.\n");
-      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
-      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      fprintf(ERR_OUT, "Invalid operand type(s).\n");
+      fprintf(ERR_OUT, "Operand(s) must be of the same type.\n");
+      fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
+      fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
       if (ctx2) {
-        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
-        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+        fprintf(ERR_OUT, "\nOperand 2: "); expr_fprint(ERR_OUT, (struct expr*)ctx2);
+        fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx2);
       }
     break;
     case LVAL: /* left operand cannot be a literal */
-      fprintf(stderr, "Invalid value of operand(s).\n");
-      fprintf(stderr, "Operand 1 must be NOT be a literal value.\n");
-      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
+      fprintf(ERR_OUT, "Invalid value of operand(s).\n");
+      fprintf(ERR_OUT, "Operand 1 must be NOT be a literal value.\n");
+      fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
     break;
     case INIT: /* operands within list must be the same */
-      fprintf(stderr, "Invalid operand type(s).\n");
-      fprintf(stderr, "Operand(s) within initializer list must be of the same type.\n");
-      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
-      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      fprintf(ERR_OUT, "Invalid operand type(s).\n");
+      fprintf(ERR_OUT, "Operand(s) within initializer list must be of the same type.\n");
+      fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
+      fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
       if (ctx2) {
-        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
-        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+        fprintf(ERR_OUT, "\nOperand 2: "); expr_fprint(ERR_OUT, (struct expr*)ctx2);
+        fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx2);
       }
     break;
     case SUBSCRIPT: /* left must be array, right must be integer */
-      fprintf(stderr, "Invalid operand type(s).\n");
-      fprintf(stderr, "Operand 1 must be of type ARRAY and operand 2 of type INTEGER.\n");
-      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
-      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      fprintf(ERR_OUT, "Invalid operand type(s).\n");
+      fprintf(ERR_OUT, "Operand 1 must be of type ARRAY and operand 2 of type INTEGER.\n");
+      fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
+      fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
       if (ctx2) {
-        fprintf(stderr, "\nOperand 2: "); expr_fprint(stderr, (struct expr*)ctx2);
-        fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx2);
+        fprintf(ERR_OUT, "\nOperand 2: "); expr_fprint(ERR_OUT, (struct expr*)ctx2);
+        fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx2);
       }
     break;
     case FCALL: /* left must be a function */
-      fprintf(stderr, "Invalid operand type(s).\n");
-      fprintf(stderr, "Operand 1 must be of type FUNCTION.\n");
-      fprintf(stderr, "Operand 1: "); expr_fprint(stderr, (struct expr*)ctx1);
-      fprintf(stderr, " with type "); type_fprint(stderr, (struct type*)type_ctx1);
+      fprintf(ERR_OUT, "Invalid operand type(s).\n");
+      fprintf(ERR_OUT, "Operand 1 must be of type FUNCTION.\n");
+      fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
+      fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
     break;
     case PARAM: /* argument types must match with parameter list types */
-      fprintf(stderr, "Invalid argument type(s).\n");
-      fprintf(stderr, "Types of expressions with argument list must match declared parameter types");
-      fprintf(stderr, "\nOf symbol: "); symbol_fprint(stderr, (struct symbol*)ctx1);
-      fprintf(stderr, "\nWith argument(s): "); expr_fprint(stderr, (struct expr*)type_ctx1);
+      fprintf(ERR_OUT, "Invalid argument type(s).\n");
+      fprintf(ERR_OUT, "Types of expressions with argument list must match declared parameter types");
+      fprintf(ERR_OUT, "\nOf symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
+      fprintf(ERR_OUT, "\nWith argument(s): "); expr_fprint(ERR_OUT, (struct expr*)type_ctx1);
     break;
   }
-  fprintf(stderr, "\n");
+  fprintf(ERR_OUT, "\n");
   global_error_count++;
   return kind;
 }

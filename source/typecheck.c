@@ -7,6 +7,7 @@
 extern int yyparse();
 extern unsigned char eof;
 extern void print_error_message();
+extern FILE* ERR_OUT;
 
 // parser outputs
 extern struct stmt* test_parser_result;
@@ -16,6 +17,10 @@ extern struct decl* parser_result;
 bool refresh = false;
 struct symbol_table* st = NULL;
 int main(int argc, const char* argv[]) {
+  ERR_OUT = stderr;
+  get_options(argc, argv);
+
+
   symbol_table_scope_enter(st); // global scope
   for (int i = 0; !eof; i++) {
     printf("%d: ", i);
@@ -53,7 +58,7 @@ void get_options(int argc, const char* argv[]) {
   };
   int c, option_index;
   while(1) {
-    c = getopt_long(argc, argv, "th", long_opts, &option_index);
+    c = getopt_long(argc, argv, "rhv", long_opts, &option_index);
     if (c == -1) { break; }
     switch(c) {
       case 'r': refresh = true; break;

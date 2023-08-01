@@ -5,20 +5,20 @@
 extern void print_indent(FILE* fp, int indent);
 const char* SPACE = "  ";
 int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2) {
-  fprintf(stderr, "ERROR [%d]: ", kind);
+  fprintf(ERR_OUT, "ERROR [%d]: ", kind);
   switch (kind) {
     case DECL_NULL: /* array size field is null when it should have a contained expression */
-    fprintf(stderr, "NULL array size. Array sizes must be NON-NULL\n");
-    fprintf(stderr, "Of symbol: "); symbol_fprint(stderr, (struct symbol*)ctx1);
-    fprintf(stderr, "With value: "); if (ctx2) { expr_fprint(stderr, (struct expr*)ctx2); } else { fprintf(stderr, "[null]"); }
+    fprintf(ERR_OUT, "NULL array size. Array sizes must be NON-NULL\n");
+    fprintf(ERR_OUT, "Of symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
+    fprintf(ERR_OUT, "With value: "); if (ctx2) { expr_fprint(ERR_OUT, (struct expr*)ctx2); } else { fprintf(ERR_OUT, "[null]"); }
     break;
     case DECL_NINT: /* array size field should evaluate to INTEGER and nothing else */
-    fprintf(stderr, "Array size is non-integer. Array sizes must have expressions to evaulate to INTEGER.\n");
-    fprintf(stderr, "Of symbol: "); symbol_fprint(stderr, (struct symbol*)ctx1);
-    fprintf(stderr, "With array size expression type: "); type_fprint(stderr, (struct type*)ctx2);
+    fprintf(ERR_OUT, "Array size is non-integer. Array sizes must have expressions to evaulate to INTEGER.\n");
+    fprintf(ERR_OUT, "Of symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
+    fprintf(ERR_OUT, "With array size expression type: "); type_fprint(ERR_OUT, (struct type*)ctx2);
     break;
   }
-  fprintf(stderr, "\n");
+  fprintf(ERR_OUT, "\n");
   global_error_count++;
   return kind;
 }

@@ -33,6 +33,7 @@ void symbol_fprint(FILE* fp, struct symbol* s) {
     case SYMBOL_GLOBAL: strcpy(str, "global"); break;
     case SYMBOL_LOCAL: strcpy(str, "local"); break;
     case SYMBOL_PARAM: strcpy(str, "parameter"); break;
+    case SYMBOL_HIDDEN: strcpy(str, "hidden (global)"); break;
   }
   fprintf(fp, "(kind: %s, name: %s, type: ", str, s->name);
   type_fprint(fp, s->type);
@@ -56,7 +57,7 @@ struct symbol* symbol_copy(struct symbol* s) {
 const char* symbol_codegen(struct symbol* s) {
   if (!s) { /* TO DO: error message, null, failed to generate address */ return NULL; }
   switch (s->kind) {
-    case SYMBOL_GLOBAL: strcpy(symbol_address, s->name); break;
+    case SYMBOL_GLOBAL: case SYMBOL_HIDDEN: strcpy(symbol_address, s->name); break;
     default: strcpy(symbol_address, "\0"); sprintf(symbol_address, "-%d(%%rbp)", (s->which + 1) * QUAD); break;
   }
   s->address = strdup(symbol_address);
