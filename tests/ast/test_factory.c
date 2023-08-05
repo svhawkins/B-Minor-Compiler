@@ -203,7 +203,7 @@ Status test_expr_create_kind(void) {
       if (e->right) { print_error(test_type, "NULL", "expr* e->right"); overall_status = FAILURE; }
       if (e->name) { print_error(test_type, "NULL", "char* e->name"); overall_status = FAILURE; }
       if (e->literal_value) {
-        sprintf(kind_expect, "%d", 0); sprintf(kind_actual, "%d", e->literal_value);
+        sprintf(kind_expect, "%d", 0); sprintf(kind_actual, "%ld", e->literal_value);
         print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
       }
       if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
@@ -228,7 +228,7 @@ Status test_expr_create_name(void) {
     if (e->right) { print_error(test_type, "NULL", "expr* e->right"); overall_status = FAILURE; }
     if (strcmp("foo", e->name)) { print_error(test_type, "foo", "char* e->name"); overall_status = FAILURE; }
     if (e->literal_value) {
-      sprintf(expect, "%d", 0); sprintf(actual, "%d", e->literal_value);
+      sprintf(expect, "%d", 0); sprintf(actual, "%ld", e->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
@@ -252,7 +252,7 @@ Status test_expr_create_int(void) {
     if (e->right) { print_error(test_type, "NULL", "expr* e->right"); overall_status = FAILURE; }
     if (e->name) { print_error(test_type, "NULL", "char* e->name"); overall_status = FAILURE; }
     if (e->literal_value != -493) {
-      sprintf(expect, "%d", -493); sprintf(actual, "%d", e->literal_value);
+      sprintf(expect, "%d", -493); sprintf(actual, "%ld", e->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
@@ -276,7 +276,7 @@ Status test_expr_create_bool(void) {
     if (e->right) { print_error(test_type, "NULL", "expr* e->right"); overall_status = FAILURE; }
     if (e->name) { print_error(test_type, "NULL", "char* e->name"); overall_status = FAILURE; }
     if (e->literal_value != 1) {
-      sprintf(expect, "%d", 1); sprintf(actual, "%d", e->literal_value);
+      sprintf(expect, "%d", 1); sprintf(actual, "%ld", e->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
@@ -300,7 +300,7 @@ Status test_expr_create_char(void) {
     if (e->right) { print_error(test_type, "NULL", "expr* e->right"); overall_status = FAILURE; }
     if (e->name) { print_error(test_type, "NULL", "char* e->name"); overall_status = FAILURE; }
     if (e->literal_value != 'A') {
-      sprintf(expect, "%c", val); sprintf(actual, "%c", e->literal_value);
+      sprintf(expect, "%c", val); sprintf(actual, "%c", (int)e->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
@@ -324,7 +324,7 @@ Status test_expr_create_str(void) {
     if (e->right) { print_error(test_type, "NULL", "expr* e->right"); overall_status = FAILURE; }
     if (e->name) { print_error(test_type, "NULL", "char* e->name"); overall_status = FAILURE; }
     if (e->literal_value) {
-      sprintf(expect, "%d", 0); sprintf(actual, "%d", e->literal_value);
+      sprintf(expect, "%d", 0); sprintf(actual, "%ld", e->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (strcmp("foo", e->string_literal)) { print_error(test_type, "foo", "char* e->string_literal"); overall_status = FAILURE; }
@@ -352,7 +352,7 @@ Status test_expr_create_unary(void) {
  				    }
     if (strcmp("x", e->left->name)) { print_error(test_type, "x", "char* e->left->name"); overall_status = FAILURE; }
     if (e->literal_value) {
-      sprintf(expect, "%d", 0); sprintf(actual, "%d", e->literal_value);
+      sprintf(expect, "%d", 0); sprintf(actual, "%ld", e->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
@@ -375,7 +375,7 @@ Status test_expr_create_binary_2_op(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->literal_value) {
-      sprintf(expect, "%d", 0); sprintf(actual, "%d", e->literal_value);
+      sprintf(expect, "%d", 0); sprintf(actual, "%ld", e->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
@@ -385,7 +385,7 @@ Status test_expr_create_binary_2_op(void) {
     if (e->left->name) { print_error(test_type, "NULL", "char* e->left->name"); overall_status = FAILURE; }
     if (e->left->string_literal)  { print_error(test_type, "NULL", "char* e->left->string_literal"); overall_status = FAILURE; }
     if (e->left->literal_value != 1) {
-      sprintf(expect, "%d", 0); sprintf(actual, "%d", e->left->literal_value);
+      sprintf(expect, "%d", 0); sprintf(actual, "%ld", e->left->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->left->kind != EXPR_INT) {
@@ -400,7 +400,7 @@ Status test_expr_create_binary_2_op(void) {
     if (e->right->name) { print_error(test_type, "NULL", "char* e->right->name"); overall_status = FAILURE; }
     if (e->right->string_literal)  { print_error(test_type, "NULL", "char* e->right->string_literal"); overall_status = FAILURE; }
     if (e->right->literal_value != 493) {
-      sprintf(expect, "%d", 0); sprintf(actual, "%d", e->right->literal_value);
+      sprintf(expect, "%d", 0); sprintf(actual, "%ld", e->right->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->right->kind != EXPR_INT) {
@@ -426,7 +426,7 @@ Status test_expr_create_binary_3_op(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->literal_value) {
-      sprintf(expect, "%d", 0); sprintf(actual, "%d", e->literal_value);
+      sprintf(expect, "%d", 0); sprintf(actual, "%ld", e->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
@@ -446,7 +446,7 @@ Status test_expr_create_binary_3_op(void) {
     if (e->left->left->name) { print_error(test_type, "NULL", "char* e->left->left->name"); overall_status = FAILURE; }
     if (e->left->left->string_literal)  { print_error(test_type, "NULL", "char* e->left->left->string_literal"); overall_status = FAILURE; }
     if (e->left->left->literal_value != 10) {
-      sprintf(expect, "%d", 0); sprintf(actual, "%d", e->left->left->literal_value);
+      sprintf(expect, "%d", 0); sprintf(actual, "%ld", e->left->left->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->left->left->kind != EXPR_INT) {
@@ -461,7 +461,7 @@ Status test_expr_create_binary_3_op(void) {
     if (e->left->right->name) { print_error(test_type, "NULL", "char* e->left->right->name"); overall_status = FAILURE; }
     if (e->left->right->string_literal)  { print_error(test_type, "NULL", "char* e->left->right->string_literal"); overall_status = FAILURE; }
     if (e->left->right->literal_value != 20) {
-      sprintf(expect, "%d", 0); sprintf(actual, "%d", e->left->right->literal_value);
+      sprintf(expect, "%d", 0); sprintf(actual, "%ld", e->left->right->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->left->right->kind != EXPR_INT) {
@@ -476,7 +476,7 @@ Status test_expr_create_binary_3_op(void) {
     if (e->right->name) { print_error(test_type, "NULL", "char* e->right->name"); overall_status = FAILURE; }
     if (e->right->string_literal)  { print_error(test_type, "NULL", "char* e->right->string_literal"); overall_status = FAILURE; }
     if (e->right->literal_value != 30) {
-      sprintf(expect, "%d", 0); sprintf(actual, "%d", e->right->literal_value);
+      sprintf(expect, "%d", 0); sprintf(actual, "%ld", e->right->literal_value);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->right->kind != EXPR_INT) {
@@ -805,7 +805,7 @@ Status test_decl_create_program(void) {
     if (d->code->next->decl->value->right) { print_error(test_type, "NULL", "expr* d->code->next->decl->value->right"); overall_status = FAILURE; }
     if (d->code->next->decl->value->name) { print_error(test_type, "NULL", "char* d->code->next->decl->value->name"); overall_status = FAILURE; }
     if (d->code->next->decl->value->literal_value != 10) {
-      sprintf(kind_expect, "%d", 10); sprintf(kind_actual, "%d", d->code->next->decl->value->literal_value);
+      sprintf(kind_expect, "%d", 10); sprintf(kind_actual, "%ld", d->code->next->decl->value->literal_value);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
     if (d->code->next->decl->value->string_literal) { print_error(test_type, "NULL", "char* d->code->next->decl->value->string_literal"); overall_status = FAILURE; }
@@ -854,7 +854,7 @@ Status test_decl_create_program(void) {
     if (d->code->next->next->init_expr->right->right) { print_error(test_type, "NULL", "expr* d->code->next->next->init_expr->right->right"); overall_status = FAILURE; }
     if (d->code->next->next->init_expr->right->name) { print_error(test_type, "NULL", "char* d->code->next->next->init_expr->right->name"); overall_status = FAILURE; }
     if (d->code->next->next->init_expr->literal_value != 0) {
-      sprintf(kind_expect, "%d", EXPR_INT); sprintf(kind_actual, "%d", d->code->next->next->init_expr->literal_value);
+      sprintf(kind_expect, "%d", EXPR_INT); sprintf(kind_actual, "%ld", d->code->next->next->init_expr->literal_value);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
     if (d->code->next->next->init_expr->left->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->init_expr->right->string_literal"); overall_status = FAILURE; }
@@ -960,7 +960,7 @@ Status test_decl_create_program(void) {
     if (d->code->next->next->next->expr->right) { print_error(test_type, "NULL", "expr* d->code->next->next->next->expr->right"); overall_status = FAILURE; }
     if (d->code->next->next->next->expr->name) { print_error(test_type, "NULL", "char* d->code->next->next->next->expr->name"); overall_status = FAILURE; }
     if (d->code->next->next->next->expr->literal_value != 0) {
-      sprintf(kind_expect, "%d", 0); sprintf(kind_actual, "%d", d->code->next->next->next->expr->literal_value);
+      sprintf(kind_expect, "%d", 0); sprintf(kind_actual, "%ld", d->code->next->next->next->expr->literal_value);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
     if (d->code->next->next->next->expr->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->next->expr->string_literal"); overall_status = FAILURE; }

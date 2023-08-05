@@ -10,6 +10,7 @@ char test_type[MAX_BUFFER];
 char output[MAX_BUFFER];
 void print_error(char* test, char* expect, char* value);
 
+extern FILE *REG_ERR_OUT, *ERR_OUT;
 
 /* helper function tests */
 Status test_scratch_alloc_success(void);
@@ -27,6 +28,9 @@ Status test_label_name(void);
 Status test_symbol_codegen(void);
 
 int main(int argc, const char* argv[]) {
+  ERR_OUT = REG_ERR_OUT = fopen("error_output_codegen.txt", "w");
+  if (!ERR_OUT || !REG_ERR_OUT) { ERR_OUT = REG_ERR_OUT = stderr; }
+
   Status (*tests[])(void) = {
        test_scratch_alloc_success,
        test_scratch_alloc_fail_ainuse,

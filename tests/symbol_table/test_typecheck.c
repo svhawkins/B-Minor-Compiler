@@ -11,6 +11,8 @@ char output[MAX_BUFFER];
 void print_error(char* test, char* expect, char* value);
 enum { INT = 0, BOOL, CHAR, STRING, VOID, AUTO, N_TYPES };
 
+extern FILE* ERR_OUT;
+
 // expr_typecheck tests
 Status test_expr_typecheck_primitive(void);
 Status test_expr_typecheck_logical_bad(void);
@@ -67,6 +69,9 @@ Status test_stmt_typecheck_expr_bad_comma(void);
 Status test_stmt_typecheck_expr_bad_assign(void);
 
 int main(void) {
+  ERR_OUT = fopen("error_output_typecheck.txt", "w");
+  if (!ERR_OUT) { ERR_OUT = stderr; }
+
   Status (*tests[])(void) = {
     test_expr_typecheck_primitive,
     test_expr_typecheck_logical_bad,
@@ -123,6 +128,8 @@ int main(void) {
 
   printf("Passed: %d/%d\n", n_pass, n_tests);
   printf("Failed: %d/%d\n", (n_tests - n_pass), n_tests);
+
+  fclose(ERR_OUT);
   return 0;
 }
 

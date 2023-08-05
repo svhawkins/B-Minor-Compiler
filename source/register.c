@@ -1,6 +1,5 @@
 #include "register.h"
 
-char label_str[8]; // max int 5 digits, 3 for .L and \0
 char* scratch_name[NSCRATCH] = { "%%rbx", "%%r10", "%%r11", "%%r12", "%%r13", "%%r14", "%%r15" };
 int scratch_kind[NSCRATCH] = { CALLEE, CALLER, CALLER, CALLEE, CALLEE, CALLEE, CALLEE};
 
@@ -8,21 +7,21 @@ int scratch_kind[NSCRATCH] = { CALLEE, CALLER, CALLER, CALLEE, CALLEE, CALLEE, C
 Handles register/code generation errors
 */
 void register_error_handle(reg_error_t kind, int ctx) {
-  fprintf(stderr, "CODEGEN ERROR: %d", kind);
+  fprintf(REG_ERR_OUT, "CODEGEN ERROR: %d\n\t", kind);
   switch(kind) {
     case REG_INVALID: /* out of bounds register selected */
-      fprintf(stderr, "register index %d is out of bounds.\n", ctx);
-      fprintf(stderr, "scratch register indices are between 0 and 6 (inclusive).");
-      fprintf(stderr, "farg register indices are between 0 and 5 (inclusive).");
+      fprintf(REG_ERR_OUT, "register index %d is out of bounds.\n", ctx);
+      fprintf(REG_ERR_OUT, "\tscratch register indices are between 0 and 6 (inclusive).\n");
+      fprintf(REG_ERR_OUT, "\tfarg register indices are between 0 and 5 (inclusive).\n");
       break;
     case REG_AINUSE: /* all registers are in use */
-      fprintf(stderr, "all registers are currently in use.\nfailed to allocated for another.");
+      fprintf(REG_ERR_OUT, "all registers are currently in use.\n\tfailed to allocated for another.\n");
       break;
     case REG_NINUSE: /* selected register is already free to use */
-      fprintf(stderr, "selected register %s is already not in use.\n", scratch_register[ctx].name);
+      fprintf(REG_ERR_OUT, "selected register %s is already not in use.\n", scratch_register[ctx].name);
       break;
     case LABEL_MAX: /* max number of labels has been reached */
-      fprintf(stderr, "failed to create new label. maximum has been reached.\n");
+      fprintf(REG_ERR_OUT, "failed to create new label. maximum has been reached.\n");
       break;
   }
   fprintf(stderr, "\n");

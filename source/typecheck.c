@@ -7,15 +7,20 @@
 extern int yyparse();
 extern unsigned char eof;
 extern void print_error_message();
+extern FILE* ERR_OUT;
 
 // parser outputs
 extern struct stmt* test_parser_result;
 extern struct decl* parser_result;
 
 // command line stuff
-bool refresh = false;
+bool refresh = false, show_hidden = false;
 struct symbol_table* st = NULL;
 int main(int argc, const char* argv[]) {
+  ERR_OUT = stderr;
+  get_options(argc, argv);
+
+  register_codegen_init(false); // for labels
   symbol_table_scope_enter(st); // global scope
   for (int i = 0; !eof; i++) {
     printf("%d: ", i);
@@ -49,18 +54,21 @@ void get_options(int argc, const char* argv[]) {
     {"refresh", no_argument, NULL, 'r'},
     {"verbose", no_argument, NULL, 'v'},
     {"help", no_argument, NULL, 'h'},
+    {"show_hidden", no_argument, 's'},
     {0, 0, 0, 0}
   };
   int c, option_index;
   while(1) {
-    c = getopt_long(argc, argv, "th", long_opts, &option_index);
+    c = getopt_long(argc, argv, "rhvs", long_opts, &option_index);
     if (c == -1) { break; }
     switch(c) {
       case 'r': refresh = true; break;
       case 'v': st = symbol_table_verbose_create(); break;
+      case 's': show_hidden = true; break;
       case 'h': exit(0); // TO DO: print help stuff, return instead.
       case '?': default: exit(-1); // TO DO: invalid
     }
   }
   if (!st) { st = symbol_table_create(); }
+  st->show_hidden = show_hidden;
 }

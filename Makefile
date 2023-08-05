@@ -15,8 +15,6 @@ all: $(EXEC)
 compiler: $(COMPILER)
 
 ## compiles all test targets
-tests: $(TESTS)
-
 ## test targets
 test: tests/test.c
 	gcc -o $@ $^
@@ -46,7 +44,7 @@ print: source/print.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
 typecheck: source/typecheck.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
-codegen: source/main.o source/scanner.o source/parser.o $(INCLUDES)
+codegen: source/codegen.o source/scanner.o source/parser.o $(INCLUDES)
 	gcc -o $@ $^
 
 ## generated code

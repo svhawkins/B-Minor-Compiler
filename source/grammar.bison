@@ -176,7 +176,7 @@ primary_expr : primitive { $$ = $1; }
 primitive : TOKEN_BOOL { $$ = expr_create_boolean_literal(bool_convert(yytext)); }
 	  | TOKEN_CH { $$ = expr_create_char_literal(yytext[0]); }
           | TOKEN_NUMBER { $$ = expr_create_integer_literal(atoi(yytext)); }
-	  | TOKEN_STR { $$ = expr_create_string_literal(yytext); }
+	  | TOKEN_STR { $$ = expr_create_string_literal(strdup(yytext)); }
 	  ;
 
 lor_expr : land_expr { $$ = $1; }

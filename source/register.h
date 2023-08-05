@@ -4,6 +4,7 @@
 #include <string.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 // important enums
 enum { CALLER = 0, CALLEE = 1, FARG = 3, NSCRATCH = 7, NFARG = 6 };
@@ -15,6 +16,7 @@ struct reg {
   const char* name;
   bool inuse;
   int kind; // caller, caller, farg
+  int64_t value; // intermediate value tracking
 }; typedef struct reg Register;
 
 // register arrays
@@ -27,6 +29,8 @@ int label_count;
 int register_error_count;
 int register_error_status;
 bool is_test;
+char label_str[8]; // max int 5 digits, 3 for .L and \0
+FILE* REG_ERR_OUT;
 
 // functions
 
