@@ -28,12 +28,13 @@ void symbol_destroy(struct symbol** s) {
 }
 
 void symbol_fprint(FILE* fp, struct symbol* s) {
+  if (!s) { return; }
   char str[10];
     switch(s->kind) {
     case SYMBOL_GLOBAL: strcpy(str, "global"); break;
     case SYMBOL_LOCAL: strcpy(str, "local"); break;
     case SYMBOL_PARAM: strcpy(str, "parameter"); break;
-    case SYMBOL_HIDDEN: strcpy(str, "hidden (global)"); break;
+    case SYMBOL_HIDDEN: strcpy(str, "hidden"); break;
   }
   fprintf(fp, "(kind: %s, name: %s, type: ", str, s->name);
   type_fprint(fp, s->type);

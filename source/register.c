@@ -1,6 +1,5 @@
 #include "register.h"
 
-char label_str[8]; // max int 5 digits, 3 for .L and \0
 char* scratch_name[NSCRATCH] = { "%%rbx", "%%r10", "%%r11", "%%r12", "%%r13", "%%r14", "%%r15" };
 int scratch_kind[NSCRATCH] = { CALLEE, CALLER, CALLER, CALLEE, CALLEE, CALLEE, CALLEE};
 

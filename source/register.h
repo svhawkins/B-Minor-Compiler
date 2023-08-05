@@ -29,6 +29,7 @@ int label_count;
 int register_error_count;
 int register_error_status;
 bool is_test;
+char label_str[8]; // max int 5 digits, 3 for .L and \0
 FILE* REG_ERR_OUT;
 
 // functions

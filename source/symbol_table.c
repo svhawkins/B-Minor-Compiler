@@ -42,14 +42,14 @@ int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
 }
 
 // prints out the key value pairs within a hash table
-void hash_table_fprint(FILE* fp, struct hash_table* ht) {
+void hash_table_fprint(FILE* fp, struct hash_table* ht, bool show_hidden) {
   if (!ht) { fprintf(fp, "\t\t[null table]\n\n"); return; }
   if (!hash_table_size(ht)) { fprintf(fp, "\t\t[empty table]\n\n"); return; }
   char* key; void* value;
   hash_table_firstkey(ht); fprintf(fp, "\n");
   while (hash_table_nextkey(ht, &key, &value)) {
-    // printing of hidden labels is command line parameter.
-    // if (!show_hidden && ((struct symbol*)value)->kind == SYMBOL_HIDDEN) { continue; }
+    // printing of hidden labels is a command line parameter.
+    if (!show_hidden && ((struct symbol*)value)->kind == SYMBOL_HIDDEN) { continue; }
     fprintf(fp, "%s --> ", key);
     symbol_fprint(fp, value);
   }
@@ -89,6 +89,7 @@ struct symbol_table* symbol_table_create() {
     st->stack = stack_create();
     st->verbose = false;
     st->top = -1;
+    // show hidden is toggled via a command line option
   }
   global_error_count = 0;
   error_status = 0;
@@ -134,10 +135,11 @@ void symbol_table_destroy(struct symbol_table** st) {
 Destroys then creates a new symbol table
 */
 struct symbol_table* symbol_table_clear(struct symbol_table* st) {
-  bool is_verbose = st->verbose;
+  bool is_verbose = st->verbose, show_hidden = st->show_hidden;
   symbol_table_destroy(&st);
   st = (is_verbose) ? symbol_table_verbose_create() : symbol_table_create();
   symbol_table_scope_enter(st); // global scope
+  st->show_hidden = show_hidden;
   return st;
 }
 
@@ -164,7 +166,7 @@ Does nothing if:
 */
 void symbol_table_scope_exit(struct symbol_table* st) {
   st->top--;
-  // reset which count to previous (or 0 if global)
+  // reset which count to previous count (or set to 0 if global scope)
   which_count = (st->top > 0) ? hash_table_size((struct hash_table*)st->stack->items[st->top]) - 1: 0;
 }
 
@@ -180,6 +182,7 @@ int symbol_table_scope_level(struct symbol_table* st) {
 
 /*
 Adds <name, sym> as a key-value pair to the topmost hash table in the stack
+*Exception: hidden symbols are always global
 Returns 1 upon success, 0 upon failure.
 Failure if:
         - NULL symbol table
@@ -189,9 +192,10 @@ Failure if:
 */
 int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct symbol* sym) {
   if (!st || !st->stack->items || !(st->top + 1) || !(st->stack->items[st->top])) return 0;
-  int status = (hash_table_insert((struct hash_table*)st->stack->items[st->top], name, (void*)sym) == 1) ? 1 : 0;
-  // update which for successful binding of non-globals
-  if (status && (stack_size(st->stack) > 1) && sym && (sym->kind != SYMBOL_GLOBAL || sym->kind != SYMBOL_HIDDEN)) {
+  int scope_index = (sym && sym->kind == SYMBOL_HIDDEN) ? 0 : st->top; // hidden symbols always global
+  int status = (hash_table_insert((struct hash_table*)st->stack->items[scope_index], name, (void*)sym) == 1) ? 1 : 0;
+  // update which count for successful binding of non-globals
+  if (status && (stack_size(st->stack) > 1) && sym && !(sym->kind == SYMBOL_GLOBAL || sym->kind == SYMBOL_HIDDEN)) {
     which_count++; sym->which = which_count;
   }
   return status;
@@ -275,7 +279,7 @@ void symbol_table_fprint(FILE* fp, struct symbol_table* st) {
     fprintf(fp, "\n"); for (int j = 0; j < 50; j++) fprintf(fp, "-"); fprintf(fp, "\n");
 
     // print out hash table
-    hash_table_fprint(fp, st->stack->items[i]);
+    hash_table_fprint(fp, st->stack->items[i], st->show_hidden);
   }
   fprintf(fp, "\n");
 }

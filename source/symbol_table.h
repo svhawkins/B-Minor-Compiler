@@ -38,12 +38,15 @@ This is used when printing out (complete) symbol tables (and for testing!)
 
 The top field is also used to indicate current scope via its index.
 This ensures for proper scope lookups even with verbose enabled.
+
+The show_hidden field is for printing purposes.
 */
 
 struct symbol_table {
   Stack* stack;
   bool verbose;
   int top;
+  bool show_hidden;
 }; typedef struct symbol_table Symbol_table;
 
 
@@ -99,6 +102,7 @@ int symbol_table_scope_level(struct symbol_table* st);
 
 /*
 Adds <name, sym> as a key-value pair to the topmost hash table in the stack
+*Exception: hidden symbols are always global
 Returns 1 upon success, 0 upon failure.
 Failure if:
 	- NULL symbol table
@@ -164,7 +168,9 @@ struct symbol* symbol_table_scope_lookup_current(struct symbol_table* st, const 
 
 /*
 Prints out all of the hash tables in the stack.
-Each hash table prints out the all of their key value pairs:
+Each hash table prints out the all of their key value pairs.
+
+If the show_hidden flag is set to false, key, hidden symbols are NOT printed.
 
 example using function definition:
 foo: function void(x: integer, z: boolean, y: char) = {

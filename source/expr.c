@@ -265,12 +265,22 @@ struct expr* expr_copy(struct expr* e) {
 int expr_resolve(struct symbol_table* st, struct expr* e) {
   if (!st || !e) return 0;
   int error_status = 0;
-  if (e->kind == EXPR_NAME) {
+  switch(e->kind) {
+  case EXPR_NAME:
+    // check to see if the symbol has already been declared
     e->symbol = symbol_table_scope_lookup(st, e->name);
     if (!e->symbol) {
       error_status = symbol_table_error_handle(SYM_UNDEF, (void*)st, (void*)e);
     }
-  } else {
+    // TO DO: if the symbol is NOT defined, should raise an error: EXPR_UNDEF
+    break;
+  case EXPR_STR:
+    // store the string literal symbol as a hidden symbol in the symbol table
+    label_name(label_create()); // stored in global label_str
+    e->symbol = symbol_create(SYMBOL_HIDDEN, type_create(TYPE_STRING, NULL, NULL, NULL), strdup(label_str));
+    symbol_table_scope_bind(st, strdup(label_str), e->symbol);
+    break;
+  default:
     error_status = expr_resolve(st, e->left);
     error_status = expr_resolve(st, e->right);
   }
