@@ -1,4 +1,6 @@
-#pragma once
+#ifndef SYMBOL_TABLE_H
+#define SYMBOL_TABLE_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -199,3 +201,5 @@ foo --> (kind: global, name: foo, type: function void (x: integer, y: char, z: b
 */
 void symbol_table_fprint(FILE* fp, struct symbol_table* st);
 void symbol_table_print(struct symbol_table* st);
+
+#endif /* SYMBOL_TABLE_H */

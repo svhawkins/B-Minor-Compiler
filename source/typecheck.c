@@ -13,6 +13,10 @@ extern FILE* ERR_OUT;
 extern struct stmt* test_parser_result;
 extern struct decl* parser_result;
 
+// other outputs
+extern struct decl* decl_hidden_list = NULL;
+extern struct decl* decl_hidden_list_tail = NULL;
+
 // command line stuff
 bool refresh = false, show_hidden = false;
 struct symbol_table* st = NULL;
@@ -37,11 +41,14 @@ int main(int argc, const char* argv[]) {
     } else { print_error_message(); }
   }
   if (parser_result) {
-    decl_print(parser_result, 0); printf("\n");
     decl_resolve(st, parser_result);
     decl_typecheck(st, parser_result);
+
+    decl_print(decl_hidden_list, 0); printf("\n");
+    decl_print(parser_result, 0); printf("\n");
     symbol_table_print(st);
-    decl_destroy(&parser_result);
+    decl_destroy(&decl_hidden_list);
+    decl_destroy(&decl_hidden_list_tail);
     printf("Total errors: %d\n", global_error_count);
   }
   symbol_table_destroy(&st);

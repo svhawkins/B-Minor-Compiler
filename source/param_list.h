@@ -27,4 +27,4 @@ bool param_list_equals(struct param_list* a, struct param_list* b);
 
 int param_list_resolve(struct symbol_table* st, struct param_list* p);
 
-#endif
+#endif /* PARAM_LIST_H */
