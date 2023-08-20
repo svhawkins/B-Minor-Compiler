@@ -1,4 +1,6 @@
-#pragma once
+#ifndef REGISTER_H
+#define REGISTER_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -85,3 +87,5 @@ int label_create();
 Creates a label string value
 */
 const char* label_name(int label);
+
+#endif /* REGISTER_H */

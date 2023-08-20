@@ -24,14 +24,14 @@ Changes since assignment 4:
 5. struct symbol now has an address field to have during code generation
    this saves the address value for a symbol while they are being generated.
 
-****************************
-1. Register field of expr has default unused value of -1.
-2. Which field of symbol has default unused value of -1.
-3. scratch allocation failure returns -1 if no halt.
-4. scratch name failure returns NULL if no halt.
-5. label create failure returns INT_MIN if no halt.
-6. symbol codegen failure returns NULL if no halt.
+6. symbol table now includes 'hidden' symbols: originally nameless array and string literals stored as symbols under a new name: the label
+  name generated from label_name() and label_create().This makes sure that pass-by-reference values are being stored and loaded correctly.
 
+7. <<struct>>_codegen functions now have an 'fprintf' variant, as <<struct>>_fcodegen():
+  These have an additonal parameter of the file pointer, which defaults to stdout.
+
+****************************
+HIDDEN SYMBOLS
 
 
 ******************************************************************************************************
@@ -59,32 +59,3 @@ use assembly emulator to help you.
 	- fcall
 		implement
 		test
-
-5. Arrays and strings are passed by reference, meaning their labels have to be generated even if a literal.
-   Therefore it is necessary to run symbol_codegen() throughout the symbol table prior to any <struct>_codegen() call.
-   Though this would require adding literals to the symbol table, they can be 'hidden'. Stored in the table but never printed, their
-   names are the label name generated from them via label_name(). This also requires #include for stmt.h and decl.h to have access to those
-   functions.
-
-
-
-CAVEATS:
-*************************************************************************************************
-
-- symbol table now includes 'hidden' symbols: originally nameless array and string literals stored as symbols under a new name: the label
-  name generated from label_name() and label_create().This makes sure that pass-by-reference values are being stored and loaded correctly.
-  These symbols are not shown as actual symbol table members, but can be with these functions:
-	- symbol_table_print()
-	- symbol_table_fprint()
-	- hash_table_print()
-	- hash_table_fprint()
-
-  though this will require renaming these functions and let them take an additional boolean parameter for show_hidden and making wrapper
-  functions:
-	- symbol_table_print() and symbol_table_print_hidden() will then become wrapper functions for a function that uses the original
-	  symbol_table_print() definition and an additional boolean parameter.
-	- ditto with hash_table_print() and their fprint variants
-
-
-- <<struct>>_codegen functions now have an 'fprintf' variant, as <<struct>>_fcodegen():
-  These have an additonal parameter of the file pointer, which defaults to stdout.

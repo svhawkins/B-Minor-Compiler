@@ -23,7 +23,6 @@
   // parser results
   struct stmt* test_parser_result = NULL; // for testing
   struct decl* parser_result = NULL;
-  
 %}
 %expect 3
 %define parse.error verbose

@@ -48,4 +48,4 @@ int stmt_resolve(struct symbol_table* st, struct stmt* s);
 
 int stmt_typecheck(struct symbol_table* st, struct stmt* s, struct type** ret_type);
 
-#endif
+#endif /* STMT_H */

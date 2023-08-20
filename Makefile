@@ -15,6 +15,8 @@ all: $(EXEC)
 compiler: $(COMPILER)
 
 ## compiles all test targets
+tests: $(TESTS)
+
 ## test targets
 test: tests/test.c
 	gcc -o $@ $^

@@ -103,4 +103,4 @@ An error code is emitted and send to the error message handler.
 */
 int expr_codegen(struct expr* e);
 
-#endif
+#endif /* EXPR_H */

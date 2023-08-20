@@ -45,4 +45,4 @@ Adds symbols with parameter scopes
 */
 int type_resolve(struct symbol_table* st, struct type* t);
 
-#endif
+#endif /* TYPE_H */
