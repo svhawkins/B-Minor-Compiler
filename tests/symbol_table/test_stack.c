@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "../../source/symbol_table.h"
+#include "../../src/symbol_table.h"
 #define MAX_BUFFER 256
 
 typedef enum { FAILURE = 0, SUCCESS = 1 } Status;
@@ -68,9 +68,13 @@ Status test_symbol_table_scope_lookup_current_good_key(void);
 Status test_symbol_table_scope_lookup_current_multi_key(void);
 
 // name resolution tests (which uses the symbol table)
+
+// resolution for expressions
 Status test_expr_resolve_name(void);
 Status test_expr_resolve_binary_op(void);
 Status test_expr_resolve_sym_undef(void);
+
+// resolution for declarations
 Status test_decl_resolve_atomic_uninit(void);
 Status test_decl_resolve_atomic_init(void);
 Status test_decl_resolve_function_uninit_no_param(void);
@@ -83,6 +87,12 @@ Status test_decl_resolve_function_sym_redef_def_undef(void);
 Status test_decl_resolve_function_sym_redef_def_def(void);
 Status test_decl_resolve_function_param_redef(void);
 Status test_decl_resolve_function_param_mismatch(void);
+Status test_decl_resolve_var_sym_redef_def_undef(void);
+Status test_decl_resolve_var_sym_redef_def_def(void);
+Status test_decl_resolve_var_sym_redef_undef_undef(void);
+
+
+// resolution for statements
 Status test_stmt_resolve_expr(void);
 Status test_stmt_resolve_print(void);
 Status test_stmt_resolve_return(void);
@@ -169,6 +179,9 @@ int main(void) {
     test_decl_resolve_function_sym_redef_def_undef,
     test_decl_resolve_function_sym_redef_def_def,
     test_decl_resolve_function_param_mismatch,
+    test_decl_resolve_var_sym_redef_def_undef,
+    test_decl_resolve_var_sym_redef_def_def,
+    test_decl_resolve_var_sym_redef_undef_undef,
     test_stmt_resolve_expr,
     test_stmt_resolve_print,
     test_stmt_resolve_return,
@@ -1503,4 +1516,53 @@ Status test_symbol_table_hidden_local(void) {
 
  symbol_table_destroy(&st); decl_destroy(&d);
  return status;
+}
+
+
+Status test_decl_resolve_var_sym_redef_def_undef(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_var_sym_redef_def_undef");
+  Status status = SUCCESS;
+  struct type* tinteger = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct expr* e1 = expr_create_integer_literal(493);
+  struct decl* dend = decl_create(strdup("foo"), type_copy(tinteger), NULL, NULL, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_copy(tinteger), e1, NULL, dend);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  error_status = decl_resolve(st, d);
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != SYM_REDEF) { print_error(test_type, "SYM_REDEF", "int error_status"); status = FAILURE; }
+  symbol_table_destroy(&st); decl_destroy(&d); type_destroy(&tinteger);
+  return status;
+}
+
+Status test_decl_resolve_var_sym_redef_def_def(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_var_sym_redef_def_def");
+  Status status = SUCCESS;
+  struct type* tinteger = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct expr* e1 = expr_create_integer_literal(493);
+  struct expr* e2 = expr_create_integer_literal(12);
+  struct decl* dend = decl_create(strdup("foo"), type_copy(tinteger), e2, NULL, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_copy(tinteger), e1, NULL, dend);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  error_status = decl_resolve(st, d);
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != SYM_REDEF) { print_error(test_type, "SYM_REDEF", "int error_status"); status = FAILURE; }
+  symbol_table_destroy(&st); decl_destroy(&d); type_destroy(&tinteger);
+  return status;
+}
+
+Status test_decl_resolve_var_sym_redef_undef_undef(void) {
+  strcpy(test_type, "Testing: test_decl_resolve_var_sym_redef_undef_undef");
+  Status status = SUCCESS;
+  struct type* tinteger = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+  struct decl* dend = decl_create(strdup("foo"), type_copy(tinteger), NULL, NULL, NULL);
+  struct decl* d = decl_create(strdup("foo"), type_copy(tinteger), NULL, NULL, dend);
+
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  error_status = decl_resolve(st, d);
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != SYM_REDEF) { print_error(test_type, "SYM_REDEF", "int error_status"); status = FAILURE; }
+  symbol_table_destroy(&st); decl_destroy(&d); type_destroy(&tinteger);
+  return status;
 }

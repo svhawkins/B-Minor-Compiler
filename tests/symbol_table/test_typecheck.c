@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "../../source/symbol_table.h"
+#include "../../src/symbol_table.h"
 #define MAX_BUFFER 256
 
 typedef enum { FAILURE = 0, SUCCESS = 1 } Status;
@@ -31,6 +31,7 @@ Status test_expr_typecheck_assign_bad(void);
 Status test_expr_typecheck_assign_good(void);
 Status test_expr_typecheck_assign_bad_lval(void);
 Status test_expr_typecheck_assign_good_subscript(void);
+Status test_expr_typecheck_assign_bad_string(void);
 Status test_expr_typecheck_fcall_bad_function(void);
 Status test_expr_typecheck_fcall_bad_param(void);
 Status test_expr_typecheck_fcall_good_no_param(void);
@@ -90,6 +91,7 @@ int main(void) {
     test_expr_typecheck_assign_good,
     test_expr_typecheck_assign_bad_lval,
     test_expr_typecheck_assign_good_subscript,
+    test_expr_typecheck_assign_bad_string,
     test_expr_typecheck_fcall_bad_function,
     test_expr_typecheck_fcall_bad_param,
     test_expr_typecheck_fcall_good_no_param,
@@ -1071,6 +1073,26 @@ Status test_stmt_typecheck_expr_bad_assign(void) {
   if (error_status != STMT_BOOLEAN) { print_error(test_type, "STMT_BOOLEAN", "int error_status"); status = FAILURE; }
   stmt_destroy(&s);
   global_error_count = 0; error_status = 0;
+  symbol_table_destroy(&st);
+  return status;
+}
+
+Status test_expr_typecheck_assign_bad_string(void) {
+  strcpy(test_type, "Testing: test_expr_typecheck_assign_bad_string");
+  Status status = SUCCESS;
+  struct type* string = type_create(TYPE_STRING, NULL, NULL, NULL);
+  struct expr* left = expr_create_name(strdup("x"));
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(string), strdup(left->name)));
+
+  struct expr* right = expr_create_string_literal(strdup("duck"));
+  struct expr* e = expr_create(EXPR_ASSIGN, left, right); expr_resolve(st, e);
+  struct type* t = expr_typecheck(st, e);
+
+  if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+  if (error_status != IMMUTABLE) { print_error(test_type, "IMMUTABLE", "int error_status"); status = FAILURE; }
+
+  expr_destroy(&e); type_destroy(&t); type_destroy(&string);
   symbol_table_destroy(&st);
   return status;
 }

@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../../source/decl.h"
-#include "../../source/expr.h"
-#include "../../source/param_list.h"
-#include "../../source/stmt.h"
-#include "../../source/symbol.h"
-#include "../../source/type.h"
+#include "../../src/decl.h"
+#include "../../src/expr.h"
+#include "../../src/param_list.h"
+#include "../../src/stmt.h"
+#include "../../src/symbol.h"
+#include "../../src/type.h"
 #define MAX_BUFFER 256
 
 extern FILE* yyin; FILE* ifp;

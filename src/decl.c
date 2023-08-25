@@ -26,7 +26,7 @@ int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2) {
 
 struct decl* decl_create(char* name, struct type* type, struct expr* value, struct stmt* code, struct decl* next)
 {
-  struct decl* d = malloc(sizeof(*d));
+  struct decl* d = malloc(sizeof(struct decl));
   if (d) {
     d->name = name;
     d->type = type;
@@ -91,7 +91,7 @@ int decl_resolve(struct symbol_table* st, struct decl* d) {
     // add symbol to the table
     if (d->value) { error_status = expr_resolve(st, d->value); }
     if (d->type->size) { error_status = expr_resolve(st, d->type->size); }
-    if (d->code) { d->symbol->defined = true; }
+    if (d->code || d->value) { d->symbol->defined = true; }
     symbol_table_scope_bind(st, d->name, d->symbol);
   } else {
     // symbol is already being used
@@ -100,9 +100,9 @@ int decl_resolve(struct symbol_table* st, struct decl* d) {
       if (!param_list_equals(sym->type->params, d->type->params)) {
         error_status = symbol_table_error_handle(SYM_PARAM, (void*)sym->type, (void*)d->type);
       }
-      symbol_destroy(&d->symbol);
     }
-    else { error_status = symbol_table_error_handle(SYM_REDEF, (void*)d->symbol, (void*)sym); symbol_destroy(&d->symbol); }
+    else { error_status = symbol_table_error_handle(SYM_REDEF, (void*)d->symbol, (void*)sym); }
+    symbol_destroy(&d->symbol);
   }
   // resolve the function parameters and body (if valid declaration)
   if (d->type->kind == TYPE_FUNCTION) {
@@ -121,10 +121,12 @@ int decl_typecheck(struct symbol_table* st, struct decl* d) {
     struct type* t = expr_typecheck(st, d->value);
     // auto declarations update their type to value type.
     if (d->type->kind == TYPE_AUTO) {
-	type_destroy(&d->type); d->type = type_copy(t);
-	type_destroy(&d->symbol->type); d->symbol->type = type_copy(t);
+	    type_destroy(&d->type); d->type = type_copy(t);
+	    type_destroy(&d->symbol->type); d->symbol->type = type_copy(t);
     }
-    if (!type_equals(t, d->symbol->type)) { error_status = symbol_table_error_handle(SYM_TYPE, (void*)d->symbol, (void*)t); }
+    if (d->symbol && !type_equals(t, d->symbol->type)) {
+        error_status = symbol_table_error_handle(SYM_TYPE, (void*)d->symbol, (void*)t);
+    }
     type_destroy(&t);
   }
   if (d->type->kind == TYPE_ARRAY) {
@@ -135,7 +137,6 @@ int decl_typecheck(struct symbol_table* st, struct decl* d) {
         type_destroy(&size_type);
     }
   }
-
   if (d->type->kind == TYPE_FUNCTION && d->symbol) {
    symbol_table_scope_enter(st);
    if (d->code) {
@@ -148,6 +149,7 @@ int decl_typecheck(struct symbol_table* st, struct decl* d) {
       type_destroy(&ret_type);
     } symbol_table_scope_exit(st);
   }
+  
   error_status = decl_typecheck(st, d->next);
   return error_status;
 }

@@ -27,7 +27,7 @@ struct stmt* stmt_create(stmt_t kind, struct decl* decl,
 			 struct expr* init_expr, struct expr* expr, struct expr* next_expr,
                          struct stmt* body, struct stmt* else_body, struct stmt* next)
 {
-  struct stmt* s = malloc(sizeof(*s));
+  struct stmt* s = malloc(sizeof(struct stmt));
   if (s) {
     s->kind = kind;
     s->decl = decl;

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "../../source/symbol_table.h"
+#include "../../src/symbol_table.h"
 #define MAX_BUFFER 256
 
 typedef enum { FAILURE = 0, SUCCESS = 1 } Status;

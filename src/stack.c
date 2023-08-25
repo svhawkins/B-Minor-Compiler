@@ -7,7 +7,7 @@ returns NULL upon failure:
   - items allocation failure
 */
 Stack* stack_create() {
-  Stack* s = (Stack*)malloc(sizeof(s));
+  Stack* s = (Stack*)malloc(sizeof(Stack));
   if (!s) { fprintf(stderr, "WARNING: Failed to allocate memory space for stack!\n"); }
   if (s) {
    s->size = 0;

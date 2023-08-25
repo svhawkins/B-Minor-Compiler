@@ -4,9 +4,9 @@ SYM = tests/test_stack tests/test_typecheck
 TESTS = tests/test_scan tests/test_parse $(AST) $(SYM) tests/test_codegen test
 COMPILER = scan parse print typecheck codegen
 EXEC = $(COMPILER) $(TESTS)
-OBJECTS = source/*.o tests/scanner/*.o tests/parser/*.o tests/ast/*.o tests/symbol_table/*.o tests/codegen/*.o
-GEN = source/scanner.c source/parser.c
-INCLUDES = source/decl.o source/expr.o source/param_list.o source/stmt.o source/symbol.o source/type.o source/hash_table.o source/symbol_table.o source/stack.o source/register.o
+OBJECTS = src/*.o tests/scanner/*.o tests/parser/*.o tests/ast/*.o tests/symbol_table/*.o tests/codegen/*.o
+GEN = src/scanner.c src/parser.c
+INCLUDES = src/decl.o src/expr.o src/param_list.o src/stmt.o src/symbol.o src/type.o src/hash_table.o src/symbol_table.o src/stack.o src/register.o
 
 ## compiles all targets
 all: $(EXEC)
@@ -20,55 +20,55 @@ tests: $(TESTS)
 ## test targets
 test: tests/test.c
 	gcc -o $@ $^
-tests/test_scan: tests/scanner/test_scanner.o source/scanner.o source/parser.o $(INCLUDES)
+tests/test_scan: tests/scanner/test_scanner.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-tests/test_parse: tests/parser/test_parser.o source/scanner.o source/parser.o $(INCLUDES)
+tests/test_parse: tests/parser/test_parser.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-tests/test_factory: tests/ast/test_factory.o source/scanner.o source/parser.o $(INCLUDES)
+tests/test_factory: tests/ast/test_factory.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-tests/test_print: tests/ast/test_print.o source/scanner.o source/parser.o $(INCLUDES)
+tests/test_print: tests/ast/test_print.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-tests/test_ast: tests/ast/test_ast.o source/scanner.o source/parser.o $(INCLUDES)
+tests/test_ast: tests/ast/test_ast.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-tests/test_stack: tests/symbol_table/test_stack.o source/scanner.o source/parser.o $(INCLUDES)
+tests/test_stack: tests/symbol_table/test_stack.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-tests/test_typecheck: tests/symbol_table/test_typecheck.o source/scanner.o source/parser.o $(INCLUDES)
+tests/test_typecheck: tests/symbol_table/test_typecheck.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-tests/test_codegen: tests/codegen/test_codegen.o source/scanner.o source/parser.o $(INCLUDES)
+tests/test_codegen: tests/codegen/test_codegen.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
 
 ## root targets
-scan: source/scan.o source/scanner.o source/parser.o $(INCLUDES)
+scan: src/scan.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-parse: source/parse.o source/scanner.o source/parser.o $(INCLUDES)
+parse: src/parse.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-print: source/print.o source/scanner.o source/parser.o $(INCLUDES)
+print: src/print.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-typecheck: source/typecheck.o source/scanner.o source/parser.o $(INCLUDES)
+typecheck: src/typecheck.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-codegen: source/codegen.o source/scanner.o source/parser.o $(INCLUDES)
+codegen: src/codegen.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
 
 ## generated code
-source/scanner.c: source/scanner.flex
+src/scanner.c: src/scanner.flex
 	flex -o$@ $^
-source/parser.c: source/grammar.bison
-	bison --output=$@ -t -W -k -v --feature=caret --report-file=source/grammar.txt $<
+src/parser.c: src/grammar.bison
+	bison --output=$@ -t -W -k -v --feature=caret --report-file=src/grammar.txt $<
 
 ## directory tests code
-%tests/scanner/.o: %tests/scanner/.c source/parser.h source/symbol_table.h
+%tests/scanner/.o: %tests/scanner/.c src/parser.h src/symbol_table.h
 	gcc $(CFLAGS) -c -g $< -o $@
-%tests/parser/.o: %tests/parser/.c source/parser.h source/symbol_table.h
+%tests/parser/.o: %tests/parser/.c src/parser.h src/symbol_table.h
 	gcc $(CFLAGS) -c -g $< -o $@
-%tests/ast/.o: %tests/ast/.c source/parser.h source/symbol_table.h
+%tests/ast/.o: %tests/ast/.c src/parser.h src/symbol_table.h
 	gcc $(CFLAGS) -c -g $< $@
-%tests/symbol_table/.o: %tests/symbol_table/.c source/parser.h source/symbol_table.h
+%tests/symbol_table/.o: %tests/symbol_table/.c src/parser.h src/symbol_table.h
 	gcc $(CFLAGS) -c -g $< $@
-%tests/codegen/.o: %tests/codegen/.c source/parser.h source/symbol_table.h
+%tests/codegen/.o: %tests/codegen/.c src/parser.h src/symbol_table.h
 	gcc $(CFLAGS) -c -g $< $@
 
-## directory source code
-%source/.o: %source/.c
+## directory src code
+%src/.o: %src/.c
 	gcc $(CFLAGS) -c -g $^ $@
 
 ## removal
