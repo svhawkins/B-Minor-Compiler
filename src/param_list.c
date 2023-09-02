@@ -4,7 +4,7 @@
 
 struct param_list* param_list_create(char* name, struct type* type, struct param_list* next )
 {
-  struct param_list* p = malloc(sizeof(*p));
+  struct param_list* p = malloc(sizeof(struct param_list));
   if (p) {
     p->name = name;
     p->type = type;
@@ -33,7 +33,7 @@ void param_list_destroy(struct param_list** p) {
 
 struct param_list* param_list_copy(struct param_list* p) {
   if (!p) return NULL;
-  struct param_list* copy = malloc(sizeof(*copy));
+  struct param_list* copy = malloc(sizeof(struct param_list));
   if (copy) {
     copy->name = strdup(p->name);
     copy->type = type_copy(p->type);

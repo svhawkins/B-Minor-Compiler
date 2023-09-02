@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "../../source/parser.h"
+#include "../../src/parser.h"
 #define MAX_BUFFER 256
 
 // TOKEN_EOF NOW HAS OPTIONAL STATE TO BE ALSO VALUE 0

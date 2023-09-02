@@ -84,7 +84,7 @@ Creates a symbol table.
 Returns a NULL pointer upon any memory allocation failures.
 */
 struct symbol_table* symbol_table_create() {
-  struct symbol_table* st = malloc(sizeof(*st));
+  struct symbol_table* st = malloc(sizeof(struct symbol_table));
   if (st) {
     st->stack = stack_create();
     st->verbose = false;

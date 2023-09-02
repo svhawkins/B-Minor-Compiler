@@ -31,11 +31,11 @@ int main(int argc, const char* argv[]) {
     if (yyparse() == 0) {
       if (test_parser_result) {
         stmt_print(test_parser_result, 0);
- 	stmt_resolve(st, test_parser_result);
-	stmt_typecheck(st, test_parser_result, NULL);
-	symbol_table_print(st);
+ 	      stmt_resolve(st, test_parser_result);
+	      stmt_typecheck(st, test_parser_result, NULL);
+	      symbol_table_print(st);
         printf("Total errors: %d\n", global_error_count);
-	stmt_destroy(&test_parser_result);
+	      stmt_destroy(&test_parser_result);
         if (refresh) { st = symbol_table_clear(st); }
       }
     } else { print_error_message(); }

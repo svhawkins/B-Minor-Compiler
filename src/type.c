@@ -4,7 +4,7 @@
 
 struct type* type_create(type_t kind, struct type* subtype, struct param_list* params, struct expr* size)
 {
-  struct type* t = malloc(sizeof(*t));
+  struct type* t = malloc(sizeof(struct type));
   if (t) {
     t->kind = kind;
     t->subtype = subtype;
@@ -55,7 +55,7 @@ void type_destroy(struct type** t) {
 
 struct type* type_copy(struct type* t) {
   if (!t) return NULL;
-  struct type* copy = malloc(sizeof(*copy));
+  struct type* copy = malloc(sizeof(struct type));
   if (copy) {
     copy->kind = t->kind;
     copy->params = param_list_copy(t->params);

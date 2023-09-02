@@ -53,6 +53,12 @@ int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void*
       fprintf(ERR_OUT, "Operand 1 must be NOT be a literal value.\n");
       fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
     break;
+    case IMMUTABLE: /* LHS of assignment operation cannot be a string */
+      fprintf(ERR_OUT, "Invalid LHS of assignment\n");
+      fprintf(ERR_OUT, "Operand 1 must be of mutable type.\n");
+      fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
+      fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
+    break;
     case INIT: /* operands within list must be the same */
       fprintf(ERR_OUT, "Invalid operand type(s).\n");
       fprintf(ERR_OUT, "Operand(s) within initializer list must be of the same type.\n");
@@ -86,7 +92,7 @@ int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void*
       fprintf(ERR_OUT, "\nWith argument(s): "); expr_fprint(ERR_OUT, (struct expr*)type_ctx1);
     break;
   }
-  fprintf(ERR_OUT, "\n");
+  fprintf(ERR_OUT, "\n\n");
   global_error_count++;
   return kind;
 }
@@ -133,7 +139,7 @@ struct type* expr_typecheck_init(struct symbol_table* st, struct expr* e) {
 
 struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right )
 {
-  struct expr* e = malloc(sizeof(*e));
+  struct expr* e = malloc(sizeof(struct expr));
   if (e) {
     e->kind = kind;
     e->left = left;
@@ -243,7 +249,7 @@ void expr_destroy(struct expr** e) {
 
 struct expr* expr_copy(struct expr* e) {
   if (!e) return NULL;
-  struct expr* copy = malloc(sizeof(*copy));
+  struct expr* copy = malloc(sizeof(struct expr));
   if (copy) {
     copy->kind = e->kind;
     switch(e->kind) {
@@ -267,12 +273,14 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
   int error_status = 0;
   switch(e->kind) {
   case EXPR_NAME:
+    // constant expressions cannot contain names
+    if (is_const_expr) { error_status = decl_error = DECL_CONST; }
+
     // check to see if the symbol has already been declared
     e->symbol = symbol_table_scope_lookup(st, e->name);
     if (!e->symbol) {
       error_status = symbol_table_error_handle(SYM_UNDEF, (void*)st, (void*)e);
     }
-    // TO DO: if the symbol is NOT defined, should raise an error: EXPR_UNDEF
     break;
   case EXPR_STR:
     // store the string literal symbol as a hidden symbol in the symbol table
@@ -346,7 +354,7 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
     case EXPR_OR:
     case EXPR_NOT:
       if (left_expr_type->kind != TYPE_BOOLEAN ||
-	 (e->right && (right_expr_type->kind != TYPE_BOOLEAN || !type_equals(left_expr_type, right_expr_type)))) {
+	       (e->right && (right_expr_type->kind != TYPE_BOOLEAN || !type_equals(left_expr_type, right_expr_type)))) {
          error_status = expr_type_error_handle(LOGIC, (void*)e->left, (void*)left_expr_type, (void*)e->right, (void*)right_expr_type);
          result = type_copy(left_expr_type);
       }
@@ -365,8 +373,8 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
     case EXPR_MOD:
     case EXPR_EXP:
       if (left_expr_type->kind != TYPE_INTEGER ||
-	 (e->right && (right_expr_type->kind != TYPE_INTEGER || !type_equals(left_expr_type, right_expr_type)))) {
-	 error_status = expr_type_error_handle(MATH, (void*)e->left, (void*)left_expr_type, (void*)e->right, (void*)right_expr_type);
+	       (e->right && (right_expr_type->kind != TYPE_INTEGER || !type_equals(left_expr_type, right_expr_type)))) {
+	       error_status = expr_type_error_handle(MATH, (void*)e->left, (void*)left_expr_type, (void*)e->right, (void*)right_expr_type);
          result = type_copy(left_expr_type);
       }
       else result = type_create(TYPE_INTEGER, NULL, NULL, NULL);
@@ -408,11 +416,17 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
 
     // assignment
     case EXPR_ASSIGN:
+      // operands must be of same type
       if (!type_equals(left_expr_type, right_expr_type)) {
        error_status = expr_type_error_handle(ASSIGN, (void*)e->left, (void*)left_expr_type, (void*)e->right, (void*)right_expr_type);
       }
+      // LHS must be LValue
       if (e->left->kind != EXPR_NAME && e->left->kind != EXPR_SUBSCRIPT) {
-       error_status = expr_type_error_handle(LVAL, e->left, left_expr_type, NULL, NULL);
+       error_status = expr_type_error_handle(LVAL, (void*)e->left, (void*)left_expr_type, NULL, NULL);
+      }
+      // LHS must be mutable
+      if (left_expr_type->kind == TYPE_STRING) {
+        error_status = expr_type_error_handle(IMMUTABLE, (void*)e->left, (void*)left_expr_type, NULL, NULL);
       }
       else result = type_copy(left_expr_type);
       break;

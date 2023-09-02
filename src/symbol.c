@@ -6,7 +6,7 @@
 char symbol_address[MAX_LENGTH];
 
 struct symbol* symbol_create(symbol_t kind, struct type* type, char* name) {
-  struct symbol* sym = malloc(sizeof(*sym));
+  struct symbol* sym = malloc(sizeof(struct symbol));
   if (sym) {
     sym->kind = kind;
     sym->name = name;
@@ -44,7 +44,7 @@ void symbol_fprint(FILE* fp, struct symbol* s) {
 
 struct symbol* symbol_copy(struct symbol* s) {
   if (!s) return NULL;
-  struct symbol* copy = malloc(sizeof(*copy));
+  struct symbol* copy = malloc(sizeof(struct symbol));
   if (copy) {
     copy->kind = s->kind;
     copy->which = s->which;
