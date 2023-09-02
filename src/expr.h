@@ -5,8 +5,10 @@
 #include "symbol.h"
 #include "register.h"
 #include "symbol_table.h"
+
+bool is_const_expr; // used for error handling
 struct symbol_table; // forward decl for reasons
-typedef enum { MATH = 1, RELATE, LOGIC, EQUAL, ASSIGN, LVAL, INIT, SUBSCRIPT, FCALL, PARAM, IMMUTABLE } type_error_t;
+typedef enum { MATH = 1, RELATE, LOGIC, EQUAL, ASSIGN, LVAL, INIT, SUBSCRIPT, FCALL, PARAM, IMMUTABLE} type_error_t;
 typedef enum {
         // unary operators
 	EXPR_INC = 0, // l++
@@ -78,7 +80,7 @@ void expr_destroy(struct expr** e);
 struct expr* expr_copy(struct expr* e);
 
 /*
-Looks up symbols in the symbol table.
+Looks up symbols in the symbol table used within expressions.
 */
 int expr_resolve(struct symbol_table* st, struct expr* e);
 

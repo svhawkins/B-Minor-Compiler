@@ -8,7 +8,7 @@ int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2) {
   fprintf(ERR_OUT, "ERROR [%d]: ", kind);
   switch (kind) {
     case DECL_NULL: /* array size field is null when it should have a contained expression */
-    fprintf(ERR_OUT, "NULL array size. Array sizes must be NON-NULL\n");
+    fprintf(ERR_OUT, "Indeterminate array size. Arrays must have a size expression or an associated value.\n");
     fprintf(ERR_OUT, "Of symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
     fprintf(ERR_OUT, "With value: "); if (ctx2) { expr_fprint(ERR_OUT, (struct expr*)ctx2); } else { fprintf(ERR_OUT, "[null]"); }
     break;
@@ -16,6 +16,11 @@ int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2) {
     fprintf(ERR_OUT, "Array size is non-integer. Array sizes must have expressions to evaulate to INTEGER.\n");
     fprintf(ERR_OUT, "Of symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
     fprintf(ERR_OUT, "With array size expression type: "); type_fprint(ERR_OUT, (struct type*)ctx2);
+    break;
+    case DECL_CONST: /* array declaration sizes and global variable declarations must be constant */
+    fprintf(ERR_OUT, "Array size or global variable value expression is non-constant.\n");
+    fprintf(ERR_OUT, "Array size expressions or global variable expressions cannot contain variables.\n");
+    fprintf(ERR_OUT, "in declaration: "); decl_fprint(ERR_OUT, (struct decl*)ctx1, 0);
     break;
   }
   fprintf(ERR_OUT, "\n");
@@ -82,15 +87,24 @@ void decl_destroy(struct decl** d) {
 
 
 int decl_resolve(struct symbol_table* st, struct decl* d) {
-  if (!st || !d) return error_status;
+  if (!st || !d) return error_status; decl_error = NO_ERROR;
   symbol_t kind = symbol_table_scope_level(st) > 1 ? SYMBOL_LOCAL : SYMBOL_GLOBAL;
+  // does this declaration require constant expressions?
+  is_const_expr = ((d->value && kind == SYMBOL_GLOBAL) || d->type->size);
+
   d->symbol = symbol_create(kind, type_copy(d->type), strdup(d->name));
   // look up symbol in table
   struct symbol* sym = symbol_table_scope_lookup_current(st, d->name);
   if (!sym) {
     // add symbol to the table
-    if (d->value) { error_status = expr_resolve(st, d->value); }
-    if (d->type->size) { error_status = expr_resolve(st, d->type->size); }
+    if (d->type->size) { 
+      error_status = expr_resolve(st, d->type->size);
+      if (decl_error) { error_status = decl_error_handle(DECL_CONST, (void*)d, NULL); }
+    }
+    if (d->value) {
+      error_status = expr_resolve(st, d->value);
+      if (decl_error) { error_status = decl_error_handle(DECL_CONST, (void*)d, NULL); }
+    }
     if (d->code || d->value) { d->symbol->defined = true; }
     symbol_table_scope_bind(st, d->name, d->symbol);
   } else {
@@ -117,6 +131,8 @@ int decl_resolve(struct symbol_table* st, struct decl* d) {
 
 int decl_typecheck(struct symbol_table* st, struct decl* d) {
   if (!d) return error_status;
+
+  // corresponding value expressions must evaluate to same type declared
   if (d->value) {
     struct type* t = expr_typecheck(st, d->value);
     // auto declarations update their type to value type.
@@ -129,14 +145,18 @@ int decl_typecheck(struct symbol_table* st, struct decl* d) {
     }
     type_destroy(&t);
   }
+  
+  // arrays cannot have both NULL size and value
   if (d->type->kind == TYPE_ARRAY) {
-    if (!d->type->size) { error_status = decl_error_handle(DECL_NULL, (void*)d->symbol, (void*)d->value); }
-    else {
+    if (!d->type->size && !d->value) { error_status = decl_error_handle(DECL_NULL, (void*)d->symbol, (void*)d->value); }
+    else if (d->type->size) {
         struct type* size_type = expr_typecheck(st, d->type->size);
         if (size_type->kind != TYPE_INTEGER) { error_status = decl_error_handle(DECL_NINT, (void*)d->symbol, (void*)size_type); }
         type_destroy(&size_type);
     }
   }
+  
+  // defined functions must let their return value match declared return type
   if (d->type->kind == TYPE_FUNCTION && d->symbol) {
    symbol_table_scope_enter(st);
    if (d->code) {

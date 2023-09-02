@@ -273,6 +273,9 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
   int error_status = 0;
   switch(e->kind) {
   case EXPR_NAME:
+    // constant expressions cannot contain names
+    if (is_const_expr) { error_status = decl_error = DECL_CONST; }
+
     // check to see if the symbol has already been declared
     e->symbol = symbol_table_scope_lookup(st, e->name);
     if (!e->symbol) {

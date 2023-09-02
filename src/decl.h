@@ -9,8 +9,9 @@
 #include "register.h"
 
 struct symbol_table; // forward decl for reasons
-typedef enum { DECL_NULL = 1, DECL_NINT } decl_error_t;
+typedef enum { NO_ERROR = 0, DECL_NULL = 1, DECL_NINT, DECL_CONST } decl_error_t;
 int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2);
+decl_error_t decl_error; extern bool is_const_expr;
 
 
 struct decl {
@@ -42,6 +43,8 @@ Adds symbols to the symbol table:
 */
 int decl_resolve(struct symbol_table* st, struct decl* d);
 
+
+// typechecks declarations, seeing if bodies/values match declared type(s)
 int decl_typecheck(struct symbol_table*, struct decl* d);
 
 #endif /* DECL_H */
