@@ -23,6 +23,7 @@ struct type {
 	struct param_list* params;
 	struct type* subtype;
 	struct expr* size; // used to properly print arrays
+	int64_t actual_size; // used for array size value tracking during codegen
 };
 
 struct type* type_create(type_t kind, struct type* subtype, struct param_list* params, struct expr* size);
