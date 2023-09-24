@@ -30,6 +30,8 @@ Changes since assignment 4:
 7. <<struct>>_codegen functions now have an 'fprintf' variant, as <<struct>>_fcodegen():
   These have an additonal parameter of the file pointer, which defaults to stdout.
 
+8. Updated typechecker for constant expressions.
+
 ****************************
 HIDDEN SYMBOLS
 

@@ -459,7 +459,7 @@ int expr_codegen(struct expr* e) {
     // load the literal
     case EXPR_INT:
     case EXPR_CH:
-    case EXPR_BOOL:
+    case EXPR_BOOL: /* MOVQ $N, %R*/
       e->reg = register_scratch_alloc();
       printf("MOVQ $%ld, %s\n", e->literal_value, register_scratch_name(e->reg));
       break;
@@ -470,23 +470,25 @@ int expr_codegen(struct expr* e) {
       printf("LEAQ %s, %s\n", symbol_codegen(e->symbol), register_scratch_name(e->reg));
       break;
     // load the symbol
-    case EXPR_NAME:
+    case EXPR_NAME: /* MOVQ <name>, %R / MOVQ %rsp(N), %R */
       // TO DO: what if the symbol is an array or string? then LEAQ!
       e->reg = register_scratch_alloc();
       printf("MOVQ %s, %s\n", symbol_codegen(e->symbol), register_scratch_name(e->reg));
       break;
 
     // arithmetic + logical operations
-    case EXPR_ASSIGN:
-    case EXPR_ADD:
-    case EXPR_SUB:
+    case EXPR_ASSIGN: /* MOVQ %RR, %RL*/
+    case EXPR_ADD: /* ADDQ %RL, %RR */
+    case EXPR_POS: /* ADDQ $0, %RL*/
+    case EXPR_SUB: /* SUBQ %RL, %RR */
+    case EXPR_NEG: /* SUBQ $0, %RL*/
+    case EXPR_AND: /* ANDQ %RL, %RR */
+    case EXPR_OR: /* ORQ %RL, %RR */
+
+    /* "unary" */
     case EXPR_INC:
     case EXPR_DEC:
-    case EXPR_POS:
-    case EXPR_NEG:
     case EXPR_NOT:
-    case EXPR_AND:
-    case EXPR_OR:
 
     // bit harder
     case EXPR_MULT:
