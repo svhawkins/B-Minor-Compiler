@@ -32,6 +32,8 @@ Changes since assignment 4:
 
 8. Updated typechecker for constant expressions.
 
+9. Error handlers now display the error enum name to be more descriptive. [resolves isue #6]
+
 ****************************
 HIDDEN SYMBOLS
 

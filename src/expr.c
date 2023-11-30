@@ -3,14 +3,32 @@
 #include <stdbool.h>
 #include "expr.h"
 
+// it is here as not realloc every time
+char buffer[16];
+
 // handles error messages
+char* expr_strerror(type_error_t kind) {
+  switch(kind) {
+    case MATH: strcpy(buffer, "EMATH"); break;
+    case RELATE: strcpy(buffer, "ERELATE"); break;
+    case LOGIC: strcpy(buffer, "ELOGIC"); break;
+    case EQUAL: strcpy(buffer, "EEQUAL"); break;
+    case ASSIGN: strcpy(buffer,"EASSIGN"); break;
+    case LVAL: strcpy(buffer, "ELVAL"); break;
+    case IMMUTABLE: strcpy(buffer, "EIMMUTABLE"); break;
+    case SUBSCRIPT: strcpy(buffer, "ESUBSCRIPT"); break;
+    case FCALL: strcpy(buffer, "EFCALL"); break;
+    case PARAM: strcpy(buffer, "EPARAM");
+  }
+  return buffer;
+}
 int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void* ctx2, void* type_ctx2) {
-  fprintf(ERR_OUT, "ERROR %d:\n", kind);
+  fprintf(ERR_OUT, "ERROR %s (%d):\n", expr_strerror(kind), kind);
   switch (kind) {
     case MATH: /* operands must be integers */
     case RELATE:
       fprintf(ERR_OUT, "Invalid operand type(s).\n");
-      fprintf(ERR_OUT, "Operand(s) must be of type INTEGER.\n");
+      fprintf(ERR_OUT, "All operand(s) must be of type INTEGER.\n");
       fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
       fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
       if (ctx2) {
@@ -20,7 +38,7 @@ int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void*
     break;
     case LOGIC: /* operands must be booleans */
       fprintf(ERR_OUT, "Invalid operand type(s).\n");
-      fprintf(ERR_OUT, "Operand(s) must be of type BOOLEAN.\n");
+      fprintf(ERR_OUT, "All operand(s) must be of type BOOLEAN.\n");
       fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
       fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
       if (ctx2) {
@@ -30,7 +48,7 @@ int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void*
     break;
     case EQUAL: /* operands must be the same, cannot be function/array */
       fprintf(ERR_OUT, "Invalid operand type(s).\n");
-      fprintf(ERR_OUT, "Operand(s) must be of type INTEGER, CHAR, BOOLEAN, or STRING.\n");
+      fprintf(ERR_OUT, "Operand(s) must be the same type of either INTEGER, CHAR, BOOLEAN, or STRING.\n");
       fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
       fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
       if (ctx2) {
@@ -61,7 +79,7 @@ int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void*
     break;
     case INIT: /* operands within list must be the same */
       fprintf(ERR_OUT, "Invalid operand type(s).\n");
-      fprintf(ERR_OUT, "Operand(s) within initializer list must be of the same type.\n");
+      fprintf(ERR_OUT, "All Operand(s) within initializer list must be of the same type.\n");
       fprintf(ERR_OUT, "Operand 1: "); expr_fprint(ERR_OUT, (struct expr*)ctx1);
       fprintf(ERR_OUT, " with type "); type_fprint(ERR_OUT, (struct type*)type_ctx1);
       if (ctx2) {

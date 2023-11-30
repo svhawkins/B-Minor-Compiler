@@ -3,22 +3,34 @@
 #include "stmt.h"
 
 extern const char* SPACE;
+char buffer[16];
+
+char* stmt_strerror(stmt_error_t kind) {
+  switch(kind) {
+    case STMT_BOOLEAN: strcpy(buffer, "EBOOLEAN"); break;
+    case STMT_TYPE: strcpy(buffer, "ETYPE"); break;
+  }
+  return buffer;
+}
 
 int stmt_error_handle(stmt_error_t kind, void* ctx1, void* ctx2) {
- fprintf(ERR_OUT, "ERROR %d: ", kind);
+ fprintf(ERR_OUT, "ERROR %s(%d): ", stmt_strerror(kind), kind);
   switch(kind) {
     case STMT_BOOLEAN: /* resulting expression type is not of boolean type/bad expression */
       fprintf(ERR_OUT, "Invalid conditional expression:\n");
-      fprintf(ERR_OUT, "Expected boolean expression (not comma nor assign): "); type_fprint(ERR_OUT, (struct type*)ctx2);
+      fprintf(ERR_OUT, "Expected boolean expression (not comma nor assign), got type: "); type_fprint(ERR_OUT, (struct type*)ctx2);
       fprintf(ERR_OUT, "\n in statement:\n\t"); stmt_fprint(ERR_OUT, (struct stmt*)ctx1, 0);
+      fprintf(ERR_OUT, "\n");
       break;
     case STMT_TYPE: /* invalid type for printing */
       fprintf(ERR_OUT, "Invalid expression type(s) for print:\t");
-      fprintf(ERR_OUT, "Expression type(s) must not be of void, array, or function.");
-      stmt_fprint(ERR_OUT, (struct stmt*)ctx1, 0); fprintf(ERR_OUT, "\n");
+      fprintf(ERR_OUT, "Expression type(s) must not be of void, array, or function.\n");
+      fprintf(ERR_OUT, "Expression "); expr_fprint(ERR_OUT, ((struct stmt*)ctx1)->expr);
+      fprintf(ERR_OUT, " has type "); type_fprint(ERR_OUT, (struct type*)ctx2);
+      fprintf(ERR_OUT, " in statement "); stmt_fprint(ERR_OUT, (struct stmt*)ctx1, 0); fprintf(ERR_OUT, "\n");
       break;
   }
-  fprintf(ERR_OUT, "\n");
+  fprintf(ERR_OUT, "\0");
   global_error_count++;
   return kind;
 }

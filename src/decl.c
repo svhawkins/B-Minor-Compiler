@@ -4,8 +4,18 @@
 
 extern void print_indent(FILE* fp, int indent);
 const char* SPACE = "  ";
+char buffer[16]; // for error strings
+char* decl_strerror(decl_error_t kind) {
+  switch(kind) {
+    case DECL_NULL: strcpy(buffer, "ENULL"); break;
+    case DECL_NINT: strcpy(buffer, "ENINT"); break;
+    case DECL_CONST: strcpy(buffer, "ECONST"); break;
+  }
+  return buffer;
+}
+
 int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2) {
-  fprintf(ERR_OUT, "ERROR [%d]: ", kind);
+  fprintf(ERR_OUT, "ERROR %s (%d): ", decl_strerror(kind), kind);
   switch (kind) {
     case DECL_NULL: /* array size field is null when it should have a contained expression */
     fprintf(ERR_OUT, "Indeterminate array size. Arrays must have a size expression or an associated value.\n");
@@ -23,7 +33,7 @@ int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2) {
     fprintf(ERR_OUT, "in declaration: "); decl_fprint(ERR_OUT, (struct decl*)ctx1, 0);
     break;
   }
-  fprintf(ERR_OUT, "\n");
+  fprintf(ERR_OUT, "\n\n");
   global_error_count++;
   return kind;
 }

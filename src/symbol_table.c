@@ -3,12 +3,22 @@
 
 /* implementation file for symbol table (stack of void pointers) */
 
+char buffer[16];
 
 // helper functions
 
 // handles symbol table errors and recovery
+char* symbol_table_strerror(symbol_error_t kind) {
+  switch(kind) {
+    case SYM_UNDEF: strcpy(buffer, "EUNDEF"); break;
+    case SYM_REDEF: strcpy(buffer, "EREDEF"); break;
+    case SYM_TYPE: strcpy(buffer, "ESYMTYPE"); break;
+    case SYM_PARAM: strcpy(buffer, "ESYMPARAM"); break;
+  }
+  return buffer;
+}
 int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
-  fprintf(ERR_OUT, "ERROR %d:\n", kind);
+  fprintf(ERR_OUT, "ERROR %s (%d):\n", symbol_table_strerror(kind), kind);
   switch(kind) {
     case SYM_UNDEF: /* undefined symbol used. recover by adding it to table with default type integer */
     fprintf(ERR_OUT, "Undefined symbol by name %s.\n Adding symbol as INTEGER.", ((struct expr*)ctx2)->name);
@@ -16,10 +26,12 @@ int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
     struct symbol* s = symbol_create(scope, type_create(TYPE_INTEGER, NULL, NULL, NULL), strdup(((struct expr*)ctx2)->name));
     symbol_table_scope_bind((struct symbol_table*)ctx1, ((struct expr*)ctx2)->name, s);
     ((struct expr*)ctx2)->symbol = s;
+    fprintf(ERR_OUT, "\n");
     break;
     case SYM_REDEF: /* symbol name is already being used in current scope */
-    fprintf(ERR_OUT, "Symbol "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
-    fprintf(ERR_OUT, "\n\talready defined in current scope as: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx2);
+    fprintf(ERR_OUT, "Symbol %s already defined in current scope as: ", ((struct symbol*)ctx2)->name);
+    symbol_fprint(ERR_OUT, (struct symbol*)ctx2);
+    fprintf(ERR_OUT, ".Failed to bind to new symbol "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
     break;
     case SYM_TYPE: /* symbol type does not match its value/return type */
     if (((struct symbol*)ctx1)->type->kind == TYPE_FUNCTION) {
@@ -34,6 +46,7 @@ int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
     case SYM_PARAM: /* parameter types do not match definiton */
     fprintf(ERR_OUT, "Parameter list declared by symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
     fprintf(ERR_OUT, " does not match definition: "); type_fprint(ERR_OUT, (struct type*)ctx2);
+    fprintf(ERR_OUT, "\n");
     break;
   }
   fprintf(ERR_OUT, "\n");

@@ -2,12 +2,22 @@
 
 char* scratch_name[NSCRATCH] = { "%%rbx", "%%r10", "%%r11", "%%r12", "%%r13", "%%r14", "%%r15" };
 int scratch_kind[NSCRATCH] = { CALLEE, CALLER, CALLER, CALLEE, CALLEE, CALLEE, CALLEE};
+char buffer[16];
 
 /*
 Handles register/code generation errors
 */
+char* register_strerror(reg_error_t kind) {
+  switch(kind) {
+    case REG_INVALID: strcpy(buffer, "EREGINVALID"); break;
+    case REG_AINUSE: strcpy(buffer, "EREGAINUSE"); break;
+    case REG_NINUSE: strcpy(buffer, "EREGNINUSE");
+    case LABEL_MAX: strcpy(buffer, "EREGMAX"); break;
+  }
+  return buffer;
+}
 void register_error_handle(reg_error_t kind, int ctx) {
-  fprintf(REG_ERR_OUT, "CODEGEN ERROR: %d\n\t", kind);
+  fprintf(REG_ERR_OUT, "CODEGEN ERROR: %s (%d)\n\t", register_strerror(kind), kind);
   switch(kind) {
     case REG_INVALID: /* out of bounds register selected */
       fprintf(REG_ERR_OUT, "register index %d is out of bounds.\n", ctx);
@@ -15,7 +25,7 @@ void register_error_handle(reg_error_t kind, int ctx) {
       fprintf(REG_ERR_OUT, "\tfarg register indices are between 0 and 5 (inclusive).\n");
       break;
     case REG_AINUSE: /* all registers are in use */
-      fprintf(REG_ERR_OUT, "all registers are currently in use.\n\tfailed to allocated for another.\n");
+      fprintf(REG_ERR_OUT, "all registers are currently in use.\n\tfailed to allocate for another.\n");
       break;
     case REG_NINUSE: /* selected register is already free to use */
       fprintf(REG_ERR_OUT, "selected register %s is already not in use.\n", scratch_register[ctx].name);
@@ -24,7 +34,7 @@ void register_error_handle(reg_error_t kind, int ctx) {
       fprintf(REG_ERR_OUT, "failed to create new label. maximum has been reached.\n");
       break;
   }
-  fprintf(stderr, "\n");
+  fprintf(REG_ERR_OUT, "\n");
   register_error_status = kind;
   register_error_count++;
   if (!is_test) exit(kind);
