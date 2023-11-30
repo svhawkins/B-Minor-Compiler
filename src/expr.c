@@ -486,9 +486,9 @@ int expr_codegen(struct expr* e) {
     case EXPR_OR: /* ORQ %RL, %RR */
 
     /* "unary" */
-    case EXPR_INC:
-    case EXPR_DEC:
-    case EXPR_NOT:
+    case EXPR_INC: /* INC %RL */
+    case EXPR_DEC: /* DEC %RL */
+    case EXPR_NOT: /* NOT %RL */
 
     // bit harder
     case EXPR_MULT:
@@ -497,6 +497,8 @@ int expr_codegen(struct expr* e) {
     case EXPR_SUBSCRIPT:
 
    // comparisions
+   /* CMP %RL, %RR */
+   // TODO: what about boolean variables not within conditions?
    case EXPR_EQ:
    case EXPR_NEQ:
    case EXPR_LESS:
