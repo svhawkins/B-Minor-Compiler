@@ -258,10 +258,14 @@ void expr_fprint(FILE* fp, struct expr* e) {
 void expr_print(struct expr* e) { expr_fprint(stdout, e); }
 
 void expr_destroy(struct expr** e) {
-  if (!(*e)) return;
+  if (!(*e)) { return; }
   expr_destroy(&((*e)->left));
   expr_destroy(&((*e)->right));
-  if ((*e)->kind == EXPR_NAME) free((void*)(*e)->name);
+
+  // free the pointers
+  if ((*e)->kind == EXPR_NAME) { free((void*)(*e)->name); }
+  if ((*e)->string_literal) { free((void*)(*e)->string_literal); }
+  if ((*e)->symbol) { (*e)->symbol = NULL; }
   free(*e); *e = NULL;
 }
 
@@ -303,8 +307,8 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
   case EXPR_STR:
     // store the string literal symbol as a hidden symbol in the symbol table
     label_name(label_create()); // stored in global label_str
-    e->symbol = symbol_create(SYMBOL_HIDDEN, type_create(TYPE_STRING, NULL, NULL, NULL), strdup(label_str));
-    symbol_table_scope_bind(st, strdup(label_str), e->symbol);
+    e->symbol = symbol_create(SYMBOL_HIDDEN, type_create(TYPE_STRING, NULL, NULL, NULL), label_str);
+    symbol_table_scope_bind(st, label_str, e->symbol);
 
     // add it to hidden delcarations
     struct decl* d = decl_create(strdup(label_str), type_create(TYPE_STRING, NULL, NULL, NULL), e, NULL, NULL);

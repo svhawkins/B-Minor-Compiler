@@ -30,7 +30,6 @@ Status test_symbol_codegen(void);
 int main(int argc, const char* argv[]) {
   ERR_OUT = REG_ERR_OUT = fopen("error_output_codegen.txt", "w");
   if (!ERR_OUT || !REG_ERR_OUT) { ERR_OUT = REG_ERR_OUT = stderr; }
-
   Status (*tests[])(void) = {
        test_scratch_alloc_success,
        test_scratch_alloc_fail_ainuse,
@@ -52,6 +51,7 @@ int main(int argc, const char* argv[]) {
 
   printf("Passed: %d/%d\n", n_pass, n_tests);
   printf("Failed: %d/%d\n", (n_tests - n_pass), n_tests);
+  fclose(REG_ERR_OUT); // no ERR_OUT as it just points to REG_ERR_OUT
   return 0;
 }
 

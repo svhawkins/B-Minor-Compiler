@@ -142,6 +142,11 @@ void symbol_table_destroy(struct symbol_table** st) {
   stack_destroy(&((*st)->stack)); free(*st);
   *st = NULL;
   global_error_count = 0;
+
+  // free the hidden symbols
+  decl_destroy(&decl_hidden_list);
+  decl_hidden_list_tail = NULL;
+  decl_hidden_list = NULL;
 }
 
 /*
