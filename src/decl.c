@@ -86,7 +86,7 @@ void decl_fprint(FILE* fp, struct decl* d, int indent) {
 void decl_print(struct decl* d, int indent) { decl_fprint(stdout, d, indent); }
 
 void decl_destroy(struct decl** d) {
-  if (!(*d)) return;
+  if (!d || !(*d)) return;
   free((*d)->name);
   type_destroy(&((*d)->type));
   expr_destroy(&((*d)->value));

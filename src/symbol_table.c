@@ -211,7 +211,7 @@ Failure if:
 int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct symbol* sym) {
   if (!st || !st->stack->items || !(st->top + 1) || !(st->stack->items[st->top])) return 0;
   int scope_index = (sym && sym->kind == SYMBOL_HIDDEN) ? 0 : st->top; // hidden symbols always global
-  int status = (hash_table_insert((struct hash_table*)st->stack->items[scope_index], name, (void*)sym) == 1) ? 1 : 0;
+  int status = (hash_table_insert((struct hash_table*)st->stack->items[scope_index], name, (void*)sym) == 1);
   // update which count for successful binding of non-globals
   if (status && (stack_size(st->stack) > 1) && sym && !(sym->kind == SYMBOL_GLOBAL || sym->kind == SYMBOL_HIDDEN)) {
     which_count++; sym->which = which_count;

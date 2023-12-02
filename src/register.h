@@ -17,7 +17,7 @@ typedef enum { REG_INVALID = 1, REG_AINUSE, REG_NINUSE, LABEL_MAX } reg_error_t;
 struct reg {
   const char* name;
   bool inuse;
-  int kind; // caller, caller, farg
+  int kind; // caller, callee, farg
   int64_t value; // intermediate value tracking
 }; typedef struct reg Register;
 
@@ -32,7 +32,8 @@ int register_error_count;
 int register_error_status;
 bool is_test;
 char label_str[8]; // max int 5 digits, 3 for .L and \0
-FILE* REG_ERR_OUT;
+FILE* REG_ERR_OUT; // file pointer for error output logging
+FILE* CODEGEN_OUT; // file pointer for generated code
 
 // functions
 

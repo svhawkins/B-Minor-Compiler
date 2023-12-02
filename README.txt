@@ -48,12 +48,12 @@ DONE3. implement + test symbol_codegen
 
 use assembly emulator to help you.
 4. implement + test expr_codegen (the easy ones)
-	- primitive expressions
+	DONE- primitive expressions
 		DONEimplement
-		    test
-	- arithmetic + logical expressions (excluding exponentiation)
-		implement
-		test
+		DONEtest
+	DONE- arithmetic + logical expressions (excluding exponentiation/division/multiplication)
+		DONEimplement
+		DONEtest
 	- comparision operations
 		implement
 		test
@@ -63,3 +63,15 @@ use assembly emulator to help you.
 	- fcall
 		implement
 		test
+
+
+****NOTES
+
+flags to implement
+-o flag added to indicate output file. default name 'output.s'. can also just output redirection.
+-i flag added to indicate input file, if any. defaults to stdin. can also just do input redirection.
+-I flag added to indicate 'interactive'. input is stdin and output is stdout. this can be overwrites - or -i options.
+-v flag added for 'verbose'. by default off. adds slight explanatory comments to the generated code.
+
+since this only generates a .s file (human-readable assembly), the generated code is not guaranteed to work
+if put through an assembler+linker+loader.

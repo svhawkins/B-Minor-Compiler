@@ -168,7 +168,7 @@ struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right )
     e->literal_value = 0;
     e->string_literal = NULL;
     e->symbol = NULL;
-    //e->reg = -1;
+    e->reg = -1;
   }
   return e;
 }
@@ -258,14 +258,21 @@ void expr_fprint(FILE* fp, struct expr* e) {
 void expr_print(struct expr* e) { expr_fprint(stdout, e); }
 
 void expr_destroy(struct expr** e) {
-  if (!(*e)) { return; }
+  if (!e || !(*e)) { return; }
   expr_destroy(&((*e)->left));
   expr_destroy(&((*e)->right));
 
   // free the pointers
   if ((*e)->kind == EXPR_NAME) { free((void*)(*e)->name); }
-  if ((*e)->string_literal) { free((void*)(*e)->string_literal); }
+
+  // since string literals are part of the symbol table
+  //if ((*e)->string_literal) { free((void*)(*e)->string_literal); }
   if ((*e)->symbol) { (*e)->symbol = NULL; }
+
+  // // free the register
+  if ((*e)->reg > 0) { register_scratch_free((*e)->reg); }
+
+
   free(*e); *e = NULL;
 }
 
@@ -310,11 +317,11 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
     e->symbol = symbol_create(SYMBOL_HIDDEN, type_create(TYPE_STRING, NULL, NULL, NULL), label_str);
     symbol_table_scope_bind(st, label_str, e->symbol);
 
-    // add it to hidden delcarations
-    struct decl* d = decl_create(strdup(label_str), type_create(TYPE_STRING, NULL, NULL, NULL), e, NULL, NULL);
-    if (!decl_hidden_list) { decl_hidden_list = d; }
-    else { decl_hidden_list_tail->next = d; }
-    decl_hidden_list_tail = d;
+    // // add it to hidden delcarations
+    // struct decl* d = decl_create(strdup(label_str), type_create(TYPE_STRING, NULL, NULL, NULL), expr_copy(e), NULL, NULL);
+    // if (!decl_hidden_list) { decl_hidden_list = d; }
+    // else { decl_hidden_list_tail->next = d; }
+    // decl_hidden_list_tail = d;
 
     break;
   default:
@@ -483,34 +490,59 @@ int expr_codegen(struct expr* e) {
     case EXPR_CH:
     case EXPR_BOOL: /* MOVQ $N, %R*/
       e->reg = register_scratch_alloc();
-      printf("MOVQ $%ld, %s\n", e->literal_value, register_scratch_name(e->reg));
+      fprintf(CODEGEN_OUT, "MOVQ $%ld, %s\n", e->literal_value, register_scratch_name(e->reg));
       break;
     // load the address
     case EXPR_STR:
       // TO DO: this solution only works for strings stored as variables. what about string literals?
       e->reg = register_scratch_alloc();
-      printf("LEAQ %s, %s\n", symbol_codegen(e->symbol), register_scratch_name(e->reg));
+      fprintf(CODEGEN_OUT, "LEAQ %s, %s\n", symbol_codegen(e->symbol), register_scratch_name(e->reg));
       break;
     // load the symbol
     case EXPR_NAME: /* MOVQ <name>, %R / MOVQ %rsp(N), %R */
       // TO DO: what if the symbol is an array or string? then LEAQ!
       e->reg = register_scratch_alloc();
-      printf("MOVQ %s, %s\n", symbol_codegen(e->symbol), register_scratch_name(e->reg));
+      fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", symbol_codegen(e->symbol), register_scratch_name(e->reg));
       break;
 
     // arithmetic + logical operations
     case EXPR_ASSIGN: /* MOVQ %RR, %RL*/
+      fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      register_scratch_free(e->left->reg);
+      break;
     case EXPR_ADD: /* ADDQ %RL, %RR */
+      fprintf(CODEGEN_OUT, "ADDQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      register_scratch_free(e->left->reg);
+      break;
     case EXPR_POS: /* ADDQ $0, %RL*/
+      fprintf(CODEGEN_OUT, "ADDQ %s, %s\n", "$0", register_scratch_name(e->right->reg));
+      break;
     case EXPR_SUB: /* SUBQ %RL, %RR */
+      fprintf(CODEGEN_OUT, "SUBQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      register_scratch_free(e->left->reg);
+      break;
     case EXPR_NEG: /* SUBQ $0, %RL*/
+      fprintf(CODEGEN_OUT, "SUBQ %s, %s\n", "$0", register_scratch_name(e->right->reg));
+      break;
     case EXPR_AND: /* ANDQ %RL, %RR */
+      fprintf(CODEGEN_OUT, "ANDQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      register_scratch_free(e->left->reg);
+      break;
     case EXPR_OR: /* ORQ %RL, %RR */
+      fprintf(CODEGEN_OUT, "ORQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      register_scratch_free(e->left->reg);
+      break;
 
     /* "unary" */
     case EXPR_INC: /* INC %RL */
+      fprintf(CODEGEN_OUT, "INCQ %s\n", register_scratch_name(e->left->reg));
+      break;
     case EXPR_DEC: /* DEC %RL */
+      fprintf(CODEGEN_OUT, "DECQ %s\n", register_scratch_name(e->left->reg));
+      break;
     case EXPR_NOT: /* NOT %RL */
+      fprintf(CODEGEN_OUT, "NOTQ %s\n", register_scratch_name(e->left->reg));
+      break;
 
     // bit harder
     case EXPR_MULT:

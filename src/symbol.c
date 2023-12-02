@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "symbol.h"
-#define MAX_LENGTH 256 // maximum length of variable name and more than enough digits!
-char symbol_address[MAX_LENGTH];
 
 struct symbol* symbol_create(symbol_t kind, struct type* type, char* name) {
   struct symbol* sym = malloc(sizeof(struct symbol));
@@ -62,6 +60,6 @@ const char* symbol_codegen(struct symbol* s) {
     default: strcpy(symbol_address, "\0"); sprintf(symbol_address, "-%d(%%rbp)", (s->which + 1) * QUAD); break;
   }
   s->address = strdup(symbol_address);
-  return symbol_address;
+  return s->address;
 }
 

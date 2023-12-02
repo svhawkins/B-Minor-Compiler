@@ -1,6 +1,6 @@
 #include "register.h"
 
-char* scratch_name[NSCRATCH] = { "%%rbx", "%%r10", "%%r11", "%%r12", "%%r13", "%%r14", "%%r15" };
+char* scratch_name[NSCRATCH] = { "%rbx", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15" };
 int scratch_kind[NSCRATCH] = { CALLEE, CALLER, CALLER, CALLEE, CALLEE, CALLEE, CALLEE};
 char buffer[16];
 

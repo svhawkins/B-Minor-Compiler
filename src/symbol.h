@@ -3,6 +3,8 @@
 
 #include "type.h"
 #include "register.h"
+#define MAX_LENGTH 256 // maximum length of variable name and more than enough digits!
+char symbol_address[MAX_LENGTH];
 
 typedef enum {
 	SYMBOL_LOCAL,
