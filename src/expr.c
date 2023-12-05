@@ -509,39 +509,48 @@ int expr_codegen(struct expr* e) {
     case EXPR_ASSIGN: /* MOVQ %RR, %RL*/
       fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
       register_scratch_free(e->left->reg);
+      e->reg = e->right->reg;
       break;
     case EXPR_ADD: /* ADDQ %RL, %RR */
       fprintf(CODEGEN_OUT, "ADDQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
       register_scratch_free(e->left->reg);
-      break;
-    case EXPR_POS: /* ADDQ $0, %RL*/
-      fprintf(CODEGEN_OUT, "ADDQ %s, %s\n", "$0", register_scratch_name(e->right->reg));
+      e->reg = e->right->reg;
       break;
     case EXPR_SUB: /* SUBQ %RL, %RR */
       fprintf(CODEGEN_OUT, "SUBQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
       register_scratch_free(e->left->reg);
-      break;
-    case EXPR_NEG: /* SUBQ $0, %RL*/
-      fprintf(CODEGEN_OUT, "SUBQ %s, %s\n", "$0", register_scratch_name(e->right->reg));
+      e->reg = e->right->reg;
       break;
     case EXPR_AND: /* ANDQ %RL, %RR */
       fprintf(CODEGEN_OUT, "ANDQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
       register_scratch_free(e->left->reg);
+      e->reg = e->right->reg;
       break;
     case EXPR_OR: /* ORQ %RL, %RR */
       fprintf(CODEGEN_OUT, "ORQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
       register_scratch_free(e->left->reg);
+      e->reg = e->right->reg;
       break;
 
     /* "unary" */
+    case EXPR_POS: /* nothing happens */
+      e->reg = e->left->reg;
+      break;
+    case EXPR_NEG: /* NEG %RL*/
+      fprintf(CODEGEN_OUT, "NEGQ %s\n", register_scratch_name(e->left->reg));
+      e->reg = e->left->reg;
+      break;
     case EXPR_INC: /* INC %RL */
       fprintf(CODEGEN_OUT, "INCQ %s\n", register_scratch_name(e->left->reg));
+      e->reg = e->left->reg;
       break;
     case EXPR_DEC: /* DEC %RL */
       fprintf(CODEGEN_OUT, "DECQ %s\n", register_scratch_name(e->left->reg));
+      e->reg = e->left->reg;
       break;
     case EXPR_NOT: /* NOT %RL */
       fprintf(CODEGEN_OUT, "NOTQ %s\n", register_scratch_name(e->left->reg));
+      e->reg = e->left->reg;
       break;
 
     // bit harder
@@ -550,21 +559,70 @@ int expr_codegen(struct expr* e) {
     case EXPR_MOD:
     case EXPR_SUBSCRIPT:
 
-   // comparisions
-   /* CMP %RL, %RR */
-   // TODO: what about boolean variables not within conditions?
-   case EXPR_EQ:
-   case EXPR_NEQ:
-   case EXPR_LESS:
-   case EXPR_LEQ:
-   case EXPR_GREAT:
-   case EXPR_GEQ:
+   // relational expressions
+   /* CMP %RL, %RR
+      SET[] %RL
+
+    // these affect the LOW BYTE registers, therefore extend them:
+    MOVZBQ %[low byte register], %RL
+   */
+
+  // TODO: have a flag to indicate if part of a condition or not. the root SET[] will be set to a JMP/J[]
+
+   case EXPR_EQ: /* SETE %AL*/
+     fprintf(CODEGEN_OUT,"CMP %s, %s\nSETE %s\nMOVZBQ %s, %s\n",
+             register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
+             register_scratch_name_low(e->left->reg),
+             register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+     register_scratch_free(e->right->reg);
+     e->reg = e->left->reg;
+     break;
+   case EXPR_NEQ: /* SETNE %AL */
+     fprintf(CODEGEN_OUT,"CMP %s, %s\nSETNE %s\nMOVZBQ %s, %s\n",
+             register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
+             register_scratch_name_low(e->left->reg),
+             register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+     register_scratch_free(e->right->reg);
+     e->reg = e->left->reg;
+     break;
+   case EXPR_LESS: /* SETL %AL */
+     fprintf(CODEGEN_OUT,"CMP %s, %s\nSETL %s\nMOVZBQ %s, %s\n",
+             register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
+             register_scratch_name_low(e->left->reg),
+             register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+     register_scratch_free(e->right->reg);
+     e->reg = e->left->reg;
+     break;
+   case EXPR_LEQ: /* SETLE %AL */
+     fprintf(CODEGEN_OUT,"CMP %s, %s\nSETLE %s\nMOVZBQ %s, %s\n",
+             register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
+             register_scratch_name_low(e->left->reg),
+             register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+     register_scratch_free(e->right->reg);
+     e->reg = e->left->reg;
+     break;
+   case EXPR_GREAT: /* SETG %AL */
+     fprintf(CODEGEN_OUT,"CMP %s, %s\nSETG %s\nMOVZBQ %s, %s\n",
+             register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
+             register_scratch_name_low(e->left->reg),
+             register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+     register_scratch_free(e->right->reg);
+     e->reg = e->left->reg;
+     break;
+   case EXPR_GEQ: /* SETGE %AL */
+     fprintf(CODEGEN_OUT,"CMP %s, %s\nSETGE %s\nMOVZBQ %s, %s\n",
+             register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
+             register_scratch_name_low(e->left->reg),
+             register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+     register_scratch_free(e->right->reg);
+     e->reg = e->left->reg;
+     break;
 
 
    // may need their own helper functions
    case EXPR_EXP:
    case EXPR_INIT:
-   case EXPR_COMMA:
+   case EXPR_COMMA: // TODO: test multiple register allocations here
    default: break; // shouldnt come here but throw error?????
   }
 }

@@ -241,7 +241,9 @@ Status file_error(char* test_type) {
   return FAILURE;
 }
 
-void print_error(char* test, char* expect, char* value) { printf("Error:\t[%s]:\n\tExpected:\n[%s]\n\tReceived:\n[%s]\n", test, expect, value); }
+void print_error(char* test, char* expect, char* value) {
+  printf("Error:\t[%s]:\n\tExpected:\n[%s]\n\tReceived:\n[%s]\n", test, expect, value);
+}
 
 // testing expressions of the primitives, also the base case for expr_print
 Status test_expr_print_name(void) {
@@ -348,7 +350,11 @@ Status test_expr_print_op(void) {
   strcpy(test_type, "Testing: test_expr_print_op");
   Status status = SUCCESS;
 
-  char* expect = "x++\nx--\nx\n-x\n!x\nx ^ y\nx * y\nx / y\nx % y\nx + y\nx - y\nx <= y\nx < y\nx >= y\nx > y\nx == y\nx != y\nx && y\nx || y\nx = y\nx, y\nx[y]\nx(y)\n{x}\n";
+  char* expect =
+"x++\nx--\nx\n-x\n!x\nx ^ y\nx * y\nx / y\nx % y\nx + y\nx - y\n\
+x <= y\nx < y\nx >= y\nx > y\nx == y\nx != y\n\
+x && y\nx || y\nx = y\nx, y\nx[y]\nx(y)\n{x}\n";
+
   tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (expr_t kind = EXPR_INC; kind <= EXPR_INIT; kind++) {
     struct expr* e = (kind < EXPR_EXP || kind == EXPR_INIT) ? expr_create(kind, expr_create_name(strdup("x")), NULL) : expr_create(kind, expr_create_name(strdup("x")), expr_create_name(strdup("y")));
@@ -383,7 +389,11 @@ Status test_expr_print_op_left_assoc_binary(void) {
   strcpy(test_type, "Testing: test_expr_print_op");
   Status status = SUCCESS;
 
-  char* expect = "(a * b) * c\n(a / b) / c\n(a % b) % c\n(a + b) + c\n(a - b) - c\n(a <= b) <= c\n(a < b) < c\n(a >= b) >= c\n(a > b) > c\n(a == b) == c\n(a != b) != c\n(a && b) && c\n(a || b) || c\n";
+  char* expect =
+"(a * b) * c\n(a / b) / c\n(a % b) % c\n(a + b) + c\n(a - b) - c\n\
+(a <= b) <= c\n(a < b) < c\n(a >= b) >= c\n(a > b) > c\n(a == b) == c\n(a != b) != c\n\
+(a && b) && c\n(a || b) || c\n";
+
   tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (expr_t kind = EXPR_MULT; kind <= EXPR_OR; kind++) {
     struct expr* a = expr_create_name(strdup("a"));
@@ -1144,7 +1154,15 @@ Status test_stmt_print_while(void) {
 Status test_stmt_print_for_expr(void) {
   strcpy(test_type, "Testing: test_stmt_print_for_expr");
   Status status = SUCCESS;
-  char* expect = "for ( ; ; ) {}\nfor ( ; ; i++) {}\nfor ( ; i < n; ) {}\nfor ( ; i < n; i++) {}\nfor (i = 0; ; ) {}\nfor (i = 0; ; i++) {}\nfor (i = 0; i < n; ) {}\nfor (i = 0; i < n; i++) {}\n";
+  char* expect =
+"for ( ; ; ) {}\n\
+for ( ; ; i++) {}\n\
+for ( ; i < n; ) {}\n\
+for ( ; i < n; i++) {}\n\
+for (i = 0; ; ) {}\n\
+for (i = 0; ; i++) {}\n\
+for (i = 0; i < n; ) {}\n\
+for (i = 0; i < n; i++) {}\n";
 
   tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   for (int i = 0; i < (1 << 3); i++) {
@@ -1224,7 +1242,15 @@ Status test_print_program(void) {
   struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, i_init, NULL, NULL);
   struct decl* d = decl_create(strdup("main"), type_create(TYPE_FUNCTION, type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL), NULL, s, NULL);
 
-  char* expect = "main: function integer (argc: integer, argv: array [] string) = {\n  i: integer;\n  n: integer = 10;\n  for (i = 0; i < n; i++) {\n    print \"hello world!:)\";\n  }\n  return 0;\n}\n";
+  char* expect =
+"main: function integer (argc: integer, argv: array [] string) = {\n  \
+i: integer;\n  \
+n: integer = 10;\n  \
+for (i = 0; i < n; i++) {\n    \
+print \"hello world!:)\";\n  \
+}\n  \
+return 0;\n}\n";
+
   tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   decl_fprint(tmp, d, 0);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }

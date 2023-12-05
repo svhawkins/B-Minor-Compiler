@@ -23,7 +23,7 @@ typedef enum {
         EXPR_DIV, // l/r
         EXPR_MOD, // l%r
         EXPR_ADD, // l+r
-	EXPR_SUB, // l-r
+		EXPR_SUB, // l-r
         EXPR_LEQ, // l<=r
         EXPR_LESS, // l<r
         EXPR_GEQ, // l>=r
@@ -33,12 +33,12 @@ typedef enum {
         EXPR_AND, // l &&r
         EXPR_OR, // l || r
         EXPR_ASSIGN, // l = r
-	EXPR_COMMA, // l, r
+		EXPR_COMMA, // l, r
 
         // operators with stuff in the middle
         EXPR_SUBSCRIPT, // l[r]
         EXPR_FCALL, // l(r)
-	EXPR_INIT, // {l}
+		EXPR_INIT, // {l}
 
         // primitives
         EXPR_NAME,

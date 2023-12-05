@@ -20,6 +20,7 @@ Status test_scratch_free_fail_invalid(void);
 Status test_scratch_free_fail_ninuse(void);
 Status test_scratch_name_success(void);
 Status test_scratch_name_fail_invalid(void);
+Status test_scratch_name_fail_nohigh(void);
 Status test_label_create_success(void);
 Status test_label_create_fail_max(void);
 Status test_label_name(void);
@@ -39,6 +40,7 @@ Status test_expr_codegen_binary(void);
 Status test_expr_codegen_unary(void);
 
 // relational expressions
+Status test_expr_codegen_relate(void);
 
 // array expressions
 // Status test_expr_codegen_array_literal(void); // TODO --> expr inint
@@ -98,6 +100,7 @@ int main(void) {
        test_scratch_free_fail_ninuse,
        test_scratch_name_success,
        test_scratch_name_fail_invalid,
+       test_scratch_name_fail_nohigh,
        test_label_create_success,
        test_label_create_fail_max,
        test_label_name,
@@ -107,6 +110,7 @@ int main(void) {
        test_expr_codegen_name_literal,
        test_expr_codegen_binary,
        test_expr_codegen_unary,
+       test_expr_codegen_relate,
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -142,7 +146,10 @@ Status test_scratch_alloc_fail_ainuse(void) {
   r = register_scratch_alloc();
   if (r != -1) { print_error(test_type, "-1", "int r: register index"); status = FAILURE; }
   if (!register_error_count) { print_error(test_type, "1", "int register_error_count"); status = FAILURE; }
-  if (!register_error_status) { print_error(test_type, "REG_AINUSE", "int register_error_status"); status = FAILURE; }
+  if (!register_error_status || register_error_status != REG_AINUSE) {
+    print_error(test_type, "REG_AINUSE", "int register_error_status");
+    status = FAILURE;
+  }
   register_codegen_clear();
   return status;
 }
@@ -160,12 +167,15 @@ Status test_scratch_free_success(void){
 }
 
 Status test_scratch_free_fail_invalid(void) {
-  strcpy(test_type, "Testing: test_scratch_alloc_fail_invalid");
+  strcpy(test_type, "Testing: test_scratch_free_fail_invalid");
   Status status = SUCCESS; bool test = true;
   register_codegen_init(test);
   int r = 9; register_scratch_free(r);
   if (!register_error_count) { print_error(test_type, "1", "int register_error_count"); status = FAILURE; }
-  if (!register_error_status) { print_error(test_type, "REG_INVALID", "int register_error_status"); status = FAILURE; }
+  if (!register_error_status || register_error_status != REG_INVALID) {
+    print_error(test_type, "REG_INVALID", "int register_error_status");
+    status = FAILURE;
+  }
   register_codegen_clear();
   return status;
 }
@@ -176,13 +186,16 @@ Status test_scratch_free_fail_ninuse(void) {
   register_codegen_init(test);
   int r = register_scratch_alloc(); register_scratch_free(r); register_scratch_free(r);
   if (!register_error_count) { print_error(test_type, "1", "int register_error_count"); status = FAILURE; }
-  if (!register_error_status) { print_error(test_type, "REG_NINUSE", "int register_error_status"); status = FAILURE; }
+  if (!register_error_status || register_error_status != REG_NINUSE) {
+    print_error(test_type, "REG_NINUSE", "int register_error_status");
+    status = FAILURE;
+  }
   register_codegen_clear();
   return status;
 }
 
 Status test_scratch_name_success(void) {
-  strcpy(test_type, "Testing: test_scratch_name_fail_invalid");
+  strcpy(test_type, "Testing: test_scratch_name_success");
   Status status = SUCCESS; bool test = true;
   register_codegen_init(test);
 
@@ -204,7 +217,28 @@ Status test_scratch_name_fail_invalid(void) {
   register_codegen_init(test);
   int r = 9; const char* s = register_scratch_name(r);
   if (!register_error_count) { print_error(test_type, "1", "int register_error_count"); status = FAILURE; }
-  if (!register_error_status) { print_error(test_type, "REG_INVALID", "int register_error_status"); status = FAILURE; }
+  if (!register_error_status || register_error_status != REG_INVALID) {
+    print_error(test_type, "REG_INVALID", "int register_error_status");
+    status = FAILURE;
+  }
+  register_codegen_clear();
+  return status;
+}
+
+Status test_scratch_name_fail_nohigh(void) {
+  strcpy(test_type, "Testing: test_scratch_name_fail_nohigh");
+  Status status = SUCCESS; bool test = true;
+  register_codegen_init(test);
+
+  for (int i = 1; i < NSCRATCH; i++) {
+    register_error_count = 0;
+    const char* s = register_scratch_name_high(i);
+    if (!register_error_count) { print_error(test_type, "1", "int register_error_count"); status = FAILURE; }
+    if (!register_error_status || register_error_status != REG_NOHIGH) {
+      print_error(test_type, "REG_NOHIGH", "int register_error_status");
+      status = FAILURE;
+    }
+  }
   register_codegen_clear();
   return status;
 }
@@ -303,6 +337,11 @@ CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_
   for (int i = 0; i < 3; i++) {
     register_codegen_init(true);
     expr_codegen(exprs[i]);
+    if (exprs[i]->reg != 0) { print_error(test_type, "0", "int exprs[i]->reg" ); return FAILURE; }
+    if (!scratch_register[exprs[i]->reg].inuse) {
+      print_error(test_type, "true", "bool scratch_register[0].inuse");
+      status = FAILURE;
+    }
     expr_destroy(&exprs[i]);
     register_codegen_clear();
   }
@@ -313,7 +352,7 @@ CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_
 }
 
 
-Status test_expr_codegen_string(void) {} // TO DO
+Status test_expr_codegen_string(void) { return SUCCESS; } // TO DO
 
 Status test_expr_codegen_name_literal(void) {
   strcpy(test_type, "Testing: test_expr_codegen_name_literal");
@@ -342,6 +381,17 @@ Status test_expr_codegen_name_literal(void) {
   t = expr_typecheck(st, local_expr); type_destroy(&t);
   error_status = expr_codegen(local_expr);
 
+  if (global_expr->reg != 0) { print_error(test_type, "0", "int global_expr->reg" ); return FAILURE; }
+  if (!scratch_register[global_expr->reg].inuse) {
+    print_error(test_type, "true", "bool scratch_register[0].inuse");
+    status = FAILURE;
+  }
+  if (local_expr->reg != 1) { print_error(test_type, "0", "int global_expr->reg" ); return FAILURE; }
+  if (!scratch_register[local_expr->reg].inuse) {
+    print_error(test_type, "true", "bool scratch_register[1].inuse");
+    status = FAILURE;
+  }
+
   register_codegen_clear();
   expr_destroy(&global_expr); expr_destroy(&local_expr);
   symbol_table_destroy(&st);
@@ -355,20 +405,36 @@ Status test_expr_codegen_name_literal(void) {
 Status test_expr_codegen_binary(void) {
   strcpy(test_type, "Testing: test_expr_codegen_binary");
   Status status = SUCCESS;
-  expr_t exprs[7] = { EXPR_ASSIGN, EXPR_ADD, EXPR_POS, EXPR_SUB, EXPR_NEG, EXPR_AND, EXPR_OR };
+  expr_t exprs[5] = { EXPR_ASSIGN, EXPR_ADD, EXPR_SUB, EXPR_AND, EXPR_OR };
   char* expect =
 "MOVQ $493, %rbx\nMOVQ $42, %r10\nMOVQ %rbx, %r10\n\
 MOVQ $493, %rbx\nMOVQ $42, %r10\nADDQ %rbx, %r10\n\
-MOVQ $493, %rbx\nMOVQ $42, %r10\nADDQ $0, %r10\n\
 MOVQ $493, %rbx\nMOVQ $42, %r10\nSUBQ %rbx, %r10\n\
-MOVQ $493, %rbx\nMOVQ $42, %r10\nSUBQ $0, %r10\n\
 MOVQ $493, %rbx\nMOVQ $42, %r10\nANDQ %rbx, %r10\n\
 MOVQ $493, %rbx\nMOVQ $42, %r10\nORQ %rbx, %r10\n";
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
-  for (int i = 0; i < 7; i++) {
+  for (int i = 0; i < 5; i++) {
     register_codegen_init(true);
     struct expr* e = expr_create(exprs[i], expr_create_integer_literal(493), expr_create_integer_literal(42));
     expr_codegen(e);
+
+    if (e->left->reg != 0) { print_error(test_type, "0", "int e->left->reg"); return FAILURE; }
+    if (e->right->reg != 1) { print_error(test_type, "1", "int e->right->reg"); return FAILURE; }
+    if (e->reg != 1) { print_error(test_type, "1", "int e->reg"); status = FAILURE; }
+    if (e->reg != e->right->reg) { print_error(test_type, "int e->reg (1)", "int e->right->reg (1)"); status = FAILURE; }
+    if (scratch_register[e->left->reg].inuse) {
+      print_error(test_type, "false", "bool scratch_register[e->left->reg].inuse");
+      status = FAILURE;
+    }
+    if (!scratch_register[e->right->reg].inuse) {
+      print_error(test_type, "true", "scratch_register[e->right->reg].inuse");
+      status = FAILURE;
+    }
+    if (!scratch_register[e->reg].inuse) {
+      print_error(test_type, "true", "scratch_register[e->reg].inuse");
+      status = FAILURE;
+    }
+
     expr_destroy(&e);
     register_codegen_clear();
   }
@@ -381,16 +447,74 @@ MOVQ $493, %rbx\nMOVQ $42, %r10\nORQ %rbx, %r10\n";
 Status test_expr_codegen_unary(void) {
   strcpy(test_type, "Testing: test_expr_codegen_unary");
   Status status = SUCCESS;
-  expr_t exprs[3] = { EXPR_INC, EXPR_DEC, EXPR_NOT };
+  expr_t exprs[5] = { EXPR_POS, EXPR_NEG, EXPR_INC, EXPR_DEC, EXPR_NOT };
   char* expect =
-"MOVQ $493, %rbx\nMOVQ $42, %r10\nINCQ %rbx\n\
-MOVQ $493, %rbx\nMOVQ $42, %r10\nDECQ %rbx\n\
-MOVQ $493, %rbx\nMOVQ $42, %r10\nNOTQ %rbx\n";
+"MOVQ $493, %rbx\n\
+MOVQ $493, %rbx\nNEGQ %rbx\n\
+MOVQ $493, %rbx\nINCQ %rbx\n\
+MOVQ $493, %rbx\nDECQ %rbx\n\
+MOVQ $493, %rbx\nNOTQ %rbx\n";
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 5; i++) {
     register_codegen_init(true);
-    struct expr* e = expr_create(exprs[i], expr_create_integer_literal(493), expr_create_integer_literal(42));
+    struct expr* e = expr_create(exprs[i], expr_create_integer_literal(493), NULL);
     expr_codegen(e);
+
+    if (e->left->reg != 0) { print_error(test_type, "0", "int e->left->reg"); return FAILURE; }
+    if (e->reg != 0) { print_error(test_type, "0", "int e->reg"); status = FAILURE; }
+    if (e->reg != e->left->reg) { print_error(test_type, "int e->reg (0)", "int e->right->reg (0)"); status = FAILURE; }
+    if (!scratch_register[e->left->reg].inuse) {
+      print_error(test_type, "true", "bool scratch_register[e->left->reg].inuse");
+      status = FAILURE;
+    }
+    if (!scratch_register[e->reg].inuse) {
+      print_error(test_type, "true", "scratch_register[e->reg].inuse");
+      status = FAILURE;
+    }
+    expr_destroy(&e);
+    register_codegen_clear();
+  }
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
+  return status;
+}
+
+
+Status test_expr_codegen_relate(void) {
+  strcpy(test_type, "Testing: test_expr_codegen_relate");
+  Status status = SUCCESS;
+  expr_t exprs[6] = { EXPR_EQ, EXPR_NEQ, EXPR_LESS, EXPR_LEQ, EXPR_GREAT, EXPR_GEQ };
+  char* expect =
+"MOVQ $4, %rbx\nMOVQ $5, %r10\nCMP %rbx, %r10\nSETE %bl\nMOVZBQ %bl, %rbx\n\
+MOVQ $4, %rbx\nMOVQ $5, %r10\nCMP %rbx, %r10\nSETNE %bl\nMOVZBQ %bl, %rbx\n\
+MOVQ $4, %rbx\nMOVQ $5, %r10\nCMP %rbx, %r10\nSETL %bl\nMOVZBQ %bl, %rbx\n\
+MOVQ $4, %rbx\nMOVQ $5, %r10\nCMP %rbx, %r10\nSETLE %bl\nMOVZBQ %bl, %rbx\n\
+MOVQ $4, %rbx\nMOVQ $5, %r10\nCMP %rbx, %r10\nSETG %bl\nMOVZBQ %bl, %rbx\n\
+MOVQ $4, %rbx\nMOVQ $5, %r10\nCMP %rbx, %r10\nSETGE %bl\nMOVZBQ %bl, %rbx\n";
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+  for (int i = 0; i < 6; i++) {
+    register_codegen_init(true);
+    struct expr* e = expr_create(exprs[i], expr_create_integer_literal(4), expr_create_integer_literal(5));
+    expr_codegen(e);
+
+    if (e->left->reg != 0) { print_error(test_type, "0", "int e->left->reg"); return FAILURE; }
+    if (e->right->reg != 1) { print_error(test_type, "1", "int e->right->reg"); return FAILURE; }
+    if (e->reg != 0) { print_error(test_type, "0", "int e->reg"); status = FAILURE; }
+    if (e->reg != e->left->reg) { print_error(test_type, "int e->reg (0)", "int e->left->reg (0)"); status = FAILURE; }
+    if (!scratch_register[e->left->reg].inuse) {
+      print_error(test_type, "true", "bool scratch_register[e->left->reg].inuse");
+      status = FAILURE;
+    }
+    if (scratch_register[e->right->reg].inuse) {
+      print_error(test_type, "false", "scratch_register[e->right->reg].inuse");
+      status = FAILURE;
+    }
+    if (!scratch_register[e->reg].inuse) {
+      print_error(test_type, "true", "scratch_register[e->reg].inuse");
+      status = FAILURE;
+    }
+
     expr_destroy(&e);
     register_codegen_clear();
   }

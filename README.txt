@@ -19,20 +19,20 @@ Changes since assignment 4:
    REG_INVALID -> out of bounds
    REG_AINUSE -> all registers in use
    REG_NINUSE -> register not in use
+   REG_NOHIGH -> register name is unavailable in the high-byte bit type (64, 32, 16, high, low)
    LABEL_MAX -> max number of labels
 
 5. struct symbol now has an address field to have during code generation
    this saves the address value for a symbol while they are being generated.
 
 6. symbol table now includes 'hidden' symbols: originally nameless array and string literals stored as symbols under a new name: the label
-  name generated from label_name() and label_create().This makes sure that pass-by-reference values are being stored and loaded correctly.
+  name generated from label_name() and label_create(). This makes sure that pass-by-reference values are being stored and loaded correctly.
 
-7. <<struct>>_codegen functions now have an 'fprintf' variant, as <<struct>>_fcodegen():
-  These have an additonal parameter of the file pointer, which defaults to stdout.
+7. Updated typechecker for constant expressions.
 
-8. Updated typechecker for constant expressions.
+8. Error handlers now display the error enum name to be more descriptive. [resolves isue #6]
 
-9. Error handlers now display the error enum name to be more descriptive. [resolves isue #6]
+9. Various code cleanups for better readability and code-style consistency.
 
 ****************************
 HIDDEN SYMBOLS
@@ -54,9 +54,9 @@ use assembly emulator to help you.
 	DONE- arithmetic + logical expressions (excluding exponentiation/division/multiplication)
 		DONEimplement
 		DONEtest
-	- comparision operations
-		implement
-		test
+	DONE- relational expressions
+		DONEimplement
+		DONEtest
 	- other operations
 		implement
 		test
@@ -68,9 +68,13 @@ use assembly emulator to help you.
 ****NOTES
 
 flags to implement
+
+in setting the codegen in/out flags for file pointers.
 -o flag added to indicate output file. default name 'output.s'. can also just output redirection.
 -i flag added to indicate input file, if any. defaults to stdin. can also just do input redirection.
--I flag added to indicate 'interactive'. input is stdin and output is stdout. this can be overwrites - or -i options.
+-I flag added to indicate 'interactive'. input is stdin and output is stdout. this can be overwrites -o or -i options.
+
+
 -v flag added for 'verbose'. by default off. adds slight explanatory comments to the generated code.
 
 since this only generates a .s file (human-readable assembly), the generated code is not guaranteed to work
