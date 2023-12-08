@@ -79,3 +79,34 @@ in setting the codegen in/out flags for file pointers.
 
 since this only generates a .s file (human-readable assembly), the generated code is not guaranteed to work
 if put through an assembler+linker+loader.
+
+these flags can be part of the compiler proper (bcc --> B-Minor C Compiler (blind carbon copy (bcc) of gcc...))
+-S: do NOT assemble the generated (.s) code (ie don't let it go through as)
+-c: do NOT link the assembled (.o) code (ie don't let it go through ld)
+-o: output file
+-v: verbose (show argv for every executed program)
+
+
+
+
+exponentation and printing are put in the runtime library which can either be statically or dynamically
+linked. static linking may be easier. 
+this runtime library is to be written in C, it has to be compiled to object code before linking with B-Minor programs.
+
+use a hidden symbol table (additional standalone hashtable) instead of adding hidden symbols to symbol table.
+this hash table associates string literals to label names (whereas in the real symbol table it's the other way around).
+expr codegen associates a string literal to a label.
+   upon finding a string literal, it finds associated 'hidden' label and assigns it to a string literal expession's name field.
+   decl codegen will use this name instead of the string literal value.
+
+   this hash table is to be printed seperately from the declaration list.
+
+similar behavior with storing literals from names:
+decl codegen associates expression value with name (value determined via its own expr codegen),
+which can then be further referenced in expr codegen for intermediate value tracking.
+now intermediate value tracking of values works for both literals and names.
+
+
+constant expressions in global scope must NOT have their full expression generated, but rather the resulting value.
+entirely constant expressions (ie not containing only literals) can be optimised to NOT generate the expression(s) to
+reach their value, just that a register be stored with the end result.

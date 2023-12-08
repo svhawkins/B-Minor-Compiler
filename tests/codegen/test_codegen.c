@@ -35,9 +35,10 @@ Status test_expr_codegen_literal(void);
 Status test_expr_codegen_string(void); // TODO
 Status test_expr_codegen_name_literal(void);
 
-// simple arithmetic + logical expressions (arithmetic + logical) (+ multiplication, division, modulus, exponentiation)
+// simple arithmetic + logical expressions (arithmetic + logical)
 Status test_expr_codegen_binary(void);
 Status test_expr_codegen_unary(void);
+Status test_expr_codegen_muldivmod(void);
 
 // relational expressions
 Status test_expr_codegen_relate(void);
@@ -110,6 +111,7 @@ int main(void) {
        test_expr_codegen_name_literal,
        test_expr_codegen_binary,
        test_expr_codegen_unary,
+       test_expr_codegen_muldivmod,
        test_expr_codegen_relate,
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
@@ -471,6 +473,47 @@ MOVQ $493, %rbx\nNOTQ %rbx\n";
       print_error(test_type, "true", "scratch_register[e->reg].inuse");
       status = FAILURE;
     }
+    expr_destroy(&e);
+    register_codegen_clear();
+  }
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
+  return status;
+}
+
+Status test_expr_codegen_muldivmod(void) {
+  strcpy(test_type, "Testing: test_expr_codegen_muldivmod");
+  Status status = SUCCESS;
+  expr_t exprs[3] = { EXPR_MULT, EXPR_DIV, EXPR_MOD };
+  char* expect =
+"MOVQ $4, %rbx\nMOVQ $5, %r10\nMOVQ %rbx, %rax\nIMULQ %r10, %rax\nMOVQ %rax, %r11\n\
+MOVQ $4, %rbx\nMOVQ $5, %r10\nMOVQ %rbx, %rax\nCQTO\nIDIVQ %r10\nMOVQ %rax, %r11\n\
+MOVQ $4, %rbx\nMOVQ $5, %r10\nMOVQ %rbx, %rax\nCQTO\nIDIVQ %r10\nMOVQ %rdx, %r11\n";
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+  for (int i = 0; i < 3; i++) {
+    register_codegen_init(true);
+    struct expr* e = expr_create(exprs[i], expr_create_integer_literal(4), expr_create_integer_literal(5));
+    expr_codegen(e);
+
+    if (e->left->reg != 0) { print_error(test_type, "0", "int e->left->reg"); return FAILURE; }
+    if (e->right->reg != 1) { print_error(test_type, "1", "int e->right->reg"); return FAILURE; }
+    if (e->reg != 2) { print_error(test_type, "1", "int e->reg"); status = FAILURE; }
+    if (e->reg == e->left->reg) { print_error(test_type, "int e->reg (2)", "int e->left->reg (0)"); status = FAILURE; }
+    if (e->reg == e->right->reg) { print_error(test_type, "int e->reg (2)", "int e->right->reg (1)"); status = FAILURE; }
+    if (scratch_register[e->left->reg].inuse) {
+      print_error(test_type, "false", "bool scratch_register[e->left->reg].inuse");
+      status = FAILURE;
+    }
+    if (scratch_register[e->right->reg].inuse) {
+      print_error(test_type, "false", "scratch_register[e->right->reg].inuse");
+      status = FAILURE;
+    }
+    if (!scratch_register[e->reg].inuse) {
+      print_error(test_type, "true", "scratch_register[e->reg].inuse");
+      status = FAILURE;
+    }
+
     expr_destroy(&e);
     register_codegen_clear();
   }

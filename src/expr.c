@@ -469,11 +469,11 @@ struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
 /*
 Generates the corresponding (unoptimized) assembly code for the given expression e.
 If any error occurs that is NOT due to register allocation such as but not limited to:
-        - division by 0
-        - modulus by 0
-        - integer underflow
-        - integer overflow
-An error code is emitted and send to the error message handler.
+        - division by 0 --> error (fatal)
+        - modulus by 0 --> error (fatal)
+        - integer underflow --> warning (nonfatal)
+        - integer overflow --> warning (nonfatal)
+An error/warning code is emitted and send to the error message handler.
 */
 int expr_codegen(struct expr* e) {
   if (!e) { return 0; } // basis reached.
@@ -553,10 +553,38 @@ int expr_codegen(struct expr* e) {
       e->reg = e->left->reg;
       break;
 
-    // bit harder
+    /*
+    MOVQ %RL, %RAX
+    IMULQ %RR, %RAX
+    MOVQ %RAX, %RL
+    */
     case EXPR_MULT:
+      // allocate different register for resultant since the dest register is not always overwritten.
+      e->reg = register_scratch_alloc();
+      fprintf(CODEGEN_OUT, "MOVQ %s, %rax\n", register_scratch_name(e->left->reg));
+      fprintf(CODEGEN_OUT, "IMULQ %s, %rax\n", register_scratch_name(e->right->reg));
+      fprintf(CODEGEN_OUT, "MOVQ %rax, %s\n", register_scratch_name(e->reg));
+      register_scratch_free(e->left->reg);
+      register_scratch_free(e->right->reg);
+      break;
+
+    /*
+    MOVQ %RL, %RAX
+    CQTO ; sign extend %RAX TO %RDX:%RAX
+    IDIVQ %RR, %RAX
+    MOVQ %RAX, %RL ; quotient
+    MOVQ %RDX, %RL ; remainder
+    */
     case EXPR_DIV:
     case EXPR_MOD:
+      e->reg = register_scratch_alloc();
+      fprintf(CODEGEN_OUT, "MOVQ %s, %rax\nCQTO\n", register_scratch_name(e->left->reg));
+      fprintf(CODEGEN_OUT, "IDIVQ %s\n", register_scratch_name(e->right->reg));
+      fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", (e->kind == EXPR_DIV) ? "%rax" : "%rdx",
+                                            register_scratch_name(e->reg));
+      register_scratch_free(e->left->reg);
+      register_scratch_free(e->right->reg);
+      break;
     case EXPR_SUBSCRIPT:
 
    // relational expressions
@@ -621,8 +649,19 @@ int expr_codegen(struct expr* e) {
 
    // may need their own helper functions
    case EXPR_EXP:
-   case EXPR_INIT:
+      // will be like fcall in (de)allocating registers before and after call.
+      // will call runtime library function exp() instead of having a statement body to just generate.
+   case EXPR_INIT: // this expression only occurs in declarations
    case EXPR_COMMA: // TODO: test multiple register allocations here
+   case EXPR_FCALL:
+    /*
+    TO DO:
+    1. generate allocation of registers prior to call (test with stub function body)
+    2. generate deallocation of registers after call (test with stub function body)
+    3. generate function prologue
+    4. generate function epilogue
+    5. generate function body
+    */
    default: break; // shouldnt come here but throw error?????
   }
 }

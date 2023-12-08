@@ -18,8 +18,9 @@ struct symbol {
 	struct type* type;
 	char* name;
 	int which;
-	bool defined; // for function definitons
+	bool defined; // for function definitions (and i guess declarations without values)
 	char* address; // for symbol code generation
+
 };
 
 struct symbol* symbol_create(symbol_t kind, struct type *type, char *name);
