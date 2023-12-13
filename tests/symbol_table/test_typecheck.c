@@ -65,7 +65,8 @@ Status test_decl_typecheck_array_null_size_nonnull_body(void);
 Status test_decl_typecheck_array_nint_size(void);
 
 // stmt_typecheck tests
-Status test_stmt_typecheck_print(void);
+Status test_stmt_typecheck_print_good(void);
+Status test_stmt_typecheck_print_bad(void);
 Status test_stmt_typecheck_expr_good(void);
 Status test_stmt_typecheck_expr_bad(void);
 Status test_stmt_typecheck_expr_bad_comma(void);
@@ -76,7 +77,7 @@ int main(void) {
   if (!ERR_OUT) { ERR_OUT = stderr; }
 
   Status (*tests[])(void) = {
-    //test_expr_typecheck_primitive, // TODO: hidden symbol memory problems
+    test_expr_typecheck_primitive,
     test_expr_typecheck_logical_bad,
     test_expr_typecheck_logical_good,
     test_expr_typecheck_arithmetic_bad,
@@ -94,7 +95,7 @@ int main(void) {
     test_expr_typecheck_assign_good,
     test_expr_typecheck_assign_bad_lval,
     test_expr_typecheck_assign_good_subscript,
-    //test_expr_typecheck_assign_bad_string,
+    test_expr_typecheck_assign_bad_string,
     test_expr_typecheck_fcall_bad_function,
     test_expr_typecheck_fcall_bad_param,
     test_expr_typecheck_fcall_good_no_param,
@@ -109,20 +110,21 @@ int main(void) {
     test_param_list_equals_right_null,
     test_param_list_equals_diff,
     test_param_list_equals_same,
-    //test_decl_typecheck
+    test_decl_typecheck,
     test_decl_typecheck_name,
     test_decl_typecheck_auto_primitive,
     test_decl_typecheck_auto_array,
-    //test_decl_typecheck_value_type_mismatch,
+    test_decl_typecheck_value_type_mismatch,
     test_decl_typecheck_function_ret_type_integer,
     test_decl_typecheck_function_ret_type_null,
-    //test_decl_typecheck_function_ret_type_mismatch,
+    test_decl_typecheck_function_ret_type_mismatch,
 
     test_decl_typecheck_array_null_size,
     test_decl_typecheck_array_null_size_nonnull_body,
     test_decl_typecheck_array_nint_size,
 
-    //test_stmt_typecheck_print,
+    test_stmt_typecheck_print_good,
+    test_stmt_typecheck_print_bad,
     test_stmt_typecheck_expr_good,
     test_stmt_typecheck_expr_bad,
     test_stmt_typecheck_expr_bad_comma,
@@ -264,7 +266,7 @@ Status test_decl_typecheck(void) {
   struct decl* decls[4] = { decl_create(strdup("foo"), type_copy(integer), expr_create_integer_literal(2), NULL, NULL),
 			                      decl_create(strdup("bar"), type_copy(boolean), expr_create_boolean_literal(true), NULL, NULL),
                             decl_create(strdup("baz"), type_copy(character), expr_create_char_literal('a'), NULL, NULL),
-                            decl_create(strdup("qux"), type_copy(string), expr_create_string_literal(strdup("bar")), NULL, NULL),
+                            decl_create(strdup("qux"), type_copy(string), expr_create_string_literal("bar"), NULL, NULL),
                           };
 
   for (int i = 0; i < 4; i++) {
@@ -1048,43 +1050,57 @@ Status test_decl_typecheck_array_nint_size(void) {
   return status;
 }
 
-Status test_stmt_typecheck_print(void) {
-  strcpy(test_type, "Testing: test_stmt_typecheck_print");
+Status test_stmt_typecheck_print_good(void) {
+  strcpy(test_type, "Testing: test_stmt_typecheck_print_good");
   Status status = SUCCESS;
+
+  // literals
+  struct stmt* stmts[4] =  { stmt_create(STMT_PRINT, NULL, NULL, expr_create_integer_literal(493), NULL, NULL, NULL, NULL),
+                             stmt_create(STMT_PRINT, NULL, NULL, expr_create_boolean_literal(true), NULL, NULL, NULL, NULL),
+                             stmt_create(STMT_PRINT, NULL, NULL, expr_create_char_literal('q'), NULL, NULL, NULL, NULL),
+                             stmt_create(STMT_PRINT, NULL, NULL, expr_create_string_literal("duck"), NULL, NULL, NULL, NULL),
+                           };
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  for (int i = 0; i < 4; i++) {
+    error_status = stmt_resolve(st, stmts[i]);
+    error_status = stmt_typecheck(st, stmts[i], NULL);
+    if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+    if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
+    error_status = 0; global_error_count = 0;
+    stmt_destroy(&stmts[i]);
+  }
+  symbol_table_destroy(&st);
+  return status;
+}
+
+Status test_stmt_typecheck_print_bad(void) {
+  strcpy(test_type, "Testing: test_stmt_typecheck_print_bad");
+  Status status = SUCCESS;
+
+  // non-literals (array, function, void): as names
+  struct stmt* stmts[3] = { stmt_create(STMT_PRINT, NULL, NULL, expr_create_name(strdup("foo")), NULL, NULL, NULL, NULL),
+                            stmt_create(STMT_PRINT, NULL, NULL, expr_create_name(strdup("bar")), NULL, NULL, NULL, NULL),
+                            stmt_create(STMT_PRINT, NULL, NULL, expr_create_name(strdup("baz")), NULL, NULL, NULL, NULL)
+                          };
+  
+  // associate names to symbols of invalid types
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct type* tarray = type_create(TYPE_ARRAY, NULL, NULL, NULL);
   struct type* tfunction = type_create(TYPE_FUNCTION, NULL, NULL, NULL);
-  int type_kinds[7] = { TYPE_VOID, TYPE_INTEGER, TYPE_BOOLEAN, TYPE_CHARACTER, TYPE_STRING, TYPE_ARRAY, TYPE_FUNCTION };
-  struct expr* exprs[7] = { expr_create_name(strdup("baz")), expr_create_integer_literal(493), expr_create_boolean_literal(true),
-			    expr_create_char_literal('q'), expr_create_string_literal("duck"), expr_create_name(strdup("bar")),
-			    expr_create_name(strdup("foo"))
-			  };
-
-  const int kind = SYMBOL_GLOBAL; const int VOID = 0; const int ARRAY = 5; const int FUNCTION = 6;
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  symbol_table_scope_bind(st, exprs[VOID]->name, symbol_create(kind, type_copy(tvoid), strdup(exprs[VOID]->name)));
-  symbol_table_scope_bind(st, exprs[ARRAY]->name, symbol_create(kind, type_copy(tarray), strdup(exprs[ARRAY]->name)));
-  symbol_table_scope_bind(st, exprs[FUNCTION]->name, symbol_create(kind, type_copy(tfunction), strdup(exprs[FUNCTION]->name)));
-  for (int i = 0; i < 7; i++) {
-      struct stmt* s = stmt_create(STMT_PRINT, NULL, NULL, exprs[i], NULL, NULL, NULL, NULL);
-      error_status = stmt_resolve(st, s);
-      error_status = stmt_typecheck(st, s, NULL);
-
-      switch((const int)i) {
-        case VOID: case ARRAY: case FUNCTION: // invalid type
-          if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
-          if (error_status != STMT_TYPE) { print_error(test_type, "STMT_TYPE", "int error_status"); status = FAILURE; }
-          break;
-        default: // valid type
-          if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
-          if (error_status) { print_error(test_type, "0", "int error_status"); status = FAILURE; }
-          break;
-      }
-      error_status = 0; global_error_count = 0;
-      stmt_destroy(&s);
+  symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, type_copy(tvoid), strdup("foo")));
+  symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_GLOBAL, type_copy(tarray), strdup("bar")));
+  symbol_table_scope_bind(st, "baz", symbol_create(SYMBOL_GLOBAL, type_copy(tfunction), strdup("baz")));
+  for (int i = 0; i < 3; i++) {
+    error_status = stmt_resolve(st, stmts[i]);
+    error_status = stmt_typecheck(st, stmts[i], NULL);
+    if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
+    if (error_status != STMT_TYPE) { print_error(test_type, "STMT_TYPE", "int error_status"); status = FAILURE; }
+    error_status = 0; global_error_count = 0;
+    stmt_destroy(&stmts[i]);
   }
-  symbol_table_destroy(&st); type_destroy(&tvoid); type_destroy(&tarray); type_destroy(&tfunction);
-  for (int i = 0; i < 7; i++) { expr_destroy(&exprs[i]); }
+  symbol_table_destroy(&st);
+  type_destroy(&tvoid); type_destroy(&tarray); type_destroy(&tfunction);
   return status;
 }
 
@@ -1165,14 +1181,17 @@ Status test_expr_typecheck_assign_bad_string(void) {
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(string), strdup(left->name)));
 
-  struct expr* right = expr_create_string_literal(strdup("duck"));
-  struct expr* e = expr_create(EXPR_ASSIGN, left, right); expr_resolve(st, e);
+  struct expr* right = expr_create_string_literal("duck");
+  struct expr* e = expr_create(EXPR_ASSIGN, left, right);
+  expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
 
   if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (error_status != IMMUTABLE) { print_error(test_type, "IMMUTABLE", "int error_status"); status = FAILURE; }
 
-  expr_destroy(&e); type_destroy(&t); type_destroy(&string);
+  expr_destroy(&e);
+  type_destroy(&t);
+  type_destroy(&string);
   symbol_table_destroy(&st);
   return status;
 }

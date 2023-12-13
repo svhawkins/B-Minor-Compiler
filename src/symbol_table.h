@@ -104,7 +104,6 @@ int symbol_table_scope_level(struct symbol_table* st);
 
 /*
 Adds <name, sym> as a key-value pair to the topmost hash table in the stack
-*Exception: hidden symbols are always global
 Returns 1 upon success, 0 upon failure.
 Failure if:
 	- NULL symbol table

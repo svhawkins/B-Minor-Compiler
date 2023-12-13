@@ -23,11 +23,6 @@ struct decl {
 	struct decl* next;
 };
 
-
-// for hidden symbols
-struct decl* decl_hidden_list;
-struct decl* decl_hidden_list_tail;
-
 struct decl* decl_create(char* name, struct type* type, struct expr* value, struct stmt* code, struct decl* next);
 
 void decl_fprint(FILE* fp, struct decl* d, int indent);

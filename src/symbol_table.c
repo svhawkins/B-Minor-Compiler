@@ -55,14 +55,12 @@ int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
 }
 
 // prints out the key value pairs within a hash table
-void hash_table_fprint(FILE* fp, struct hash_table* ht, bool show_hidden) {
+void hash_table_fprint(FILE* fp, struct hash_table* ht) {
   if (!ht) { fprintf(fp, "\t\t[null table]\n\n"); return; }
   if (!hash_table_size(ht)) { fprintf(fp, "\t\t[empty table]\n\n"); return; }
   char* key; void* value;
   hash_table_firstkey(ht); fprintf(fp, "\n");
   while (hash_table_nextkey(ht, &key, &value)) {
-    // printing of hidden labels is a command line parameter.
-    if (!show_hidden && ((struct symbol*)value)->kind == SYMBOL_HIDDEN) { continue; }
     fprintf(fp, "%s --> ", key);
     symbol_fprint(fp, value);
   }
@@ -142,11 +140,6 @@ void symbol_table_destroy(struct symbol_table** st) {
   stack_destroy(&((*st)->stack)); free(*st);
   *st = NULL;
   global_error_count = 0;
-
-  // free the hidden symbols
-  decl_destroy(&decl_hidden_list);
-  decl_hidden_list_tail = NULL;
-  decl_hidden_list = NULL;
 }
 
 /*
@@ -200,7 +193,6 @@ int symbol_table_scope_level(struct symbol_table* st) {
 
 /*
 Adds <name, sym> as a key-value pair to the topmost hash table in the stack
-*Exception: hidden symbols are always global
 Returns 1 upon success, 0 upon failure.
 Failure if:
         - NULL symbol table
@@ -210,10 +202,9 @@ Failure if:
 */
 int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct symbol* sym) {
   if (!st || !st->stack->items || !(st->top + 1) || !(st->stack->items[st->top])) return 0;
-  int scope_index = (sym && sym->kind == SYMBOL_HIDDEN) ? 0 : st->top; // hidden symbols always global
-  int status = (hash_table_insert((struct hash_table*)st->stack->items[scope_index], name, (void*)sym) == 1);
+  int status = (hash_table_insert((struct hash_table*)st->stack->items[st->top], name, (void*)sym) == 1);
   // update which count for successful binding of non-globals
-  if (status && (stack_size(st->stack) > 1) && sym && !(sym->kind == SYMBOL_GLOBAL || sym->kind == SYMBOL_HIDDEN)) {
+  if (status && (stack_size(st->stack) > 1) && sym && !(sym->kind == SYMBOL_GLOBAL)) {
     which_count++; sym->which = which_count;
   }
   return status;
@@ -297,7 +288,7 @@ void symbol_table_fprint(FILE* fp, struct symbol_table* st) {
     fprintf(fp, "\n"); for (int j = 0; j < 50; j++) fprintf(fp, "-"); fprintf(fp, "\n");
 
     // print out hash table
-    hash_table_fprint(fp, st->stack->items[i], st->show_hidden);
+    hash_table_fprint(fp, st->stack->items[i]);
   }
   fprintf(fp, "\n");
 }

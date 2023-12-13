@@ -111,10 +111,6 @@ Status test_decl_resolve_program(void);
 Status test_decl_resolve_which_scope_enter(void);
 Status test_stmt_resolve_which_scope_exit(void);
 
-// hidden symbol name resolution tests
-Status test_symbol_table_hidden_global(void);
-Status test_symbol_table_hidden_local(void);
-
 int main(void) {
   ERR_OUT = fopen("error_output_st.txt", "w");
   if (!ERR_OUT) { ERR_OUT = stderr; }
@@ -199,8 +195,6 @@ int main(void) {
     test_decl_resolve_program,
     test_decl_resolve_which_scope_enter,
     test_stmt_resolve_which_scope_exit,
-    //test_symbol_table_hidden_global, // TODO: invalid free, hidden symbol only affected.
-    //test_symbol_table_hidden_local, // --> TODO: invalid free
     test_decl_resolve_nonconst_array_size,
     test_decl_resolve_nonconst_global,
     test_decl_resolve_nonconst_global_array
@@ -1477,53 +1471,6 @@ Status test_stmt_resolve_which_scope_exit(void) {
   if (which_count) { print_error(test_type, "0", "int which_count (global reset)"); status = FAILURE; }
   symbol_table_destroy(&st); stmt_destroy(&s); type_destroy(&tvoid);
   return status;
-}
-
-
-Status test_symbol_table_hidden_global(void) {
-  strcpy(test_type, __FUNCTION__);
-  Status status = SUCCESS;
-
-  struct decl* d = decl_create(strdup("x"), type_create(TYPE_STRING, NULL, NULL, NULL), expr_create_string_literal("493"), NULL, NULL);
-
-  // not using register codegen init here
-  label_count = -1;
-  Symbol_table* st = symbol_table_verbose_create(); st->show_hidden = true;
-  symbol_table_scope_enter(st);
-  error_status = decl_resolve(st, d);
-
-  struct symbol* hidden_symbol = symbol_table_scope_lookup(st, ".L0");
-  if (!hidden_symbol) { print_error(test_type, "NOT NULL", "struct symbol* hidden_symbol"); return FAILURE; }
-  if (hidden_symbol->which != -1) { print_error(test_type, "-1", "int hidden_symbol->which"); status= FAILURE; }
-  if (which_count) { print_error(test_type, "0", "int which_count"); status = FAILURE; }
-  symbol_table_destroy(&st);
-  decl_destroy(&d);
-  return status;
-}
-
-Status test_symbol_table_hidden_local(void) {
-  strcpy(test_type, __FUNCTION__);
-  Status status = SUCCESS;
-
-  struct decl* d = decl_create(strdup("x"), type_create(TYPE_STRING, NULL, NULL, NULL), expr_create_string_literal("493"), NULL, NULL);
-
-  // not using register codegen init here
-  label_count = -1;
-  Symbol_table* st = symbol_table_verbose_create(); st->show_hidden = true;
-  symbol_table_scope_enter(st); symbol_table_scope_enter(st);
-  error_status = decl_resolve(st, d);
-
- struct symbol* hidden_symbol_local = symbol_table_scope_lookup_at(st, ".L0", 1);
- struct symbol* hidden_symbol_global = symbol_table_scope_lookup_at(st, ".L0", 0);
-
- if (hidden_symbol_local) { print_error(test_type, "NULL", "struct symbol* hidden_symbol_local"); return FAILURE; }
- if (!hidden_symbol_global) { print_error(test_type, "NOT NULL", "struct symbol* hidden_symbol_global"); return FAILURE; }
- if (hidden_symbol_global->which != -1) { print_error(test_type, "-1", "int hidden_symbol->which"); status= FAILURE; }
- if (which_count) { print_error(test_type, "0", "int which_count"); status = FAILURE; }
-
-
- symbol_table_destroy(&st); decl_destroy(&d);
- return status;
 }
 
 

@@ -313,15 +313,6 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
     break;
   case EXPR_STR:
     // store the string literal symbol as a hidden symbol in the symbol table
-    label_name(label_create()); // stored in global label_str
-    e->symbol = symbol_create(SYMBOL_HIDDEN, type_create(TYPE_STRING, NULL, NULL, NULL), label_str);
-    symbol_table_scope_bind(st, label_str, e->symbol);
-
-    // // add it to hidden delcarations
-    // struct decl* d = decl_create(strdup(label_str), type_create(TYPE_STRING, NULL, NULL, NULL), expr_copy(e), NULL, NULL);
-    // if (!decl_hidden_list) { decl_hidden_list = d; }
-    // else { decl_hidden_list_tail->next = d; }
-    // decl_hidden_list_tail = d;
 
     break;
   default:

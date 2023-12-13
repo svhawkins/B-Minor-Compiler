@@ -13,10 +13,6 @@ extern FILE *REG_ERR_OUT, *ERR_OUT, *CODEGEN_OUT;
 extern struct stmt* test_parser_result;
 extern struct decl* parser_result;
 
-// other outputs
-extern struct decl* decl_hidden_list = NULL;
-extern struct decl* decl_hidden_list_tail = NULL;
-
 char* out_filename = "output.s";
 
 void get_options(int argc, const char* argv[]);

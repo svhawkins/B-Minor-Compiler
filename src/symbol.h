@@ -10,7 +10,6 @@ typedef enum {
 	SYMBOL_LOCAL,
 	SYMBOL_PARAM,
 	SYMBOL_GLOBAL,
-	SYMBOL_HIDDEN // for arrays and strings during code generation. considered global.
 } symbol_t;
 
 struct symbol {
