@@ -14,7 +14,7 @@ int main(void) {
   int total_pass = 0, total_tests = 0;
 
   // executables list
-  int n_exec = 8;
+  int n_exec = 9;
   char* path[] = {
     "tests/test_scan",
     "tests/test_parse",
@@ -22,26 +22,31 @@ int main(void) {
     "tests/test_print",
     "tests/test_ast",
     "tests/test_stack",
+    "tests/test_symbol_table",
     "tests/test_typecheck",
     "tests/test_codegen"
   };
-  char* name[] = { "test_scan",
+  char* name[] = {
+       "test_scan",
 		   "test_parse",
 		   "test_factory",
 		   "test_print",
 		   "test_ast",
 		   "test_stack",
+       "test_symbol_table",
 		   "test_typecheck",
 		   "test_codegen"
 		  };
 
   // what to print per pre-execution
   char* header = "TESTING: ";
-  char* tests[] = { "SCANNER",
+  char* tests[] = {
+        "SCANNER",
 		    "PARSER",
-  		    "FACTORY FUNCTIONS",
+  		  "FACTORY FUNCTIONS",
 		    "PRINT FUNCTIONS",
 		    "ABSTRACT SYNTAX TREE",
+        "SYMBOL TABLE DATA STRUCTURES",
 		    "SYMBOL TABLE",
 		    "TYPECHECKING",
 		    "CODE GENERATION"

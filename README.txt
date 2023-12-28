@@ -5,7 +5,7 @@ Assignment 5: Code Generator
 Changes since assignment 4:
 1. [main.c] renamed to [typecheck.c]
 2. symbol_table_clear() now no longer always creates non-verbose symbol tables.
-   if the just destroyed table was verbose, then so is the new one created.
+   If the just destroyed table was verbose, then so is the new one created.
 3. 2 tests were added in tests/symbol_table/test_stack.c to test for correct generation of symbol->which values
    upon scope entry and exit through binding via <struct>_resolve()
 4. Added 2 additional code files:
@@ -32,11 +32,22 @@ Changes since assignment 4:
 
 8. Error handlers now display the error enum name to be more descriptive. [resolves isue #6]
 
-9. Various code cleanups for better readability and code-style consistency.
+9. Various code cleanups for better readability, code-style consistency, and better cohesion.
 
 ****************************
 HIDDEN SYMBOLS
 
+symbol_table.h/.c now has an additional structure (typedef) to hold these hidden symbols: Hidden_table.
+Under the hood still very much a hash table (much like how the Symbol_table's stack is).
+
+Additional functions have been added for Hidden_table:
+
+- Hidden_table* symbol_table_hidden_create()
+- void symbol_table_hidden_destroy(Hidden_table** hst)
+- int symbol_table_hidden_bind(Hidden_table* hst, const char* literal)
+- int symbol_table_hidden_lookup(Hidden_table* hst, const char* literal)
+
+The hidden table is an additional field of the Symbol_table structure. 
 
 ******************************************************************************************************
 TO DO:
@@ -77,8 +88,7 @@ in setting the codegen in/out flags for file pointers.
 
 -v flag added for 'verbose'. by default off. adds slight explanatory comments to the generated code.
 
-since this only generates a .s file (human-readable assembly), the generated code is not guaranteed to work
-if put through an assembler+linker+loader.
+the code generator only generates a .s file. it still needs to be assembled, linked, and loaded afterward.
 
 these flags can be part of the compiler proper (bcc --> B-Minor C Compiler (blind carbon copy (bcc) of gcc...))
 -S: do NOT assemble the generated (.s) code (ie don't let it go through as)

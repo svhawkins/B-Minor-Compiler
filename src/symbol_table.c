@@ -89,6 +89,15 @@ struct symbol* symbol_table_search(struct symbol_table* st, const char* name, in
   return found;
 }
 
+/*
+Creates a hidden symbol table.
+Returns a NULL pointer upon any memory allocation failures.
+*/
+Hidden_table* symbol_table_hidden_create() {
+  Hidden_table* hst = hash_table_create(0, 0);
+  return hst;
+}
+
 
 /*
 Creates a symbol table.
@@ -100,7 +109,8 @@ struct symbol_table* symbol_table_create() {
     st->stack = stack_create();
     st->verbose = false;
     st->top = -1;
-    // show hidden is toggled via a command line option
+    st->show_hidden = false; // true iff from command line option
+    st->hidden_table = symbol_table_hidden_create();
   }
   global_error_count = 0;
   error_status = 0;
@@ -115,6 +125,27 @@ struct symbol_table* symbol_table_verbose_create() {
   struct symbol_table* st = symbol_table_create();
   if (st) st->verbose = true;
   return st;
+}
+
+/*
+Destroys a hidden symbol table.
+Sets hst to NULL upon success.
+Does nothing if NULL hidden symbol table.
+*/
+void symbol_table_hidden_destroy(Hidden_table** hst) {
+  if (!hst || !(*hst)) { return; }
+
+  // delete all of the individual keys (strdupped)
+  const char* key; void* value;
+  hash_table_firstkey(*hst);
+  while (hash_table_nextkey(*hst, &key, &value)) {
+    const char* label = (const char*)hash_table_lookup(*hst, key);
+    free(label);
+  }
+
+  // delete the table
+  hash_table_delete((struct hash_table*)*hst);
+  *hst = NULL;
 }
 
 /*
@@ -137,8 +168,11 @@ void symbol_table_destroy(struct symbol_table** st) {
     struct hash_table* ht = stack_pop((*st)->stack);
     hash_table_destroy(&ht);
   }
-  stack_destroy(&((*st)->stack)); free(*st);
-  *st = NULL;
+  stack_destroy(&((*st)->stack));
+
+  symbol_table_hidden_destroy(&((*st)->hidden_table));
+
+  free(*st); *st = NULL;
   global_error_count = 0;
 }
 
@@ -211,6 +245,16 @@ int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct sy
 }
 
 /*
+Adds <string literal, label> as a key-value to the hidden symbol table.
+Returns 1 upon success, 0 upon failure.
+Failure if:
+        - NULL hash table
+*/
+int symbol_table_hidden_bind(Hidden_table* hst, const char* literal, const char* label) {
+  return (hst) ? hash_table_insert(hst, literal, (void*)label) : 0;
+}
+
+/*
 Searches for <name> only in topmost scope regardless of value in st->top
 Returns a NULL pointer in the following cases:
         - out of bounds index value
@@ -276,6 +320,18 @@ Returns a NULL pointer in the following cases:
 */
 struct symbol* symbol_table_scope_lookup_current(struct symbol_table* st, const char* name) {
   return (st) ? symbol_table_scope_lookup_at(st, name, st->top) : NULL;
+}
+
+/*
+Searches for <literal> in hidden symbol table's, returning the associated label.
+Returns a NULL pointer in the following cases:
+        - NULL hash table
+        - empty hash table
+        - invalid key
+*/
+const char* symbol_table_hidden_lookup(Hidden_table* hst, const char* literal) {
+  if (!hst || (hash_table_size(hst) == 0)) { return NULL; }
+  else { return hash_table_lookup(hst, literal); }
 }
 
 void symbol_table_fprint(FILE* fp, struct symbol_table* st) {

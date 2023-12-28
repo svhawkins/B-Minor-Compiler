@@ -41,14 +41,15 @@ This is used when printing out (complete) symbol tables (and for testing!)
 The top field is also used to indicate current scope via its index.
 This ensures for proper scope lookups even with verbose enabled.
 
-The show_hidden field is for printing purposes.
+The show_hidden field is for printing purposes. It prints the hidden symbol table, a seperate structure.
 */
-
+typedef struct hash_table Hidden_table;
 struct symbol_table {
   Stack* stack;
   bool verbose;
   int top;
   bool show_hidden;
+  Hidden_table* hidden_table;
 }; typedef struct symbol_table Symbol_table;
 
 
@@ -65,11 +66,24 @@ Returns a NULL pointer upon any memory allocation failures.
 struct symbol_table* symbol_table_verbose_create();
 
 /*
+Creates a hidden symbol table.
+Returns a NULL pointer upon any memory allocation failures.
+*/
+Hidden_table* symbol_table_hidden_create();
+
+/*
 Destroys a symbol table.
 Sets st to NULL upon success.
 Does nothing if NULL symbol table.
 */
 void symbol_table_destroy(struct symbol_table** st);
+
+/*
+Destroys a hidden symbol table.
+Sets hst to NULL upon success.
+Does nothing if NULL hidden symbol table.
+*/
+void symbol_table_hidden_destroy(Hidden_table** hst);
 
 
 /*
@@ -114,7 +128,15 @@ Failure if:
 int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct symbol* sym);
 
 /*
-Searches for <name> only in topmost scope regardless of value in st->top
+Adds <string literal, label> as a key-value to the hidden symbol table.
+Returns 1 upon success, 0 upon failure.
+Failure if:
+        - NULL hash table
+*/
+int symbol_table_hidden_bind(Hidden_table* hst, const char* literal, const char* label);
+
+/*
+Searches for <name> in indicated scope from index regardless of value in st->top
 Returns a NULL pointer in the following cases:
         - out of bounds index value
         - NULL symbol table
@@ -168,10 +190,17 @@ Note this is a special case of symbol_table_scope_lookup_at()
 struct symbol* symbol_table_scope_lookup_current(struct symbol_table* st, const char* name);
 
 /*
+Searches for <literal> in hidden symbol table's, returning the associated label.
+Returns a NULL pointer in the following cases:
+        - NULL hash table
+        - empty hash table
+        - invalid key
+*/
+const char* symbol_table_hidden_lookup(Hidden_table* hst, const char* literal);
+
+/*
 Prints out all of the hash tables in the stack.
 Each hash table prints out the all of their key value pairs.
-
-If the show_hidden flag is set to false, key, hidden symbols are NOT printed.
 
 example using function definition:
 foo: function void(x: integer, z: boolean, y: char) = {
@@ -200,5 +229,20 @@ foo --> (kind: global, name: foo, type: function void (x: integer, y: char, z: b
 */
 void symbol_table_fprint(FILE* fp, struct symbol_table* st);
 void symbol_table_print(struct symbol_table* st);
+
+/*
+Prints out all of the key-value (string literal to label) pairs
+in the hidden symbol hash table.
+
+example:
+
+LITERAL --> LABEL
+--------------------------------------------------
+"foo" --> ".L0"
+--------------------------------------------------
+*/
+void symbol_table_hidden_fprint(FILE* fp, Hidden_table* hst);
+void symbol_table_hidden_print(Hidden_table* hst);
+
 
 #endif /* SYMBOL_TABLE_H */

@@ -1,6 +1,6 @@
 CFLAGS = -pedantic -Og -Wall -Wextra
 AST = tests/test_factory tests/test_print tests/test_ast
-SYM = tests/test_stack tests/test_typecheck
+SYM = tests/test_stack tests/test_symbol_table tests/test_typecheck
 TESTS = tests/test_scan tests/test_parse $(AST) $(SYM) tests/test_codegen test
 COMPILER = scan parse print typecheck codegen
 EXEC = $(COMPILER) $(TESTS)
@@ -31,6 +31,8 @@ tests/test_print: tests/ast/test_print.o src/scanner.o src/parser.o $(INCLUDES)
 tests/test_ast: tests/ast/test_ast.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
 tests/test_stack: tests/symbol_table/test_stack.o src/scanner.o src/parser.o $(INCLUDES)
+	gcc -o $@ $^
+tests/test_symbol_table: tests/symbol_table/test_symbol_table.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
 tests/test_typecheck: tests/symbol_table/test_typecheck.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
