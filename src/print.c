@@ -19,6 +19,7 @@ extern void print_error_message();
 extern struct stmt* test_parser_result;
 extern struct decl* parser_result;
 
+void help(void);
 void get_options(int argc, const char* argv[]);
 int main(int argc, const char* argv[]) {
   get_options(argc, argv);
@@ -30,6 +31,13 @@ int main(int argc, const char* argv[]) {
   }
   if (parser_result) { decl_print(parser_result, 0); printf("\n");  decl_destroy(&parser_result); }
   return 0;
+}
+
+void help(void) {
+    printf("parse [options]: Grammar validator for B-Minor\n");
+    printf("Options:\n");
+    printf("--toggle (-t): Turn YYDEBUG to ON (default OFF).\n");
+    printf("--help (-h): print this help.\n");
 }
 
 void get_options(int argc, const char* argv[]) {
@@ -44,8 +52,8 @@ void get_options(int argc, const char* argv[]) {
     if (c == -1) { break; }
     switch(c) {
       case 't': yydebug = 1; break;
-      case 'h': exit(0); // TO DO: print help stuff, return instead.
-      case '?': default: exit(-1); // TO DO: invalid
+      case 'h': help(); exit(0);
+      case '?': default: fprintf(stderr, "invalid argument\n"); exit(-1);
     }
   }
 }

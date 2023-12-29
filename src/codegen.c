@@ -13,11 +13,18 @@ extern FILE *REG_ERR_OUT, *ERR_OUT, *CODEGEN_OUT;
 extern struct stmt* test_parser_result;
 extern struct decl* parser_result;
 
-char* out_filename = "output.s";
+char* out_filename[MAX_LENGTH];
+char* in_filename[MAX_LENGTH];
+bool verbose = false;
 
 void get_options(int argc, const char* argv[]);
+void help(void);
 bool setup_genfile(void);
 int main(int argc, const char** argv) {
+
+  // set up file I/O defaults
+  strcpy(in_filename, "stdin");
+  strcpy(out_filename, "stdout"); // TO DO: change to output.s eventually.
   ERR_OUT = REG_ERR_OUT = stderr;
   get_options(argc, argv);
   bool infile = setup_genfile();
@@ -33,20 +40,36 @@ int main(int argc, const char** argv) {
   return 0;
 }
 
+void help(void) {
+  printf("codegen [options]: Code generator for B-Minor\n");
+  printf("Options:\n");
+  printf("--help (-h): print this help\n");
+  printf("--output_file (-o <outfile>): specify the output file to be <outfile>\n");
+  printf("--input_file (-i) <infile>: specify the input file to be <infile>\n");
+  printf("--interactive (-I): input and output file descriptors are STDIN and STDOUT\n");
+  printf("--verbose (-v): generated assembly code will have brief explanatory comments.\n");
+}
+
 void get_options(int argc, const char* argv[]) {
   struct option long_opts [] = {
     {"help", no_argument, NULL, 'h'},
-    {"output_file", no_argument, NULL, 'o'},
+    {"output_file", optional_argument, NULL, 'o'},
+    {"input_file", optional_argument, NULL, 'i'},
+    {"interactive", no_argument, NULL, 'I'},
+    {"verbose", no_argument, NULL, '-v'},
     {0, 0, 0, 0}
   };
   int c, option_index;
   while(1) {
-    c = getopt_long(argc, argv, "ho:", long_opts, &option_index);
+    c = getopt_long(argc, argv, "ho:i:Iv", long_opts, &option_index);
     if (c == -1) { break; }
     switch(c) {
       case 'o': strcpy(out_filename, optarg); break;
-      case 'h': exit(0); // TO DO: print help stuff, return instead.
-      case '?': default: exit(-1); // TO DO: invalid
+      case 'i': strcpy(in_filename, optarg); break;
+      case 'I': strcpy(in_filename, "stdin"); strcpy(out_filename, "stdout"); break;
+      case 'v': verbose = true; break;
+      case 'h': help(); exit(0);
+      case '?': default: fprintf(stderr, "invalid argument\n"); exit(-1);
     }
   }
 }

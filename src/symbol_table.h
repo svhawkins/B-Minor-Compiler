@@ -234,15 +234,27 @@ void symbol_table_print(struct symbol_table* st);
 Prints out all of the key-value (string literal to label) pairs
 in the hidden symbol hash table.
 
-example:
+example)
 
 LITERAL --> LABEL
 --------------------------------------------------
-"foo" --> ".L0"
+foo --> .L0
 --------------------------------------------------
 */
 void symbol_table_hidden_fprint(FILE* fp, Hidden_table* hst);
 void symbol_table_hidden_print(Hidden_table* hst);
+
+/*
+Generates the necessary assembly labels and values from the hidden symbol table.
+
+Example with a string literal, "foo", being associated the label ".L0":
+
+.L0:
+    .string "foo"
+
+This is done for every entry in the table.
+*/
+void symbol_table_hidden_codegen(Hidden_table* hst);
 
 
 #endif /* SYMBOL_TABLE_H */

@@ -19,6 +19,7 @@ void print_error(char* test, char* expect, char* value);
 Status test_expr_resolve_name(void);
 Status test_expr_resolve_binary_op(void);
 Status test_expr_resolve_sym_undef(void);
+Status test_expr_resolve_hidden(void);
 
 // resolution for declarations
 Status test_decl_resolve_atomic_uninit(void);
@@ -65,6 +66,7 @@ int main(void) {
     test_expr_resolve_name,
     test_expr_resolve_binary_op,
     test_expr_resolve_sym_undef,
+    test_expr_resolve_hidden,
     test_decl_resolve_atomic_uninit,
     test_decl_resolve_atomic_init,
     test_decl_resolve_function_uninit_no_param,
@@ -873,5 +875,31 @@ Status test_decl_resolve_nonconst_global_array(void) {
   if (decl_error != DECL_CONST) { print_error(test_type, "DECL_CONST", "int error_status"); status = FAILURE;}
   symbol_table_destroy(&st);
   decl_destroy(&arrdecl);
+  return status;
+}
+
+Status test_expr_resolve_hidden(void) {
+  strcpy(test_type, __FUNCTION__);
+  Status status = SUCCESS;
+  struct expr* e = expr_create_string_literal(strdup("foo"));
+
+  Symbol_table* st = symbol_table_create();
+  label_count = -1;
+  symbol_table_scope_enter(st); symbol_table_scope_enter(st);
+  if (e->symbol) { print_error(test_type, "NULL", "e->symbol"); status = FAILURE; }
+  if (symbol_table_hidden_lookup(st->hidden_table, "foo")) {
+    print_error(test_type, "NULL", "struct symbol* symbol_table_scope_lookup(st, \"x\""); status = FAILURE;
+  }
+
+  error_status = expr_resolve(st, e);
+  const char* found_label = symbol_table_hidden_lookup(st->hidden_table, "foo");
+  if (global_error_count) { print_error(test_type, "0", "int global_error_count"); status = FAILURE; }
+  if (e->symbol) { print_error(test_type, "NULL", "struct symbol* e->symbol"); status = FAILURE; }
+  if (!found_label) {
+    print_error(test_type, "NOT NULL", "const char* symbol_table_hidden_lookup(Hidden_table* hst, \"foo\")");
+    status = FAILURE;
+  }
+  if (strcmp(found_label, ".L0")) { print_error(test_type, "0", "strcmp(found_label, \".L0\")"); status = FAILURE; }
+  symbol_table_destroy(&st); expr_destroy(&e);
   return status;
 }

@@ -15,6 +15,7 @@ extern char error_text[2 * YYLMAX];
 extern char filename[YYLMAX];
 extern bool has_match;
 extern void add_col(bool is_newline);
+void help(void);
 void print_header(void);
 token_t print_token(token_t kind);
 
@@ -44,6 +45,16 @@ int main(int argc, const char** argv) {
   return 0;
 }
 
+void help(void) {
+    printf("scan [options]: Scans provided B-Minor input and returns list of tokens, their type, and line number.\n");
+    printf("Options:\n");
+    printf("--column (-c): Show column number along with line number.\n");
+    printf("--help (-h): show this help.\n");
+    printf("--all (-a): All token kinds show their associated value (instead of just ones for variables).\n");
+    printf("--verbose (-v): Use both -c and -a flags.\n");
+    printf("--file (-f <file>): Use provided input file instead of STDIN.\n"); 
+}
+
 scanmode_t get_options(int argc, const char** argv) {
   struct option long_opts [] = {
     {"column", no_argument, NULL, 'c'},
@@ -57,15 +68,15 @@ scanmode_t get_options(int argc, const char** argv) {
   int c, option_index;
   yyin = stdin; strcpy(filename, "stdin");
   while(1) {
-    c = getopt_long(argc, argv, "acf:hv", long_opts, &option_index);
+    c = getopt_long(argc, (char* const*)argv, "acf:hv", long_opts, &option_index);
     if (c == -1) { break; }
     switch(c) {
       case 'a': mode = ALL; break;
       case 'c': mode = COLUMN; break;
       case 'v': mode = VERBOSE; break;
       case 'f': if (optarg) { yyin = fopen(argv[optind - 1], "r"); strcpy(filename, argv[optind -1]); } break;
-      case 'h': exit(0); // TO DO: print help stuff, return instead.
-      case '?': default: exit(-1); // TO DO: invalid
+      case 'h': help(); exit(0);
+      case '?': default: fprintf(stderr, "invalid argument.\n"); exit(-1);
     }
   }
   if (!yyin) {} // TO DO: also error */

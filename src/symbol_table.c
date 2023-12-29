@@ -334,6 +334,11 @@ const char* symbol_table_hidden_lookup(Hidden_table* hst, const char* literal) {
   else { return hash_table_lookup(hst, literal); }
 }
 
+/*
+Prints out all of the hash tables in the stack.
+Each hash table prints out the all of their key value pairs.
+*/
+
 void symbol_table_fprint(FILE* fp, struct symbol_table* st) {
   int top = (st->verbose) ? stack_size(st->stack) - 1 : st->top;
   for (int i = top; i >= 0; i--) {
@@ -350,3 +355,50 @@ void symbol_table_fprint(FILE* fp, struct symbol_table* st) {
 }
 
 void symbol_table_print(struct symbol_table* st) { symbol_table_fprint(stdout, st); }
+
+/*
+Prints out all of the key-value (string literal to label) pairs
+in the hidden symbol hash table.
+*/
+void symbol_table_hidden_fprint(FILE* fp, Hidden_table* hst) {
+  /*
+  LITERAL --> LABEL
+  --------------------------------------------------
+  <key> --> <value>
+  --------------------------------------------------
+  */
+
+  // hash table header
+  fprintf(fp, "\nLITERAL --> LABEL\n");
+  fprintf(fp, "\n"); for (int j = 0; j < 50; j++) fprintf(fp, "-"); fprintf(fp, "\n");
+
+  // print out hidden table
+  if (!hst) { fprintf(fp, "\t\t[null table]\n\n"); return; }
+  if (!hash_table_size(hst)) { fprintf(fp, "\t\t[empty table]\n\n"); return; }
+  char* key; void* value;
+  hash_table_firstkey(hst); fprintf(fp, "\n");
+  while (hash_table_nextkey(hst, &key, &value)) {
+    fprintf(fp, "%s --> %s\n", key, (const char*)value);
+  }
+  fprintf(fp, "\n"); for (int i = 0; i < 50; i++) { fprintf(fp, "-"); } fprintf(fp, "\n");
+}
+void symbol_table_hidden_print(Hidden_table* hst) { symbol_table_hidden_fprint(stdout, hst); }
+
+/*
+Generates the necessary assembly labels and values from the hidden symbol table.
+
+Example with a string literal, "foo", being associated the label ".L0":
+
+.L0:
+    .string "foo"
+
+This is done for every entry in the table.
+*/
+void symbol_table_hidden_codegen(Hidden_table* hst) {
+  if (!hst || !hash_table_size(hst)) { return; } 
+  char* key; void* value;
+  hash_table_firstkey(hst);
+  while (hash_table_nextkey(hst, &key, &value)) {
+    fprintf(CODEGEN_OUT, "%s:\n\t\t.string \"%s\"\n", (const char*)value, key);
+  }
+}

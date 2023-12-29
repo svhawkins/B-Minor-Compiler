@@ -37,17 +37,28 @@ Changes since assignment 4:
 ****************************
 HIDDEN SYMBOLS
 
-symbol_table.h/.c now has an additional structure (typedef) to hold these hidden symbols: Hidden_table.
+symbol_table.h/.c now has an additional structure to hold these hidden symbols: Hidden_table.
 Under the hood still very much a hash table (much like how the Symbol_table's stack is).
 
 Additional functions have been added for Hidden_table:
 
+
+For typechecking:
 - Hidden_table* symbol_table_hidden_create()
 - void symbol_table_hidden_destroy(Hidden_table** hst)
 - int symbol_table_hidden_bind(Hidden_table* hst, const char* literal)
 - int symbol_table_hidden_lookup(Hidden_table* hst, const char* literal)
 
+For symbol table printing:
+- void symbol_table_hidden_fprint(FILE* fp, Hidden_table* hst)
+- void symbol_table_hidden_print(Hidden_table* hst)
+
+For code generation:
+- void symbol_table_hidden_codegen(Hidden_table* hst)
+
 The hidden table is an additional field of the Symbol_table structure. 
+The hidden symbols are generated seperately from the rest of the declarations (attempts were made to make it part
+of the same declaration list, but did not work, so it has its own special function).
 
 ******************************************************************************************************
 TO DO:
@@ -71,22 +82,29 @@ use assembly emulator to help you.
 	- other operations
 		implement
 		test
-	- fcall
+	- fcall (not necessarily declaration, just prologues and epilogues)
 		implement
 		test
 
+5. implement + test decl codegen
+   - global non-function/array declarations
+   - local non-function/array declarations
+   - array declarations (global, local) (requires EXPR_INIT)
+
+6. implement + test stmt codegen
+   - expression statements
+   - declaration statements
+   - code blocks
+   - print statements
+   - return statements
+   - loops
+   - conditional statements
+
+7. functions:
+   - function declarations
+
 
 ****NOTES
-
-flags to implement
-
-in setting the codegen in/out flags for file pointers.
--o flag added to indicate output file. default name 'output.s'. can also just output redirection.
--i flag added to indicate input file, if any. defaults to stdin. can also just do input redirection.
--I flag added to indicate 'interactive'. input is stdin and output is stdout. this can be overwrites -o or -i options.
-
-
--v flag added for 'verbose'. by default off. adds slight explanatory comments to the generated code.
 
 the code generator only generates a .s file. it still needs to be assembled, linked, and loaded afterward.
 
@@ -95,8 +113,6 @@ these flags can be part of the compiler proper (bcc --> B-Minor C Compiler (blin
 -c: do NOT link the assembled (.o) code (ie don't let it go through ld)
 -o: output file
 -v: verbose (show argv for every executed program)
-
-
 
 
 exponentation and printing are put in the runtime library which can either be statically or dynamically
@@ -120,3 +136,5 @@ now intermediate value tracking of values works for both literals and names.
 constant expressions in global scope must NOT have their full expression generated, but rather the resulting value.
 entirely constant expressions (ie not containing only literals) can be optimised to NOT generate the expression(s) to
 reach their value, just that a register be stored with the end result.
+
+string comparisions (NEQ and EQ) must use strcmp (runtime library)

@@ -298,8 +298,9 @@ struct expr* expr_copy(struct expr* e) {
 }
 
 int expr_resolve(struct symbol_table* st, struct expr* e) {
-  if (!st || !e) return 0;
+  if (!st || !e) { return 0; }
   int error_status = 0;
+  char* found_label = NULL;
   switch(e->kind) {
   case EXPR_NAME:
     // constant expressions cannot contain names
@@ -313,7 +314,11 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
     break;
   case EXPR_STR:
     // store the string literal symbol as a hidden symbol in the symbol table
-
+    found_label = symbol_table_hidden_lookup(st->hidden_table, e->string_literal);
+    if (!found_label) {
+      found_label = label_name(label_create());
+      symbol_table_hidden_bind(st->hidden_table, (const char*)e->string_literal, (const char*)strdup(found_label));
+    }
     break;
   default:
     error_status = expr_resolve(st, e->left);
