@@ -114,6 +114,8 @@ struct symbol_table* symbol_table_create() {
   }
   global_error_count = 0;
   error_status = 0;
+  generate_hidden = false;
+  generate_global = true;
   return st;
 }
 

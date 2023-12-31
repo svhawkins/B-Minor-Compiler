@@ -3,9 +3,44 @@
 #include <stdbool.h>
 #include "expr.h"
 
+enum { UNDERFLOW = false, OVERFLOW = true };
+inline bool flow_check(expr_t kind, int64_t result, int64_t left, int64_t right, bool is_overflow) {
+  bool overflow = false, underflow = false;
+  //printf("result: %ld\tleft: %ld\tright: %ld\n", result, left, right);
+  switch(kind) {
+    case EXPR_ADD:
+      overflow = (left >= 0 && right >= 0 && result < 0);
+      underflow = (left < 0 && right < 0 && result >= 0);
+    break;
+    case EXPR_INC:
+        overflow = (left >= 0 && result < 0);
+        underflow = (left < 0 && result >= 0);
+    break;
+    case EXPR_SUB:
+      overflow = (left >= 0 && right < 0 && result < 0); /* +L --R --> +L + R*/
+      underflow = (left < 0 && right >= 0 && result >= 0); /* -L - +R --> -L -R */
+    break;
+    case EXPR_DEC:
+      overflow = (left >= 0 && result < 0);
+      underflow = (left < 0 && result >= 0);
+    break;
+    case EXPR_MULT:
+      overflow = (left < 0 && right < 0 && result < 0) || (left >= 0 && right >= 0 && result < 0); /* -L * -R -> +, +L * +R --> +*/
+      underflow = (left < 0 && right >= 0 && result >= 0) || (left >= 0 && right < 0 && result >= 0);
+    break;
+    case EXPR_DIV:
+    case EXPR_MOD:
+      underflow = false;
+      overflow = (left == INT64_MIN && right == - 1); /* overflow only occurs with negative operands */
+    break;
+    case EXPR_EXP: // TO DO /* overflow: NaN, underflow: unnormalized*/
+    default: break; /* do nothing */
+  }
+  return (is_overflow) ? overflow : underflow;
+}
+
 // it is here as not realloc every time
 char buffer[16];
-
 // handles error messages
 char* expr_strerror(type_error_t kind) {
   switch(kind) {
@@ -110,6 +145,34 @@ int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void*
       fprintf(ERR_OUT, "\nWith argument(s): "); expr_fprint(ERR_OUT, (struct expr*)type_ctx1);
     break;
   }
+  fprintf(ERR_OUT, "\n\n");
+  global_error_count++;
+  return kind;
+}
+
+char* expr_codegen_strerror(codegen_error_t kind) {
+  switch(kind) {
+    case EXPR_OVERFLOW: strcpy(buffer, "EOVERFLOW"); break;
+    case EXPR_UNDERFLOW: strcpy(buffer, "EUNDERFLOW"); break;
+    case EXPR_BYZERO: strcpy(buffer, "EBYZERO"); break;
+  }
+  return buffer;
+}
+
+int expr_codegen_error_handle(codegen_error_t kind, struct expr* e) {
+  fprintf(ERR_OUT, "ERROR %s (%d):\n", expr_codegen_strerror(kind), kind);
+  switch(kind) {
+    case EXPR_OVERFLOW: /* operation detected integer overflow */
+      fprintf(ERR_OUT, "WARNING: integer overflow detected in expression: ");
+      break;
+    case EXPR_UNDERFLOW: /* operation detected integer underflow*/
+      fprintf(ERR_OUT, "WARNING: integer underflow detected in expression: ");
+      break;
+    case EXPR_BYZERO: /* modulus or division by zero detected */
+      fprintf(ERR_OUT, "WARNING: division or modulus by zero attempted in expression: ");
+      break;
+  }
+  expr_fprint(ERR_OUT, e);
   fprintf(ERR_OUT, "\n\n");
   global_error_count++;
   return kind;
@@ -269,10 +332,8 @@ void expr_destroy(struct expr** e) {
   //if ((*e)->string_literal) { free((void*)(*e)->string_literal); }
   if ((*e)->symbol) { (*e)->symbol = NULL; }
 
-  // // free the register
+  // free the register
   if ((*e)->reg > 0) { register_scratch_free((*e)->reg); }
-
-
   free(*e); *e = NULL;
 }
 
@@ -471,12 +532,12 @@ If any error occurs that is NOT due to register allocation such as but not limit
         - integer overflow --> warning (nonfatal)
 An error/warning code is emitted and send to the error message handler.
 */
-int expr_codegen(struct expr* e) {
-  if (!e) { return 0; } // basis reached.
+int expr_codegen(struct symbol_table* st, struct expr* e) {
+  if (!e) { return error_status; } // basis reached.
 
   // post order traversal, left child, right child, then parent
-  error_status = expr_codegen(e->left);
-  error_status = expr_codegen(e->right);
+  error_status = expr_codegen(st, e->left);
+  error_status = expr_codegen(st, e->right);
 
   // parent
   switch(e->kind) {
@@ -488,17 +549,27 @@ int expr_codegen(struct expr* e) {
       e->reg = register_scratch_alloc();
       fprintf(CODEGEN_OUT, "MOVQ $%ld, %s\n", e->literal_value, register_scratch_name(e->reg));
       break;
-    // load the address
+    // load the address (the associated label name with the literal)
     case EXPR_STR:
-      // TO DO: this solution only works for strings stored as variables. what about string literals?
       e->reg = register_scratch_alloc();
-      fprintf(CODEGEN_OUT, "LEAQ %s, %s\n", symbol_codegen(e->symbol), register_scratch_name(e->reg));
+      fprintf(CODEGEN_OUT, "LEAQ %s, %s\n",
+                            (const char*)symbol_table_hidden_lookup(st->hidden_table, e->string_literal),
+                            register_scratch_name(e->reg));
       break;
     // load the symbol
-    case EXPR_NAME: /* MOVQ <name>, %R / MOVQ %rsp(N), %R */
-      // TO DO: what if the symbol is an array or string? then LEAQ!
+    case EXPR_NAME:
+    /*
+    pass-by-value
+    MOVQ <name>, %R / MOVQ %rsp(N), %R
+    
+    pass-by-reference (string, array)
+    LEAQ <name>, %R / LEAQ %rps(N), %R
+    */
       e->reg = register_scratch_alloc();
-      fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", symbol_codegen(e->symbol), register_scratch_name(e->reg));
+      fprintf(CODEGEN_OUT, "%s %s, %s\n",
+                           (e->symbol->type->kind == TYPE_STRING || e->symbol->type->kind == TYPE_ARRAY)
+                           ? "LEAQ" : "MOVQ",
+                            symbol_codegen(e->symbol), register_scratch_name(e->reg));
       break;
 
     // arithmetic + logical operations
@@ -506,16 +577,36 @@ int expr_codegen(struct expr* e) {
       fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
       register_scratch_free(e->left->reg);
       e->reg = e->right->reg;
+
+      // value tracking
+      if (!e->string_literal) { e->literal_value = e->right->literal_value; }
+      //else { e->string_literal = strdup(e->right->string_literal); }
       break;
     case EXPR_ADD: /* ADDQ %RL, %RR */
       fprintf(CODEGEN_OUT, "ADDQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
       register_scratch_free(e->left->reg);
       e->reg = e->right->reg;
+
+      // value tracking
+      e->literal_value = e->left->literal_value + e->right->literal_value;
+      if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, OVERFLOW)) {
+        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+      } else if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, UNDERFLOW)) {
+        error_status = expr_codegen_error_handle(EXPR_UNDERFLOW, e);
+      }
       break;
     case EXPR_SUB: /* SUBQ %RL, %RR */
       fprintf(CODEGEN_OUT, "SUBQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
       register_scratch_free(e->left->reg);
       e->reg = e->right->reg;
+
+      // value tracking
+      e->literal_value = e->left->literal_value - e->right->literal_value;
+      if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, OVERFLOW)) {
+        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+      } else if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, UNDERFLOW)) {
+        error_status = expr_codegen_error_handle(EXPR_UNDERFLOW, e);
+      }
       break;
     case EXPR_AND: /* ANDQ %RL, %RR */
       fprintf(CODEGEN_OUT, "ANDQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
@@ -531,18 +622,36 @@ int expr_codegen(struct expr* e) {
     /* "unary" */
     case EXPR_POS: /* nothing happens */
       e->reg = e->left->reg;
+      e->literal_value = e->left->literal_value;
       break;
     case EXPR_NEG: /* NEG %RL*/
       fprintf(CODEGEN_OUT, "NEGQ %s\n", register_scratch_name(e->left->reg));
       e->reg = e->left->reg;
+      e->literal_value = -1 * e->left->literal_value;
       break;
     case EXPR_INC: /* INC %RL */
       fprintf(CODEGEN_OUT, "INCQ %s\n", register_scratch_name(e->left->reg));
       e->reg = e->left->reg;
+
+      // value tracking
+      e->literal_value = e->left->literal_value + 1;
+      if (flow_check(e->kind, e->literal_value, e->left->literal_value, -1, OVERFLOW)) {
+        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+      } else if (flow_check(e->kind, e->literal_value, e->left->literal_value, -1, UNDERFLOW)) {
+        error_status = expr_codegen_error_handle(EXPR_UNDERFLOW, e);
+      }
       break;
     case EXPR_DEC: /* DEC %RL */
       fprintf(CODEGEN_OUT, "DECQ %s\n", register_scratch_name(e->left->reg));
       e->reg = e->left->reg;
+
+      // value tracking
+      e->literal_value = e->left->literal_value - 1;
+      if (flow_check(e->kind, e->literal_value, e->left->literal_value, -1, OVERFLOW)) {
+        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+      } else if (flow_check(e->kind, e->literal_value, e->left->literal_value, -1, UNDERFLOW)) {
+        error_status = expr_codegen_error_handle(EXPR_UNDERFLOW, e);
+      }
       break;
     case EXPR_NOT: /* NOT %RL */
       fprintf(CODEGEN_OUT, "NOTQ %s\n", register_scratch_name(e->left->reg));
@@ -562,6 +671,14 @@ int expr_codegen(struct expr* e) {
       fprintf(CODEGEN_OUT, "MOVQ %rax, %s\n", register_scratch_name(e->reg));
       register_scratch_free(e->left->reg);
       register_scratch_free(e->right->reg);
+
+      // value tracking
+      e->literal_value = e->left->literal_value * e->right->literal_value;
+      if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, OVERFLOW)) {
+        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+      } else if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, UNDERFLOW)) {
+        error_status = expr_codegen_error_handle(EXPR_UNDERFLOW, e);
+      }
       break;
 
     /*
@@ -580,6 +697,16 @@ int expr_codegen(struct expr* e) {
                                             register_scratch_name(e->reg));
       register_scratch_free(e->left->reg);
       register_scratch_free(e->right->reg);
+
+      // value tracking
+      if (e->right->literal_value == 0) { return error_status = expr_codegen_error_handle(EXPR_BYZERO, e); }
+      if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, OVERFLOW)) {
+        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+      } else {
+        e->literal_value = (e->kind == EXPR_DIV) ?
+                            e->left->literal_value / e->right->literal_value :
+                            e->left->literal_value % e->right->literal_value;
+      }
       break;
     case EXPR_SUBSCRIPT:
 

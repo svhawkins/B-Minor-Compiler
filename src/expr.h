@@ -9,6 +9,7 @@
 bool is_const_expr; // used for error handling
 struct symbol_table; // forward decl for reasons
 typedef enum { MATH = 1, RELATE, LOGIC, EQUAL, ASSIGN, LVAL, INIT, SUBSCRIPT, FCALL, PARAM, IMMUTABLE} type_error_t;
+typedef enum { EXPR_OVERFLOW = 1, EXPR_UNDERFLOW, EXPR_BYZERO } codegen_error_t;
 typedef enum {
         // unary operators
 	EXPR_INC = 0, // l++
@@ -81,6 +82,7 @@ struct expr* expr_copy(struct expr* e);
 
 /*
 Looks up symbols in the symbol table used within expressions.
+Hidden symbols (string literal labels) are added to their own table.
 */
 int expr_resolve(struct symbol_table* st, struct expr* e);
 
@@ -103,6 +105,6 @@ If any error occurs that is NOT due to register allocation such as but not limit
 	- integer overflow
 An error code is emitted and send to the error message handler.
 */
-int expr_codegen(struct expr* e);
+int expr_codegen(struct symbol_table* st, struct expr* e);
 
 #endif /* EXPR_H */

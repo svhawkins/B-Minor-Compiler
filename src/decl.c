@@ -97,7 +97,7 @@ void decl_destroy(struct decl** d) {
 
 
 int decl_resolve(struct symbol_table* st, struct decl* d) {
-  if (!st || !d) return error_status; decl_error = NO_ERROR;
+  if (!st || !d) { return error_status; decl_error = NO_ERROR; }
   symbol_t kind = symbol_table_scope_level(st) > 1 ? SYMBOL_LOCAL : SYMBOL_GLOBAL;
   // does this declaration require constant expressions?
   is_const_expr = ((d->value && kind == SYMBOL_GLOBAL) || d->type->size);
@@ -140,7 +140,7 @@ int decl_resolve(struct symbol_table* st, struct decl* d) {
 }
 
 int decl_typecheck(struct symbol_table* st, struct decl* d) {
-  if (!d) return error_status;
+  if (!d) { return error_status; }
 
   // corresponding value expressions must evaluate to same type declared
   if (d->value) {
@@ -182,4 +182,57 @@ int decl_typecheck(struct symbol_table* st, struct decl* d) {
   
   error_status = decl_typecheck(st, d->next);
   return error_status;
+}
+
+// generates code for declaration structures.
+int decl_codegen(struct symbol_table* st, struct decl* d) {
+  if (!d) { return error_status; }
+
+  // check flags
+  if (!generate_hidden) { symbol_table_hidden_codegen(st->hidden_table); generate_hidden = true; }
+
+
+  /*
+  TO DO:
+  - refactor
+  - arrays need to do expr_codegen for every expression in it is list
+    same global/const rules apply.
+  */
+  if (d->type->kind != TYPE_FUNCTION) {
+    // don't generate intermediate expression code if part of global variable declaration
+    if (!is_test && (d->symbol->kind == SYMBOL_GLOBAL)) { generate_global = false; }
+
+    // get the resulting expression register
+    error_status = expr_codegen(st, d->value);
+    if (!d->symbol->address) { symbol_codegen(d->symbol); }
+    if (d->symbol->kind == SYMBOL_GLOBAL) {
+      /*
+      <name>:
+            .quad <value>
+            .zero 8 # if no value
+      */
+     if (d->value) {
+      // global string literals are assigned the label to the string
+      if (d->value->string_literal) {
+        fprintf(CODEGEN_OUT, "%s:\n\t\t.quad %s\n",
+                             d->symbol->address,
+                             symbol_table_hidden_lookup(st->hidden_table, d->value->string_literal));
+      } else {
+        // other global literals use the exact value, NOT the register!
+        fprintf(CODEGEN_OUT, "%s:\n\t\t.quad %d\n", d->symbol->address, d->value->literal_value);
+      }
+      // undefined-though-declared values are 'zeroed'
+     } else { fprintf(CODEGEN_OUT, "%s:\n\t\t.zero %d\n", d->symbol->address, QUAD); }
+    } else {
+      /*
+      MOVQ e->reg, symbol_codegen(e->symbol)
+
+      if undefined, value is default 0.
+      */
+     fprintf("MOVQ %s, %s\n", (d->value) ? register_scratch_name(d->value->reg) : "$0",
+                               d->symbol->address);
+    }
+
+  } else {
+  }
 }

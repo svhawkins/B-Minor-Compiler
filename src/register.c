@@ -41,7 +41,7 @@ void register_error_handle(reg_error_t kind, int ctx) {
       fprintf(REG_ERR_OUT, "\tthe only 64-bit scratch register with 8-bit high byte register is %rbx (index 0): %bl.\n");
       break;
     case LABEL_MAX: /* max number of labels has been reached */
-      fprintf(REG_ERR_OUT, "failed to create new label. maximum has been reached.\n");
+      fprintf(REG_ERR_OUT, "failed to create new label. Maximum has been reached.\n");
       break;
   }
   fprintf(REG_ERR_OUT, "\n");

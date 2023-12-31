@@ -34,13 +34,16 @@ void decl_destroy(struct decl** d);
 Adds symbols to the symbol table:
 1. variables
 2. function definitions + prototypes
-3. 'hidden' labels (strings and arrays)
 */
 int decl_resolve(struct symbol_table* st, struct decl* d);
 
 
 // typechecks declarations, seeing if bodies/values match declared type(s)
 int decl_typecheck(struct symbol_table*, struct decl* d);
+
+
+// generates code for declaration structures.
+int decl_codegen(struct symbol_table* st, struct decl* d);
 
 #endif /* DECL_H */
 
