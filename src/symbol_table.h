@@ -26,7 +26,7 @@ int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2);
 
 // code generation flags
 bool generate_hidden; /* indicator if hidden symbols have been generated or not */
-bool generate_global; /* indicator if declaration is to have its entire expression generated
+bool generate_expr; /* indicator if declaration is to have its entire expression generated
                          global variables must consist only of constant expressions.
                          global variables use the result of the intermediate values instead.
                       */

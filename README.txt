@@ -35,6 +35,14 @@ Changes since assignment 4:
 9. Various code cleanups for better readability, code-style consistency, and better cohesion.
 
 ****************************
+FILES
+****************************
+EXECUTABLES
+****************************
+ERROR MESSAGES
+****************************
+TESTS
+****************************
 HIDDEN SYMBOLS
 
 symbol_table.h/.c now has an additional structure to hold these hidden symbols: Hidden_table.
@@ -60,7 +68,11 @@ The hidden table is an additional field of the Symbol_table structure.
 The hidden symbols are generated seperately from the rest of the declarations (attempts were made to make it part
 of the same declaration list, but did not work, so it has its own special function).
 
-******************************************************************************************************
+*****************
+ CAVEATS
+*****************
+
+
 TO DO:
 
 DONE1. implement + test necessary things for helper functions (expr->reg, symbol->which)
@@ -87,8 +99,8 @@ use assembly emulator to help you.
 		test
 
 5. implement + test decl codegen
-   - global non-function/array declarations
-   - local non-function/array declarations
+   DONE- global non-function/array declarations
+   DONE- local non-function/array declarations
    - array declarations (global, local) (requires EXPR_INIT)
 
 6. implement + test stmt codegen
@@ -114,18 +126,12 @@ these flags can be part of the compiler proper (bcc --> B-Minor C Compiler (blin
 -o: output file
 -v: verbose (show argv for every executed program)
 
+runtime library functions:
+- exponentiation (pow)
+- printing (printf)
+- string comparision (==, !=) (strcmp)
 
-exponentation and printing are put in the runtime library which can either be statically or dynamically
-linked. static linking may be easier. 
-this runtime library is to be written in C, it has to be compiled to object code before linking with B-Minor programs.
-
-use a hidden symbol table (additional standalone hashtable) instead of adding hidden symbols to symbol table.
-this hash table associates string literals to label names (whereas in the real symbol table it's the other way around).
-expr codegen associates a string literal to a label.
-   upon finding a string literal, it finds associated 'hidden' label and assigns it to a string literal expession's name field.
-   decl codegen will use this name instead of the string literal value.
-
-   this hash table is to be printed seperately from the declaration list.
+*written in C, compile BEFORE linking with B-Minor programs. can be compiled with the rest of the compiler as .a.
 
 similar behavior with storing literals from names:
 decl codegen associates expression value with name (value determined via its own expr codegen),
@@ -136,5 +142,3 @@ now intermediate value tracking of values works for both literals and names.
 constant expressions in global scope must NOT have their full expression generated, but rather the resulting value.
 entirely constant expressions (ie not containing only literals) can be optimised to NOT generate the expression(s) to
 reach their value, just that a register be stored with the end result.
-
-string comparisions (NEQ and EQ) must use strcmp (runtime library)

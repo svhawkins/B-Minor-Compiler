@@ -9,7 +9,7 @@
 bool is_const_expr; // used for error handling
 struct symbol_table; // forward decl for reasons
 typedef enum { MATH = 1, RELATE, LOGIC, EQUAL, ASSIGN, LVAL, INIT, SUBSCRIPT, FCALL, PARAM, IMMUTABLE} type_error_t;
-typedef enum { EXPR_OVERFLOW = 1, EXPR_UNDERFLOW, EXPR_BYZERO } codegen_error_t;
+typedef enum { ERR_OVERFLOW = 90, ERR_UNDERFLOW, EXPR_BYZERO } codegen_error_t;
 typedef enum {
         // unary operators
 	EXPR_INC = 0, // l++

@@ -190,17 +190,16 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
 
   // check flags
   if (!generate_hidden) { symbol_table_hidden_codegen(st->hidden_table); generate_hidden = true; }
+  if(d->symbol->kind == SYMBOL_GLOBAL) { generate_expr = false; }
 
 
   /*
   TO DO:
   - refactor
-  - arrays need to do expr_codegen for every expression in it is list
+  - arrays need to do expr_codegen for every expression in its list
     same global/const rules apply.
   */
   if (d->type->kind != TYPE_FUNCTION) {
-    // don't generate intermediate expression code if part of global variable declaration
-    if (!is_test && (d->symbol->kind == SYMBOL_GLOBAL)) { generate_global = false; }
 
     // get the resulting expression register
     error_status = expr_codegen(st, d->value);
@@ -214,22 +213,22 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
      if (d->value) {
       // global string literals are assigned the label to the string
       if (d->value->string_literal) {
-        fprintf(CODEGEN_OUT, "%s:\n\t\t.quad %s\n",
+        fprintf(CODEGEN_OUT, "%s:\n\t.quad %s\n",
                              d->symbol->address,
                              symbol_table_hidden_lookup(st->hidden_table, d->value->string_literal));
       } else {
         // other global literals use the exact value, NOT the register!
-        fprintf(CODEGEN_OUT, "%s:\n\t\t.quad %d\n", d->symbol->address, d->value->literal_value);
+        fprintf(CODEGEN_OUT, "%s:\n\t.quad %ld\n", d->symbol->address, d->value->literal_value);
       }
       // undefined-though-declared values are 'zeroed'
-     } else { fprintf(CODEGEN_OUT, "%s:\n\t\t.zero %d\n", d->symbol->address, QUAD); }
+     } else { fprintf(CODEGEN_OUT, "%s:\n\t.zero %d\n", d->symbol->address, QUAD); }
     } else {
       /*
       MOVQ e->reg, symbol_codegen(e->symbol)
 
       if undefined, value is default 0.
       */
-     fprintf("MOVQ %s, %s\n", (d->value) ? register_scratch_name(d->value->reg) : "$0",
+     fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", (d->value) ? register_scratch_name(d->value->reg) : "$0",
                                d->symbol->address);
     }
 

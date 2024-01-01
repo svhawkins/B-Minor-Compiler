@@ -29,6 +29,7 @@ Status test_label_name(void);
 
 // symbols
 Status test_symbol_codegen(void);
+Status test_symbol_table_hidden_codegen(void);
 
 // primitive expressions
 Status test_expr_codegen_literal(void);
@@ -58,14 +59,16 @@ Status test_expr_codegen_relate(void);
 // fcall
 
 // declarations
-Status test_decl_codegen_literal_global(void); // covers init and uninit
-Status test_decl_codegen_literal_local(void);
-Status test_decl_codegen_string_literal_global(void);
-Status test_decl_codegen_string_literal_local(void);
+Status test_decl_codegen_global(void); // covers init and uninit
+Status test_decl_codegen_local(void);
+Status test_decl_codegen_global_uninit(void);
+Status test_decl_codegen_local_uninit(void);
 // Status test_decl_codegen_array_literal_global(void);
 // Status test_decl_codegen_array_literal_local(void);
 // Status test_decl_codegen_array_string_literal_global(void);
 // Status test_decl_codegen_array_string_literal_local(void);
+// Status test_decl_codegen_array_global_uninit(void);
+// Status test_decl_codegen_array_local_uninit(void);
 // Status test_decl_codegen_array_size_mismatch(void);
 // Status test_decl_codegen_array_size_infer_uninit(void);
 // Status test_decl_codegen_array_size_infer_init(void);
@@ -126,6 +129,7 @@ int main(void) {
        test_label_create_fail_max,
        test_label_name,
        test_symbol_codegen,
+       test_symbol_table_hidden_codegen,
        test_expr_codegen_literal,
        test_expr_codegen_string,
        test_expr_codegen_name_literal,
@@ -137,10 +141,10 @@ int main(void) {
        test_expr_codegen_overflow,
        test_expr_codegen_mult_underflow_overflow,
        test_expr_codegen_underflow,
-       test_decl_codegen_literal_global,
-       test_decl_codegen_literal_local,
-       test_decl_codegen_string_literal_global,
-       test_decl_codegen_string_literal_local
+       test_decl_codegen_global,
+       test_decl_codegen_global_uninit,
+       test_decl_codegen_local,
+       test_decl_codegen_local_uninit
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -354,6 +358,32 @@ Status test_symbol_codegen(void) {
   return status;
 }
 
+Status test_symbol_table_hidden_codegen(void) {
+  strcpy(test_type, "Testing: test_symbol_table_hidden_codegen");
+  Status status = SUCCESS;
+
+  char expect[MAX_BUFFER >> 1];
+  strcpy(expect, ".L0:\n\t.string \"foo\"\n");
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+
+  struct expr* e = expr_create_string_literal("foo");
+
+  register_codegen_init(true);
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+
+  error_status = expr_resolve(st, e);
+  struct type* t = NULL; t = expr_typecheck(st, e); type_destroy(&t);
+  symbol_table_hidden_codegen(st->hidden_table);
+  symbol_table_destroy(&st); expr_destroy(&e);
+  register_codegen_clear();
+
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
+
+  return status;
+}
+
 Status test_expr_codegen_literal(void) {
   strcpy(test_type, "Testing: test_expr_codegen_literal");
   Status status = SUCCESS;
@@ -365,6 +395,7 @@ char expect[MAX_BUFFER >> 1];
 strcpy(expect, "MOVQ $42, %rbx\nMOVQ $65, %rbx\nMOVQ $0, %rbx\n");
 CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   for (int i = 0; i < 3; i++) {
+    generate_expr = true; // even tho in global scope technically --> for testing purposes!
     struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
     register_codegen_init(true);
     error_status = expr_resolve(st, exprs[i]);
@@ -394,6 +425,7 @@ Status test_expr_codegen_string(void) {
   register_codegen_init(true);
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
 
+  generate_expr = true; // even tho in global scope technically --> for testing purposes!
   struct expr* e = expr_create_string_literal("foo"); struct type* t;
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   error_status = expr_resolve(st, e);
@@ -421,7 +453,6 @@ Status test_expr_codegen_name_literal(void) {
   Status status = SUCCESS;
   char expect[MAX_BUFFER >> 1];
   strcpy(expect, "MOVQ foo, %rbx\nMOVQ -8(%rbp), %r10\n");
-  register_codegen_init(true);
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
 
   register_codegen_init(true);
@@ -430,6 +461,7 @@ Status test_expr_codegen_name_literal(void) {
   struct type* t;
 
   // add in symbols (here as not testing decl stuff yet)
+  generate_expr = true; // even tho in global scope technically --> for testing purposes!
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
 
   // global
@@ -476,6 +508,7 @@ MOVQ $493, %rbx\nMOVQ $42, %r10\nANDQ %rbx, %r10\n\
 MOVQ $493, %rbx\nMOVQ $42, %r10\nORQ %rbx, %r10\n";
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   for (int i = 0; i < 5; i++) {
+    generate_expr = true; // even tho in global scope technically --> for testing purposes!
     struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
     register_codegen_init(true);
     struct expr* e = expr_create(exprs[i], expr_create_integer_literal(493), expr_create_integer_literal(42));
@@ -522,6 +555,7 @@ MOVQ $493, %rbx\nDECQ %rbx\n\
 MOVQ $493, %rbx\nNOTQ %rbx\n";
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   for (int i = 0; i < 5; i++) {
+    generate_expr = true; // even tho in global scope technically --> for testing purposes!
     struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
     register_codegen_init(true);
     struct expr* e = expr_create(exprs[i], expr_create_integer_literal(493), NULL);
@@ -560,6 +594,7 @@ MOVQ $4, %rbx\nMOVQ $5, %r10\nMOVQ %rbx, %rax\nCQTO\nIDIVQ %r10\nMOVQ %rax, %r11
 MOVQ $4, %rbx\nMOVQ $5, %r10\nMOVQ %rbx, %rax\nCQTO\nIDIVQ %r10\nMOVQ %rdx, %r11\n";
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   for (int i = 0; i < 3; i++) {
+    generate_expr = true; // even tho in global scope technically --> for testing purposes!
     struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
     register_codegen_init(true);
     struct expr* e = expr_create(exprs[i], expr_create_integer_literal(4), expr_create_integer_literal(5));
@@ -609,6 +644,7 @@ MOVQ $4, %rbx\nMOVQ $5, %r10\nCMP %rbx, %r10\nSETG %bl\nMOVZBQ %bl, %rbx\n\
 MOVQ $4, %rbx\nMOVQ $5, %r10\nCMP %rbx, %r10\nSETGE %bl\nMOVZBQ %bl, %rbx\n";
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   for (int i = 0; i < 6; i++) {
+    generate_expr = true; // even tho in global scope technically --> for testing purposes!
     struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
     register_codegen_init(true);
     struct expr* e = expr_create(exprs[i], expr_create_integer_literal(4), expr_create_integer_literal(5));
@@ -701,7 +737,7 @@ Status test_expr_codegen_overflow(void) {
     error_status = expr_codegen(st, e);
 
     if (!global_error_count) { print_error(test_type, "NOT 0", "int error_status"); status = FAILURE; }
-    if (error_status != EXPR_OVERFLOW) { print_error(test_type, "EOVERFLOW", "int error_status"); status = FAILURE; }
+    if (error_status != ERR_OVERFLOW) { print_error(test_type, "EOVERFLOW", "int error_status"); status = FAILURE; }
     expr_destroy(&e);
     symbol_table_destroy(&st);
     register_codegen_clear();
@@ -731,7 +767,7 @@ Status test_expr_codegen_underflow(void) {
     error_status = expr_codegen(st, e);
 
     if (!global_error_count) { print_error(test_type, "NOT 0", "int error_status"); status = FAILURE; }
-    if (error_status != EXPR_UNDERFLOW) { print_error(test_type, "EUNDERFLOW", "int error_status"); status = FAILURE; }
+    if (error_status != ERR_UNDERFLOW) { print_error(test_type, "EUNDERFLOW", "int error_status"); status = FAILURE; }
     expr_destroy(&e);
     symbol_table_destroy(&st);
     register_codegen_clear();
@@ -750,24 +786,25 @@ Status test_expr_codegen_mult_underflow_overflow(void) {
     register_codegen_init(true);
     struct expr* right = NULL;
     struct expr* left = NULL;
+    expect = ERR_OVERFLOW;
     switch(i) {
       case 0: /* overflow positive operands */
-          expect = EXPR_OVERFLOW;
+          expect = ERR_OVERFLOW;
           left = expr_create_integer_literal(INT64_MAX);
           right = expr_create_integer_literal(2);
       break;
       case 1: /* overflow negative operands */
-          expect = EXPR_OVERFLOW;
+          expect = ERR_OVERFLOW;
           left = expr_create_integer_literal(INT64_MIN);
           right = expr_create_integer_literal(-1);
       break;
       case 2: /* underflow left positive right negative */
-          expect = EXPR_UNDERFLOW;
+          expect = ERR_UNDERFLOW;
           left = expr_create_integer_literal(INT64_MAX);
           right = expr_create_integer_literal(-2);
       break;
       case 3: /* underflow left negative right positive */
-          expect = EXPR_UNDERFLOW;
+          expect = ERR_UNDERFLOW;
           left = expr_create_integer_literal(-2);
           right = expr_create_integer_literal(INT64_MAX);
       break;
@@ -779,8 +816,8 @@ Status test_expr_codegen_mult_underflow_overflow(void) {
     error_status = expr_codegen(st, e);
 
     if (!global_error_count) { print_error(test_type, "NOT 0", "int error_status"); status = FAILURE; }
-    if (error_status != expect) {
-      print_error(test_type, (expect == EXPR_OVERFLOW) ?  "EOVERFLOW" : "EUNDERFLOW", "int error_status");
+    if (error_status != (int)expect) {
+      print_error(test_type, (expect == ERR_OVERFLOW) ?  "EOVERFLOW" : "EUNDERFLOW", "int error_status");
       status = FAILURE;
     }
     expr_destroy(&e);
@@ -791,8 +828,198 @@ Status test_expr_codegen_mult_underflow_overflow(void) {
   return status;
 }
 
-// covers both init and uninit!!!
-Status test_decl_codegen_literal_global(void) { return FAILURE; }
-Status test_decl_codegen_literal_local(void) { return FAILURE; }
-Status test_decl_codegen_string_literal_global(void) { return FAILURE; }
-Status test_decl_codegen_string_literal_local(void) { return FAILURE; }
+Status test_decl_codegen_global(void) {
+  strcpy(test_type, "Testing: test_decl_codegen_global");
+  Status status = SUCCESS;
+  expr_t exprs[4] = { EXPR_INT, EXPR_CH, EXPR_BOOL, EXPR_STR };
+  char* expect =
+"foo:\n\t.quad 493\n\
+foo:\n\t.quad 65\n\
+foo:\n\t.quad 1\n\
+.L0:\n\t.string \"duck\"\nfoo:\n\t.quad .L0\n";
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+  for (int i = 0; i < 4; i++) {
+    struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+    register_codegen_init(true);
+    struct decl* d = NULL; struct type* t = NULL; struct expr* e = NULL;
+    switch(exprs[i]) {
+      case EXPR_INT:
+        t = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+        e = expr_create_integer_literal(493);
+      break;
+      case EXPR_CH:
+        t = type_create(TYPE_CHARACTER, NULL, NULL, NULL);
+        e = expr_create_char_literal('A');
+      break;
+      case EXPR_BOOL:
+        t = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
+        e = expr_create_boolean_literal(true);
+      break;
+      case EXPR_STR:
+        t = type_create(TYPE_STRING, NULL, NULL, NULL);
+        e = expr_create_string_literal("duck");
+      break;
+      default: break;
+    }
+    d = decl_create(strdup("foo"), t, e, NULL, NULL);
+    error_status = decl_resolve(st, d);
+    error_status = decl_typecheck(st, d);
+    error_status = decl_codegen(st, d);
+
+    if (d->value->reg != 0) { print_error(test_type, "0", "int d->value->reg"); return FAILURE; }
+    if (!scratch_register[d->value->reg].inuse) {
+      print_error(test_type, "true", "bool scratch_register[d->value->reg].inuse");
+      status = FAILURE;
+    }
+    decl_destroy(&d);
+    symbol_table_destroy(&st);
+    register_codegen_clear();
+  }
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
+  return status;
+}
+
+Status test_decl_codegen_global_uninit(void) {
+  strcpy(test_type, "Testing: test_decl_codegen_global_uninit");
+  Status status = SUCCESS;
+  expr_t exprs[4] = { EXPR_INT, EXPR_CH, EXPR_BOOL, EXPR_STR };
+  char* expect =
+"foo:\n\t.zero 8\n\
+foo:\n\t.zero 8\n\
+foo:\n\t.zero 8\n\
+foo:\n\t.zero 8\n";
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+  for (int i = 0; i < 4; i++) {
+    struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+    register_codegen_init(true);
+    struct decl* d = NULL; struct type* t = NULL;
+    switch(exprs[i]) {
+      case EXPR_INT:
+        t = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+      break;
+      case EXPR_CH:
+        t = type_create(TYPE_CHARACTER, NULL, NULL, NULL);
+      break;
+      case EXPR_BOOL:
+        t = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
+      break;
+      case EXPR_STR:
+        t = type_create(TYPE_STRING, NULL, NULL, NULL);
+      break;
+      default: break;
+    }
+    d = decl_create(strdup("foo"), t, NULL, NULL, NULL);
+    error_status = decl_resolve(st, d);
+    error_status = decl_typecheck(st, d);
+    error_status = decl_codegen(st, d);
+
+    decl_destroy(&d);
+    symbol_table_destroy(&st);
+    register_codegen_clear();
+  }
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
+  return status;
+}
+
+Status test_decl_codegen_local(void)  {
+  strcpy(test_type, "Testing: test_decl_codegen_local");
+  Status status = SUCCESS;
+  expr_t exprs[4] = { EXPR_INT, EXPR_CH, EXPR_BOOL, EXPR_STR };
+  char* expect =
+"MOVQ $493, %rbx\nMOVQ %rbx, -8(%rbp)\n\
+MOVQ $65, %rbx\nMOVQ %rbx, -8(%rbp)\n\
+MOVQ $1, %rbx\nMOVQ %rbx, -8(%rbp)\n\
+.L0:\n\t.string \"duck\"\nLEAQ .L0, %rbx\nMOVQ %rbx, -8(%rbp)\n";
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+  for (int i = 0; i < 4; i++) {
+    struct symbol_table* st = symbol_table_create();
+    symbol_table_scope_enter(st); symbol_table_scope_enter(st); // local scope
+    register_codegen_init(true);
+    struct decl* d = NULL; struct type* t = NULL; struct expr* e = NULL;
+    switch(exprs[i]) {
+      case EXPR_INT:
+        t = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+        e = expr_create_integer_literal(493);
+      break;
+      case EXPR_CH:
+        t = type_create(TYPE_CHARACTER, NULL, NULL, NULL);
+        e = expr_create_char_literal('A');
+      break;
+      case EXPR_BOOL:
+        t = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
+        e = expr_create_boolean_literal(true);
+      break;
+      case EXPR_STR:
+        t = type_create(TYPE_STRING, NULL, NULL, NULL);
+        e = expr_create_string_literal("duck");
+      break;
+      default: break;
+    }
+    d = decl_create(strdup("foo"), t, e, NULL, NULL);
+    error_status = decl_resolve(st, d);
+    error_status = decl_typecheck(st, d);
+    error_status = decl_codegen(st, d);
+
+    if (d->value->reg != 0) { print_error(test_type, "0", "int d->value->reg"); return FAILURE; }
+    if (!scratch_register[d->value->reg].inuse) {
+      print_error(test_type, "true", "bool scratch_register[d->value->reg].inuse");
+      status = FAILURE;
+    }
+    decl_destroy(&d);
+    symbol_table_destroy(&st);
+    register_codegen_clear();
+  }
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
+  return status;
+}
+
+Status test_decl_codegen_local_uninit(void)  {
+  strcpy(test_type, "Testing: test_decl_codegen_local_uninit");
+  Status status = SUCCESS;
+  expr_t exprs[4] = { EXPR_INT, EXPR_CH, EXPR_BOOL, EXPR_STR };
+  char* expect =
+"MOVQ $0, -8(%rbp)\n\
+MOVQ $0, -8(%rbp)\n\
+MOVQ $0, -8(%rbp)\n\
+MOVQ $0, -8(%rbp)\n";
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+  for (int i = 0; i < 4; i++) {
+    struct symbol_table* st = symbol_table_create();
+    symbol_table_scope_enter(st); symbol_table_scope_enter(st); // local scope
+    register_codegen_init(true);
+    struct decl* d = NULL; struct type* t = NULL;
+    switch(exprs[i]) {
+      case EXPR_INT:
+        t = type_create(TYPE_INTEGER, NULL, NULL, NULL);
+      break;
+      case EXPR_CH:
+        t = type_create(TYPE_CHARACTER, NULL, NULL, NULL);
+      break;
+      case EXPR_BOOL:
+        t = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
+      break;
+      case EXPR_STR:
+        t = type_create(TYPE_STRING, NULL, NULL, NULL);
+      break;
+      default: break;
+    }
+    d = decl_create(strdup("foo"), t, NULL, NULL, NULL);
+    error_status = decl_resolve(st, d);
+    error_status = decl_typecheck(st, d);
+    error_status = decl_codegen(st, d);
+
+    decl_destroy(&d);
+    symbol_table_destroy(&st);
+    register_codegen_clear();
+  }
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
+  return status;
+}

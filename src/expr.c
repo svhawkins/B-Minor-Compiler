@@ -152,8 +152,8 @@ int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void*
 
 char* expr_codegen_strerror(codegen_error_t kind) {
   switch(kind) {
-    case EXPR_OVERFLOW: strcpy(buffer, "EOVERFLOW"); break;
-    case EXPR_UNDERFLOW: strcpy(buffer, "EUNDERFLOW"); break;
+    case ERR_OVERFLOW: strcpy(buffer, "EOVERFLOW"); break;
+    case ERR_UNDERFLOW: strcpy(buffer, "EUNDERFLOW"); break;
     case EXPR_BYZERO: strcpy(buffer, "EBYZERO"); break;
   }
   return buffer;
@@ -162,10 +162,10 @@ char* expr_codegen_strerror(codegen_error_t kind) {
 int expr_codegen_error_handle(codegen_error_t kind, struct expr* e) {
   fprintf(ERR_OUT, "ERROR %s (%d):\n", expr_codegen_strerror(kind), kind);
   switch(kind) {
-    case EXPR_OVERFLOW: /* operation detected integer overflow */
+    case ERR_OVERFLOW: /* operation detected integer overflow */
       fprintf(ERR_OUT, "WARNING: integer overflow detected in expression: ");
       break;
-    case EXPR_UNDERFLOW: /* operation detected integer underflow*/
+    case ERR_UNDERFLOW: /* operation detected integer underflow*/
       fprintf(ERR_OUT, "WARNING: integer underflow detected in expression: ");
       break;
     case EXPR_BYZERO: /* modulus or division by zero detected */
@@ -547,14 +547,18 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
     case EXPR_CH:
     case EXPR_BOOL: /* MOVQ $N, %R*/
       e->reg = register_scratch_alloc();
-      fprintf(CODEGEN_OUT, "MOVQ $%ld, %s\n", e->literal_value, register_scratch_name(e->reg));
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "MOVQ $%ld, %s\n", e->literal_value, register_scratch_name(e->reg));
+      }
       break;
     // load the address (the associated label name with the literal)
     case EXPR_STR:
       e->reg = register_scratch_alloc();
-      fprintf(CODEGEN_OUT, "LEAQ %s, %s\n",
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "LEAQ %s, %s\n",
                             (const char*)symbol_table_hidden_lookup(st->hidden_table, e->string_literal),
                             register_scratch_name(e->reg));
+      }
       break;
     // load the symbol
     case EXPR_NAME:
@@ -566,57 +570,70 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
     LEAQ <name>, %R / LEAQ %rps(N), %R
     */
       e->reg = register_scratch_alloc();
-      fprintf(CODEGEN_OUT, "%s %s, %s\n",
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "%s %s, %s\n",
                            (e->symbol->type->kind == TYPE_STRING || e->symbol->type->kind == TYPE_ARRAY)
                            ? "LEAQ" : "MOVQ",
                             symbol_codegen(e->symbol), register_scratch_name(e->reg));
+      }
       break;
 
     // arithmetic + logical operations
     case EXPR_ASSIGN: /* MOVQ %RR, %RL*/
-      fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      }
       register_scratch_free(e->left->reg);
       e->reg = e->right->reg;
 
-      // value tracking
       if (!e->string_literal) { e->literal_value = e->right->literal_value; }
       //else { e->string_literal = strdup(e->right->string_literal); }
       break;
     case EXPR_ADD: /* ADDQ %RL, %RR */
-      fprintf(CODEGEN_OUT, "ADDQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "ADDQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      }
       register_scratch_free(e->left->reg);
       e->reg = e->right->reg;
 
       // value tracking
       e->literal_value = e->left->literal_value + e->right->literal_value;
       if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, OVERFLOW)) {
-        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+        error_status = expr_codegen_error_handle(ERR_OVERFLOW, e);
       } else if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, UNDERFLOW)) {
-        error_status = expr_codegen_error_handle(EXPR_UNDERFLOW, e);
+        error_status = expr_codegen_error_handle(ERR_UNDERFLOW, e);
       }
       break;
     case EXPR_SUB: /* SUBQ %RL, %RR */
-      fprintf(CODEGEN_OUT, "SUBQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "SUBQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      }
       register_scratch_free(e->left->reg);
       e->reg = e->right->reg;
 
       // value tracking
       e->literal_value = e->left->literal_value - e->right->literal_value;
       if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, OVERFLOW)) {
-        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+        error_status = expr_codegen_error_handle(ERR_OVERFLOW, e);
       } else if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, UNDERFLOW)) {
-        error_status = expr_codegen_error_handle(EXPR_UNDERFLOW, e);
+        error_status = expr_codegen_error_handle(ERR_UNDERFLOW, e);
       }
       break;
     case EXPR_AND: /* ANDQ %RL, %RR */
-      fprintf(CODEGEN_OUT, "ANDQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "ANDQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      }
       register_scratch_free(e->left->reg);
       e->reg = e->right->reg;
+      e->literal_value = e->left->literal_value && e->right->literal_value;
       break;
     case EXPR_OR: /* ORQ %RL, %RR */
-      fprintf(CODEGEN_OUT, "ORQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "ORQ %s, %s\n", register_scratch_name(e->left->reg), register_scratch_name(e->right->reg));
+      }
       register_scratch_free(e->left->reg);
       e->reg = e->right->reg;
+      e->literal_value = e->left->literal_value || e->right->literal_value;
       break;
 
     /* "unary" */
@@ -625,37 +642,46 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
       e->literal_value = e->left->literal_value;
       break;
     case EXPR_NEG: /* NEG %RL*/
-      fprintf(CODEGEN_OUT, "NEGQ %s\n", register_scratch_name(e->left->reg));
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "NEGQ %s\n", register_scratch_name(e->left->reg));
+      }
       e->reg = e->left->reg;
       e->literal_value = -1 * e->left->literal_value;
       break;
     case EXPR_INC: /* INC %RL */
-      fprintf(CODEGEN_OUT, "INCQ %s\n", register_scratch_name(e->left->reg));
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "INCQ %s\n", register_scratch_name(e->left->reg));
+      }
       e->reg = e->left->reg;
 
       // value tracking
       e->literal_value = e->left->literal_value + 1;
       if (flow_check(e->kind, e->literal_value, e->left->literal_value, -1, OVERFLOW)) {
-        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+        error_status = expr_codegen_error_handle(ERR_OVERFLOW, e);
       } else if (flow_check(e->kind, e->literal_value, e->left->literal_value, -1, UNDERFLOW)) {
-        error_status = expr_codegen_error_handle(EXPR_UNDERFLOW, e);
+        error_status = expr_codegen_error_handle(ERR_UNDERFLOW, e);
       }
       break;
     case EXPR_DEC: /* DEC %RL */
-      fprintf(CODEGEN_OUT, "DECQ %s\n", register_scratch_name(e->left->reg));
+      if (generate_expr) { 
+        fprintf(CODEGEN_OUT, "DECQ %s\n", register_scratch_name(e->left->reg));
+      }
       e->reg = e->left->reg;
 
       // value tracking
       e->literal_value = e->left->literal_value - 1;
       if (flow_check(e->kind, e->literal_value, e->left->literal_value, -1, OVERFLOW)) {
-        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+        error_status = expr_codegen_error_handle(ERR_OVERFLOW, e);
       } else if (flow_check(e->kind, e->literal_value, e->left->literal_value, -1, UNDERFLOW)) {
-        error_status = expr_codegen_error_handle(EXPR_UNDERFLOW, e);
+        error_status = expr_codegen_error_handle(ERR_UNDERFLOW, e);
       }
       break;
     case EXPR_NOT: /* NOT %RL */
-      fprintf(CODEGEN_OUT, "NOTQ %s\n", register_scratch_name(e->left->reg));
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "NOTQ %s\n", register_scratch_name(e->left->reg));
+      }
       e->reg = e->left->reg;
+      e->literal_value = !e->left->literal_value;
       break;
 
     /*
@@ -666,18 +692,20 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
     case EXPR_MULT:
       // allocate different register for resultant since the dest register is not always overwritten.
       e->reg = register_scratch_alloc();
-      fprintf(CODEGEN_OUT, "MOVQ %s, %rax\n", register_scratch_name(e->left->reg));
-      fprintf(CODEGEN_OUT, "IMULQ %s, %rax\n", register_scratch_name(e->right->reg));
-      fprintf(CODEGEN_OUT, "MOVQ %rax, %s\n", register_scratch_name(e->reg));
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "MOVQ %s, %rax\n", register_scratch_name(e->left->reg));
+        fprintf(CODEGEN_OUT, "IMULQ %s, %rax\n", register_scratch_name(e->right->reg));
+        fprintf(CODEGEN_OUT, "MOVQ %rax, %s\n", register_scratch_name(e->reg));
+      }
       register_scratch_free(e->left->reg);
       register_scratch_free(e->right->reg);
 
       // value tracking
       e->literal_value = e->left->literal_value * e->right->literal_value;
       if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, OVERFLOW)) {
-        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+        error_status = expr_codegen_error_handle(ERR_OVERFLOW, e);
       } else if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, UNDERFLOW)) {
-        error_status = expr_codegen_error_handle(EXPR_UNDERFLOW, e);
+        error_status = expr_codegen_error_handle(ERR_UNDERFLOW, e);
       }
       break;
 
@@ -691,17 +719,19 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
     case EXPR_DIV:
     case EXPR_MOD:
       e->reg = register_scratch_alloc();
-      fprintf(CODEGEN_OUT, "MOVQ %s, %rax\nCQTO\n", register_scratch_name(e->left->reg));
-      fprintf(CODEGEN_OUT, "IDIVQ %s\n", register_scratch_name(e->right->reg));
-      fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", (e->kind == EXPR_DIV) ? "%rax" : "%rdx",
+      if (generate_expr) {
+        fprintf(CODEGEN_OUT, "MOVQ %s, %rax\nCQTO\n", register_scratch_name(e->left->reg));
+        fprintf(CODEGEN_OUT, "IDIVQ %s\n", register_scratch_name(e->right->reg));
+        fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", (e->kind == EXPR_DIV) ? "%rax" : "%rdx",
                                             register_scratch_name(e->reg));
+      }
       register_scratch_free(e->left->reg);
       register_scratch_free(e->right->reg);
 
       // value tracking
       if (e->right->literal_value == 0) { return error_status = expr_codegen_error_handle(EXPR_BYZERO, e); }
       if (flow_check(e->kind, e->literal_value, e->left->literal_value, e->right->literal_value, OVERFLOW)) {
-        error_status = expr_codegen_error_handle(EXPR_OVERFLOW, e);
+        error_status = expr_codegen_error_handle(ERR_OVERFLOW, e);
       } else {
         e->literal_value = (e->kind == EXPR_DIV) ?
                             e->left->literal_value / e->right->literal_value :
@@ -721,52 +751,75 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
   // TODO: have a flag to indicate if part of a condition or not. the root SET[] will be set to a JMP/J[]
 
    case EXPR_EQ: /* SETE %AL*/
-     fprintf(CODEGEN_OUT,"CMP %s, %s\nSETE %s\nMOVZBQ %s, %s\n",
+     if (generate_expr) {
+
+      // TODO: this only works for integer cases. use runtime library for strcmp.
+      fprintf(CODEGEN_OUT,"CMP %s, %s\nSETE %s\nMOVZBQ %s, %s\n",
              register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
              register_scratch_name_low(e->left->reg),
              register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+     }
      register_scratch_free(e->right->reg);
      e->reg = e->left->reg;
+     if (!e->left->string_literal) { e->literal_value = e->left->literal_value == e->right->literal_value; }
+     else{ /* e->literal_value = (strcmp(e->left->string_literal, e->right->string_literal) == 0); */ }
      break;
    case EXPR_NEQ: /* SETNE %AL */
+    if (generate_expr) {
+      // TODO: this only works for integer cases. use runtime library for strcmp.
      fprintf(CODEGEN_OUT,"CMP %s, %s\nSETNE %s\nMOVZBQ %s, %s\n",
              register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
              register_scratch_name_low(e->left->reg),
              register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+    }
      register_scratch_free(e->right->reg);
      e->reg = e->left->reg;
+     if (!e->left->string_literal) { e->literal_value = (e->left->literal_value != e->right->literal_value); }
+     else { /* e->literal_value = (strcmp(e->left->string_literal, e->right->string_literal) != 0);*/}
      break;
    case EXPR_LESS: /* SETL %AL */
-     fprintf(CODEGEN_OUT,"CMP %s, %s\nSETL %s\nMOVZBQ %s, %s\n",
+     if (generate_expr) {
+      fprintf(CODEGEN_OUT,"CMP %s, %s\nSETL %s\nMOVZBQ %s, %s\n",
              register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
              register_scratch_name_low(e->left->reg),
              register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+     }
      register_scratch_free(e->right->reg);
      e->reg = e->left->reg;
+     e->literal_value = (e->left->literal_value < e->right->literal_value);
      break;
    case EXPR_LEQ: /* SETLE %AL */
-     fprintf(CODEGEN_OUT,"CMP %s, %s\nSETLE %s\nMOVZBQ %s, %s\n",
+     if (generate_expr) {
+      fprintf(CODEGEN_OUT,"CMP %s, %s\nSETLE %s\nMOVZBQ %s, %s\n",
              register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
              register_scratch_name_low(e->left->reg),
              register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+     }
      register_scratch_free(e->right->reg);
      e->reg = e->left->reg;
+     e->literal_value = (e->left->literal_value <= e->right->literal_value);
      break;
    case EXPR_GREAT: /* SETG %AL */
-     fprintf(CODEGEN_OUT,"CMP %s, %s\nSETG %s\nMOVZBQ %s, %s\n",
+     if (generate_expr) {
+      fprintf(CODEGEN_OUT,"CMP %s, %s\nSETG %s\nMOVZBQ %s, %s\n",
              register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
              register_scratch_name_low(e->left->reg),
              register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+     }
      register_scratch_free(e->right->reg);
      e->reg = e->left->reg;
+     e->literal_value = (e->left->literal_value > e->right->literal_value);
      break;
    case EXPR_GEQ: /* SETGE %AL */
-     fprintf(CODEGEN_OUT,"CMP %s, %s\nSETGE %s\nMOVZBQ %s, %s\n",
+     if (generate_expr) {
+      fprintf(CODEGEN_OUT,"CMP %s, %s\nSETGE %s\nMOVZBQ %s, %s\n",
              register_scratch_name(e->left->reg), register_scratch_name(e->right->reg),
              register_scratch_name_low(e->left->reg),
              register_scratch_name_low(e->left->reg), register_scratch_name(e->left->reg));
+     }
      register_scratch_free(e->right->reg);
      e->reg = e->left->reg;
+     e->literal_value =(e->left->literal_value >= e->right->literal_value);
      break;
 
 

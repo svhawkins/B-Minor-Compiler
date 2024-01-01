@@ -115,7 +115,7 @@ struct symbol_table* symbol_table_create() {
   global_error_count = 0;
   error_status = 0;
   generate_hidden = false;
-  generate_global = true;
+  generate_expr = true;
   return st;
 }
 
@@ -401,6 +401,6 @@ void symbol_table_hidden_codegen(Hidden_table* hst) {
   char* key; void* value;
   hash_table_firstkey(hst);
   while (hash_table_nextkey(hst, &key, &value)) {
-    fprintf(CODEGEN_OUT, "%s:\n\t\t.string \"%s\"\n", (const char*)value, key);
+    fprintf(CODEGEN_OUT, "%s:\n\t.string \"%s\"\n", (const char*)value, key);
   }
 }
