@@ -1,28 +1,28 @@
-#include "stack.h"
+#include "vector.h"
 
 /*
-creates and allocates memory for a stack
+creates and allocates memory for a vector
 returns NULL upon failure:
-  - stack allocation failure
+  - vector allocation failure
   - items allocation failure
 */
-Stack* stack_create() {
-  Stack* s = (Stack*)malloc(sizeof(Stack));
-  if (!s) { fprintf(stderr, "WARNING: Failed to allocate memory space for stack!\n"); }
+Vector* vector_create() {
+  Vector* s = (Vector*)malloc(sizeof(Vector));
+  if (!s) { fprintf(stderr, "WARNING: Failed to allocate memory space for vector!\n"); }
   if (s) {
    s->size = 0;
    s->capacity = 1<<3;
    s->items = (void**)calloc(s->capacity, sizeof(void*));
-   if (!s->items) { free(s); fprintf(stderr, "WARNING: Failed to allocate memory space for stack contents!\n"); }
+   if (!s->items) { free(s); fprintf(stderr, "WARNING: Failed to allocate memory space for vector contents!\n"); }
   }
   return s;
 }
 
 /*
-frees the memory allocated by the stack and its items.
-sets stack pointer to NULL once done
+frees the memory allocated by the vector and its items.
+sets vector pointer to NULL once done
 */
-void stack_destroy(Stack** s) {
+void vector_destroy(Vector** s) {
   if (*s) {
     free((*s)->items);
     free(*s); *s = NULL;
@@ -31,15 +31,15 @@ void stack_destroy(Stack** s) {
 
 
 /*
-Adds item to the stack, increasing its size
+Adds item to the vector, increasing its size
 Memory may have to be reallocated if above capacity (left shift)
 if in any case of failure:
-  - unallocated stack
+  - unallocated vector
   - unallocated items
   - memory reallocation
 item is set to NULL.
 */
-void stack_push(Stack* s, void* item) {
+void vector_push(Vector* s, void* item) {
   if (!s || !s->items) return;
   if (s->size >= s->capacity) {
     int new_capacity = s->capacity << 1;
@@ -57,19 +57,19 @@ void stack_push(Stack* s, void* item) {
 
 
 /*
-Pops the topmost item from the stack, removing it.
+Pops the topmost item from the vector, removing it.
 This item is returned.
-The stack size decreases.
+The vector size decreases.
 Memory may have to be reallocated if (way) under capacity (right shift)
 
 If in any case of failure:
-  - unallocated stack
+  - unallocated vector
   - unallocated items
-  - empty stack
+  - empty vector
   - memory reallocation
 return NULL
 */
-void* stack_pop(Stack* s) {
+void* vector_pop(Vector* s) {
   if (!(s && s->items && s->size)) return NULL;
   int new_capacity = s->capacity >> 1;
   if ((s->size - 1) < new_capacity) {
@@ -90,18 +90,18 @@ void* stack_pop(Stack* s) {
 
 
 /*
-returns stack size (number of items) within the stack
-Returns -1 if no stack nor items vector has been allocated.
+returns vector size (number of items) within the vector
+Returns -1 if no vector nor items vector has been allocated.
 */
-int stack_size(Stack* s) { return (s && s->items) ? s->size : -1; }
+int vector_size(Vector* s) { return (s && s->items) ? s->size : -1; }
 
 
 /*
 Returns to pointer to item specified by position.
-The top of the stack is final element in items (size - 1)
+The top of the vector is final element in items (size - 1)
 If either:
    - out of bounds (negative or above size)
-   - stack or items is unallocated
+   - vector or items is unallocated
 return NULL.
 */
-void* stack_item(Stack* s, int position) { return ((s && s->items) && (position >= 0 && position < s->size)) ? s->items[position] : NULL; }
+void* vector_item(Vector* s, int position) { return ((s && s->items) && (position >= 0 && position < s->size)) ? s->items[position] : NULL; }

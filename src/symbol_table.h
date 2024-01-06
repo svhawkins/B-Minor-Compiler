@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include "stack.h"
+#include "vector.h"
 #include "hash_table.h"
 #include "decl.h"
 #include "expr.h"
@@ -15,7 +15,7 @@
 #include "symbol.h"
 #include "type.h"
 
-/* header file for the symbol table : a stack of hash tables (void pointers cast to hash tables) */
+/* header file for the symbol table : a vector of hash tables (void pointers cast to hash tables) */
 
 
 // for error handling for everything related
@@ -38,7 +38,7 @@ FILE* ERR_OUT;
 int which_count;
 
 /*
-Symbol table itself is a stack wrapper handling
+Symbol table itself is a vector wrapper handling
 the casts and allocations of its hash table elements,
 and symbol elements of its element hash tables.
 
@@ -52,7 +52,7 @@ The show_hidden field is for printing purposes. It prints the hidden symbol tabl
 */
 typedef struct hash_table Hidden_table;
 struct symbol_table {
-  Stack* stack;
+  Vector* vector;
   bool verbose;
   int top;
   bool show_hidden;
@@ -99,7 +99,7 @@ Destroys then creates a new symbol table
 struct symbol_table* symbol_table_clear(struct symbol_table* st);
 
 /*
-Pushes a new hashtable to the stack
+Pushes a new hashtable to the vector
 Does nothing if:
 	- NULL symbol table
 	- NULL symbol table items array
@@ -108,7 +108,7 @@ Does nothing if:
 void symbol_table_scope_enter(struct symbol_table* st);
 
 /*
-Removes topmost hash table from the stack
+Removes topmost hash table from the vector
 Does nothing if:
 	- NULL symbol table
 	- NULL symbol table items array
@@ -116,7 +116,7 @@ Does nothing if:
 void symbol_table_scope_exit(struct symbol_table* st);
 
 /*
-Returns number of hashtables (scopes) currently on the stack
+Returns number of hashtables (scopes) currently on the vector
 Returns -1 for:
 	- NULL symbol table
 	- NULL items array in symbol table
@@ -124,7 +124,7 @@ Returns -1 for:
 int symbol_table_scope_level(struct symbol_table* st);
 
 /*
-Adds <name, sym> as a key-value pair to the topmost hash table in the stack
+Adds <name, sym> as a key-value pair to the topmost hash table in the vector
 Returns 1 upon success, 0 upon failure.
 Failure if:
 	- NULL symbol table
@@ -156,7 +156,7 @@ Returns a NULL pointer in the following cases:
 struct symbol* symbol_table_scope_lookup_at(struct symbol_table* st, const char* name, int index);
 
 /*
-Searches through the stack from top to bottom for <name> of all tables within scope.
+Searches through the vector from top to bottom for <name> of all tables within scope.
 Returns associated pointer value to key upon success, otherwise NULL.
 
 Returns a NULL pointer in the following cases:
@@ -206,7 +206,7 @@ Returns a NULL pointer in the following cases:
 const char* symbol_table_hidden_lookup(Hidden_table* hst, const char* literal);
 
 /*
-Prints out all of the hash tables in the stack.
+Prints out all of the hash tables in the vector.
 Each hash table prints out the all of their key value pairs.
 
 example using function definition:

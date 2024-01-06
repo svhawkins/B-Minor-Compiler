@@ -1,7 +1,7 @@
 #include "symbol_table.h"
 
 
-/* implementation file for symbol table (stack of void pointers) */
+/* implementation file for symbol table (vector of void pointers) */
 
 char buffer[16];
 
@@ -81,7 +81,7 @@ void hash_table_destroy(struct hash_table** ht) {
 
 // searches through a symbol table from top to bottom
 struct symbol* symbol_table_search(struct symbol_table* st, const char* name, int top) {
-  if (!st || !st->stack->items || !st->stack->size) return NULL;
+  if (!st || !st->vector->items || !st->vector->size) return NULL;
   struct symbol* found = NULL;
   for (int i = top; i >= 0; i--) {
     found = symbol_table_scope_lookup_at(st, name, i); if (found) break;
@@ -106,7 +106,7 @@ Returns a NULL pointer upon any memory allocation failures.
 struct symbol_table* symbol_table_create() {
   struct symbol_table* st = malloc(sizeof(struct symbol_table));
   if (st) {
-    st->stack = stack_create();
+    st->vector = vector_create();
     st->verbose = false;
     st->top = -1;
     st->show_hidden = false; // true iff from command line option
@@ -162,15 +162,15 @@ void symbol_table_destroy(struct symbol_table** st) {
 		retrieve the symbol
 		delete the symbol
 	delete hash table
-   delete stack
+   delete vector
    */
   if (!(*st)) return;
-  int top = (*st)->stack->size;
+  int top = (*st)->vector->size;
   for (int i = top - 1; i >= 0; i--) {
-    struct hash_table* ht = stack_pop((*st)->stack);
+    struct hash_table* ht = vector_pop((*st)->vector);
     hash_table_destroy(&ht);
   }
-  stack_destroy(&((*st)->stack));
+  vector_destroy(&((*st)->vector));
 
   symbol_table_hidden_destroy(&((*st)->hidden_table));
 
@@ -191,7 +191,7 @@ struct symbol_table* symbol_table_clear(struct symbol_table* st) {
 }
 
 /*
-Pushes a new hashtable to the stack
+Pushes a new hashtable to the vector
 Does nothing if:
         - NULL symbol table
         - NULL symbol table items array
@@ -199,14 +199,14 @@ Does nothing if:
 */
 void symbol_table_scope_enter(struct symbol_table* st) {
   st->top++;
-  if ((st->top) >= stack_size(st->stack)) { stack_push(st->stack, (void*)hash_table_create(0, 0)); }
+  if ((st->top) >= vector_size(st->vector)) { vector_push(st->vector, (void*)hash_table_create(0, 0)); }
   // start which count
   if (st->top == 1) { which_count = -1; }
 }
 
 
 /*
-Removes topmost hash table from the stack
+Removes topmost hash table from the vector
 Does nothing if:
         - NULL symbol table
         - NULL symbol table items array
@@ -214,11 +214,11 @@ Does nothing if:
 void symbol_table_scope_exit(struct symbol_table* st) {
   st->top--;
   // reset which count to previous count (or set to 0 if global scope)
-  which_count = (st->top > 0) ? hash_table_size((struct hash_table*)st->stack->items[st->top]) - 1: 0;
+  which_count = (st->top > 0) ? hash_table_size((struct hash_table*)st->vector->items[st->top]) - 1: 0;
 }
 
 /*
-Returns number of hashtables (scopes) currently on the stack
+Returns number of hashtables (scopes) currently on the vector
 Returns -1 for:
         - NULL symbol table
         - NULL items array in symbol table
@@ -228,7 +228,7 @@ int symbol_table_scope_level(struct symbol_table* st) {
 }
 
 /*
-Adds <name, sym> as a key-value pair to the topmost hash table in the stack
+Adds <name, sym> as a key-value pair to the topmost hash table in the vector
 Returns 1 upon success, 0 upon failure.
 Failure if:
         - NULL symbol table
@@ -237,10 +237,10 @@ Failure if:
         - empty symbol table
 */
 int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct symbol* sym) {
-  if (!st || !st->stack->items || !(st->top + 1) || !(st->stack->items[st->top])) return 0;
-  int status = (hash_table_insert((struct hash_table*)st->stack->items[st->top], name, (void*)sym) == 1);
+  if (!st || !st->vector->items || !(st->top + 1) || !(st->vector->items[st->top])) return 0;
+  int status = (hash_table_insert((struct hash_table*)st->vector->items[st->top], name, (void*)sym) == 1);
   // update which count for successful binding of non-globals
-  if (status && (stack_size(st->stack) > 1) && sym && !(sym->kind == SYMBOL_GLOBAL)) {
+  if (status && (vector_size(st->vector) > 1) && sym && !(sym->kind == SYMBOL_GLOBAL)) {
     which_count++; sym->which = which_count;
   }
   return status;
@@ -268,14 +268,14 @@ Returns a NULL pointer in the following cases:
         - invalid key
 */
 struct symbol* symbol_table_scope_lookup_at(struct symbol_table* st, const char* name, int index) {
-  if (!st || !st->stack || !st->stack->items || !st->stack->size) { return NULL; }
-  if (index < 0 || index >= stack_size(st->stack)) { return NULL; }
-  if (!st->stack->items[index] || !hash_table_size(st->stack->items[index])) { return NULL; }
-  else { return hash_table_lookup(st->stack->items[index], name); }
+  if (!st || !st->vector || !st->vector->items || !st->vector->size) { return NULL; }
+  if (index < 0 || index >= vector_size(st->vector)) { return NULL; }
+  if (!st->vector->items[index] || !hash_table_size(st->vector->items[index])) { return NULL; }
+  else { return hash_table_lookup(st->vector->items[index], name); }
 }
 
 /*
-Searches through the stack from top to bottom for <name>
+Searches through the vector from top to bottom for <name>
 Returns associated pointer value to key upon success, otherwise NULL.
 
 Returns a NULL pointer in the following cases:
@@ -287,7 +287,7 @@ Returns a NULL pointer in the following cases:
         - invalid key
 */
 struct symbol* symbol_table_scope_lookup(struct symbol_table* st, const char* name) {
-  if (!st || !st->stack->items || !st->stack->size) return NULL;
+  if (!st || !st->vector->items || !st->vector->size) return NULL;
   return symbol_table_search(st, name, st->top);
 }
 
@@ -304,8 +304,8 @@ Returns a NULL pointer in the following cases:
         - invalid key
 */
 struct symbol* symbol_table_scope_lookup_all(struct symbol_table* st, const char* name) {
-  if (!st || !st->stack->items || !st->stack->size) return NULL;
-  return symbol_table_search(st, name, stack_size(st->stack) - 1);
+  if (!st || !st->vector->items || !st->vector->size) return NULL;
+  return symbol_table_search(st, name, vector_size(st->vector) - 1);
 }
 
 
@@ -337,12 +337,12 @@ const char* symbol_table_hidden_lookup(Hidden_table* hst, const char* literal) {
 }
 
 /*
-Prints out all of the hash tables in the stack.
+Prints out all of the hash tables in the vector.
 Each hash table prints out the all of their key value pairs.
 */
 
 void symbol_table_fprint(FILE* fp, struct symbol_table* st) {
-  int top = (st->verbose) ? stack_size(st->stack) - 1 : st->top;
+  int top = (st->verbose) ? vector_size(st->vector) - 1 : st->top;
   for (int i = top; i >= 0; i--) {
     // hash table header
     fprintf(fp, "\nSCOPE [%d]:", i);
@@ -351,7 +351,7 @@ void symbol_table_fprint(FILE* fp, struct symbol_table* st) {
     fprintf(fp, "\n"); for (int j = 0; j < 50; j++) fprintf(fp, "-"); fprintf(fp, "\n");
 
     // print out hash table
-    hash_table_fprint(fp, st->stack->items[i]);
+    hash_table_fprint(fp, st->vector->items[i]);
   }
   fprintf(fp, "\n");
 }

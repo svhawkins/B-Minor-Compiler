@@ -15,26 +15,26 @@ void print_error(char* test, char* expect, char* value);
 
 // test functions
 
-// unit tests for the stack
-Status test_stack_create(void);
-Status test_stack_destroy(void);
-Status test_stack_size_null_stack(void);
-Status test_stack_size_null_items(void);
-Status test_stack_size_empty(void);
-Status test_stack_push_null_stack(void);
-Status test_stack_push_null_items(void);
-Status test_stack_push(void);
-Status test_stack_pop(void);
-Status test_stack_pop_null_stack(void);
-Status test_stack_pop_null_items(void);
-Status test_stack_pop_empty(void);
-Status test_stack_push_refit(void);
-Status test_stack_pop_refit(void);
-Status test_stack_item_null_stack(void);
-Status test_stack_item_null_items(void);
-Status test_stack_item_out_of_bounds_low(void);
-Status test_stack_item_out_of_bounds_high(void);
-Status test_stack_item(void);
+// unit tests for the vector
+Status test_vector_create(void);
+Status test_vector_destroy(void);
+Status test_vector_size_null_vector(void);
+Status test_vector_size_null_items(void);
+Status test_vector_size_empty(void);
+Status test_vector_push_null_vector(void);
+Status test_vector_push_null_items(void);
+Status test_vector_push(void);
+Status test_vector_pop(void);
+Status test_vector_pop_null_vector(void);
+Status test_vector_pop_null_items(void);
+Status test_vector_pop_empty(void);
+Status test_vector_push_refit(void);
+Status test_vector_pop_refit(void);
+Status test_vector_item_null_vector(void);
+Status test_vector_item_null_items(void);
+Status test_vector_item_out_of_bounds_low(void);
+Status test_vector_item_out_of_bounds_high(void);
+Status test_vector_item(void);
 
 // hashtable + symbol integration tests
 Status test_hash_symbol_insert(void);
@@ -50,17 +50,17 @@ Status test_symbol_table_scope_enter_multi(void);
 Status test_symbol_table_scope_exit(void);
 Status test_symbol_table_scope_bind(void);
 Status test_symbol_table_scope_bind_null(void);
-Status test_symbol_table_scope_lookup_null_stack(void);
+Status test_symbol_table_scope_lookup_null_vector(void);
 Status test_symbol_table_scope_lookup_null_items(void);
-Status test_symbol_table_scope_lookup_empty_stack(void);
+Status test_symbol_table_scope_lookup_empty_vector(void);
 Status test_symbol_table_scope_lookup_null_table(void);
 Status test_symbol_table_scope_lookup_empty_table(void);
 Status test_symbol_table_scope_lookup_bad_key(void);
 Status test_symbol_table_scope_lookup_good_key(void);
 Status test_symbol_table_scope_lookup_multi_table(void);
-Status test_symbol_table_scope_lookup_current_null_stack(void);
+Status test_symbol_table_scope_lookup_current_null_vector(void);
 Status test_symbol_table_scope_lookup_current_null_items(void);
-Status test_symbol_table_scope_lookup_current_empty_stack(void);
+Status test_symbol_table_scope_lookup_current_empty_vector(void);
 Status test_symbol_table_scope_lookup_current_null_table(void);
 Status test_symbol_table_scope_lookup_current_empty_table(void);
 Status test_symbol_table_scope_lookup_current_bad_key(void);
@@ -80,25 +80,25 @@ int main(void) {
   if (!ERR_OUT) { ERR_OUT = stderr; }
 
   Status (*tests[])(void) = {
-    test_stack_create,
-    test_stack_destroy,
-    test_stack_size_null_stack,
-    test_stack_size_null_items,
-    test_stack_size_empty,
-    test_stack_push_null_stack,
-    test_stack_push_null_items,
-    test_stack_push,
-    test_stack_pop,
-    test_stack_pop_null_stack,
-    test_stack_pop_null_items,
-    test_stack_pop_empty,
-    test_stack_push_refit,
-    test_stack_pop_refit,
-    test_stack_item_null_stack,
-    test_stack_item_null_items,
-    test_stack_item_out_of_bounds_low,
-    test_stack_item_out_of_bounds_high,
-    test_stack_item,
+    test_vector_create,
+    test_vector_destroy,
+    test_vector_size_null_vector,
+    test_vector_size_null_items,
+    test_vector_size_empty,
+    test_vector_push_null_vector,
+    test_vector_push_null_items,
+    test_vector_push,
+    test_vector_pop,
+    test_vector_pop_null_vector,
+    test_vector_pop_null_items,
+    test_vector_pop_empty,
+    test_vector_push_refit,
+    test_vector_pop_refit,
+    test_vector_item_null_vector,
+    test_vector_item_null_items,
+    test_vector_item_out_of_bounds_low,
+    test_vector_item_out_of_bounds_high,
+    test_vector_item,
     test_hash_symbol_insert,
     test_hash_symbol_remove,
     test_hash_symbol_lookup_null,
@@ -110,17 +110,17 @@ int main(void) {
     test_symbol_table_scope_exit,
     test_symbol_table_scope_bind,
     test_symbol_table_scope_bind_null,
-    test_symbol_table_scope_lookup_null_stack,
+    test_symbol_table_scope_lookup_null_vector,
     test_symbol_table_scope_lookup_null_items,
-    test_symbol_table_scope_lookup_empty_stack,
+    test_symbol_table_scope_lookup_empty_vector,
     test_symbol_table_scope_lookup_null_table,
     test_symbol_table_scope_lookup_empty_table,
     test_symbol_table_scope_lookup_bad_key,
     test_symbol_table_scope_lookup_good_key,
     test_symbol_table_scope_lookup_multi_table,
-    test_symbol_table_scope_lookup_current_null_stack,
+    test_symbol_table_scope_lookup_current_null_vector,
     test_symbol_table_scope_lookup_current_null_items,
-    test_symbol_table_scope_lookup_current_empty_stack,
+    test_symbol_table_scope_lookup_current_empty_vector,
     test_symbol_table_scope_lookup_current_null_table,
     test_symbol_table_scope_lookup_current_empty_table,
     test_symbol_table_scope_lookup_current_bad_key,
@@ -149,11 +149,11 @@ int main(void) {
 // pointers so use strings for expected types
 void print_error(char* test, char* expect, char* value) { printf("Error:\t[%s]:\n\tExpected a value of %s for value: [%s]\n", test, expect, value); }
 
-Status test_stack_create(void) {
+Status test_vector_create(void) {
 strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create();
-  if (!s) { print_error(test_type, "NOT NULL", "Stack* s"); return FAILURE; }
+  Vector* s = vector_create();
+  if (!s) { print_error(test_type, "NOT NULL", "Vector* s"); return FAILURE; }
   if (!s->items) { print_error(test_type, "NOT NULL", "void** s->items"); status = FAILURE; }
   if (s->size) { print_error(test_type, "ZERO", "int s->size"); status= FAILURE; }
   if (s->capacity != (1<<3)) { print_error(test_type, "EIGHT (1<<3)", "int s->capacity"); status = FAILURE; }
@@ -161,183 +161,183 @@ strcpy(test_type, __FUNCTION__);
   return status;
 }
 
-Status test_stack_destroy(void) {
+Status test_vector_destroy(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create();
-  if (!s) { print_error(test_type, "NOT NULL", "Stack* s"); return FAILURE; }
-  stack_destroy(&s);
-  if (s) { print_error(test_type, "NULL", "Stack* s"); status = FAILURE; }
+  Vector* s = vector_create();
+  if (!s) { print_error(test_type, "NOT NULL", "Vector* s"); return FAILURE; }
+  vector_destroy(&s);
+  if (s) { print_error(test_type, "NULL", "Vector* s"); status = FAILURE; }
   return status;
 }
 
 
-Status test_stack_size_null_stack(void) {
+Status test_vector_size_null_vector(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = NULL;
-  if (stack_size(s) != -1) { print_error(test_type, "-1", "return value stack_size(Stack* s)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = NULL;
+  if (vector_size(s) != -1) { print_error(test_type, "-1", "return value vector_size(Vector* s)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_size_null_items(void) {
+Status test_vector_size_null_items(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create(); free(s->items); s->items = NULL;
-  if (stack_size(s) != -1) { print_error(test_type, "-1", "return value stack_size(Stack* s)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = vector_create(); free(s->items); s->items = NULL;
+  if (vector_size(s) != -1) { print_error(test_type, "-1", "return value vector_size(Vector* s)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_size_empty(void) {
+Status test_vector_size_empty(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create();
-  if (stack_size(s)) { print_error(test_type, "0", "return value stack_size(Stack* s)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = vector_create();
+  if (vector_size(s)) { print_error(test_type, "0", "return value vector_size(Vector* s)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_push_null_stack(void) {
+Status test_vector_push_null_vector(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = NULL; void* item = NULL;
-  stack_push(s, item);
-  if (stack_size(s) != -1) { print_error(test_type, "-1", "stack_push(Stack* s, void* item)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = NULL; void* item = NULL;
+  vector_push(s, item);
+  if (vector_size(s) != -1) { print_error(test_type, "-1", "vector_push(Vector* s, void* item)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_push_null_items(void) {
+Status test_vector_push_null_items(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create(); free(s->items); s->items = NULL; void* item = NULL;
-  stack_push(s, item);
-  if (stack_size(s) != -1) { print_error(test_type, "-1", "stack_push(Stack* s, void* item)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = vector_create(); free(s->items); s->items = NULL; void* item = NULL;
+  vector_push(s, item);
+  if (vector_size(s) != -1) { print_error(test_type, "-1", "vector_push(Vector* s, void* item)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_push(void) {
+Status test_vector_push(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create(); void* item = (void*)"duck";
-  stack_push(s, item); int top = stack_size(s) - 1;
-  if (!stack_size(s)) { print_error(test_type, "1", "return value stack_size(Stack* s) after push"); status = FAILURE; }
+  Vector* s = vector_create(); void* item = (void*)"duck";
+  vector_push(s, item); int top = vector_size(s) - 1;
+  if (!vector_size(s)) { print_error(test_type, "1", "return value vector_size(Vector* s) after push"); status = FAILURE; }
   if (strcmp(s->items[top], "duck")) { print_error(test_type, "\"duck\"", "(char*)s->items[top]"); status = FAILURE; }
-  stack_destroy(&s);
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_pop(void) {
+Status test_vector_pop(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create(); void* item = (void*)"duck";
-  stack_push(s, item); void* ret = stack_pop(s);
-  if (stack_size(s)) { print_error(test_type, "0", "return value stack_size(Stack* s)"); status = FAILURE; }
-  if (strcmp((char*)ret, "duck")) { print_error(test_type, "\"duck\"", "return value of stack_pop(Stack* s)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = vector_create(); void* item = (void*)"duck";
+  vector_push(s, item); void* ret = vector_pop(s);
+  if (vector_size(s)) { print_error(test_type, "0", "return value vector_size(Vector* s)"); status = FAILURE; }
+  if (strcmp((char*)ret, "duck")) { print_error(test_type, "\"duck\"", "return value of vector_pop(Vector* s)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_pop_null_stack(void) {
+Status test_vector_pop_null_vector(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = NULL;
-  stack_pop(s);
-  if (stack_size(s) != -1) { print_error(test_type, "-1", "stack size stack_pop(Stack* s)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = NULL;
+  vector_pop(s);
+  if (vector_size(s) != -1) { print_error(test_type, "-1", "vector size vector_pop(Vector* s)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_pop_null_items(void) {
+Status test_vector_pop_null_items(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create(); free(s->items); s->items = NULL;
-  stack_pop(s);
-  if (stack_size(s) != -1) { print_error(test_type, "-1", "stack size after stack_pop(Stack* s)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = vector_create(); free(s->items); s->items = NULL;
+  vector_pop(s);
+  if (vector_size(s) != -1) { print_error(test_type, "-1", "vector size after vector_pop(Vector* s)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_pop_empty(void) {
+Status test_vector_pop_empty(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create(); stack_pop(s);
-  if (stack_size(s)) { print_error(test_type, "0", "stack size after stack_pop(Stack* s)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = vector_create(); vector_pop(s);
+  if (vector_size(s)) { print_error(test_type, "0", "vector size after vector_pop(Vector* s)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_push_refit(void) {
+Status test_vector_push_refit(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create(); void* item = (void*)"duck"; int cap = s->capacity + 1;
-  for (int i = 0; i < cap; i++) stack_push(s, item);
-  if (s->capacity != (1<<4)) { print_error(test_type, "16 (1<<4)", "refitting items in stack_push(Stack* s, void* item)"); status = FAILURE; }
-  if (s->size != cap) { print_error(test_type, "9", "stack size after push"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = vector_create(); void* item = (void*)"duck"; int cap = s->capacity + 1;
+  for (int i = 0; i < cap; i++) vector_push(s, item);
+  if (s->capacity != (1<<4)) { print_error(test_type, "16 (1<<4)", "refitting items in vector_push(Vector* s, void* item)"); status = FAILURE; }
+  if (s->size != cap) { print_error(test_type, "9", "vector size after push"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_pop_refit(void) {
+Status test_vector_pop_refit(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create(); void* item = (void*)"duck"; int cap = (s->capacity >> 1);
-  for (int i = 0; i < cap; i++) { stack_push(s, item); } stack_pop(s);
-  if (s->capacity != (1<<2)) { print_error(test_type, "4 (1<<2)", "refitting items in stack_pop(Stack* s)"); status = FAILURE; }
-  if (s->size != (cap - 1)) { print_error(test_type, "3", "stack size after pop"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = vector_create(); void* item = (void*)"duck"; int cap = (s->capacity >> 1);
+  for (int i = 0; i < cap; i++) { vector_push(s, item); } vector_pop(s);
+  if (s->capacity != (1<<2)) { print_error(test_type, "4 (1<<2)", "refitting items in vector_pop(Vector* s)"); status = FAILURE; }
+  if (s->size != (cap - 1)) { print_error(test_type, "3", "vector size after pop"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_item_null_stack(void) {
+Status test_vector_item_null_vector(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = NULL;
-  void* item = stack_item(s, 0);
-  if (item) { print_error(test_type, "NULL", "return value of stack_item(Stack* s, int position)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = NULL;
+  void* item = vector_item(s, 0);
+  if (item) { print_error(test_type, "NULL", "return value of vector_item(Vector* s, int position)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_item_null_items(void) {
+Status test_vector_item_null_items(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create(); free(s->items); s->items = NULL;
-  void* item = stack_item(s, 0);
-  if (item) { print_error(test_type, "NULL", "return value of stack_item(Stack* s, int position)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = vector_create(); free(s->items); s->items = NULL;
+  void* item = vector_item(s, 0);
+  if (item) { print_error(test_type, "NULL", "return value of vector_item(Vector* s, int position)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_item_out_of_bounds_low(void) {
+Status test_vector_item_out_of_bounds_low(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create(); void* item = stack_item(s, -1);
-  if (item) { print_error(test_type, "NULL", "return value of stack_item(Stack* s, int position)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = vector_create(); void* item = vector_item(s, -1);
+  if (item) { print_error(test_type, "NULL", "return value of vector_item(Vector* s, int position)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_item_out_of_bounds_high(void) {
+Status test_vector_item_out_of_bounds_high(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create(); void* item = stack_item(s, 1);
-  if (item) { print_error(test_type, "NULL", "return value of stack_item(Stack* s, int position)"); status = FAILURE; }
-  stack_destroy(&s);
+  Vector* s = vector_create(); void* item = vector_item(s, 1);
+  if (item) { print_error(test_type, "NULL", "return value of vector_item(Vector* s, int position)"); status = FAILURE; }
+  vector_destroy(&s);
   return status;
 }
 
-Status test_stack_item(void) {
+Status test_vector_item(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Stack* s = stack_create();
-  stack_push(s, (void*)"duck"); int top = stack_size(s) - 1; void* item = stack_item(s, top);
-  if (!item) { print_error(test_type, "NOT NULL", "return value of stack_item(Stack* s, int position)"); status = FAILURE; }
+  Vector* s = vector_create();
+  vector_push(s, (void*)"duck"); int top = vector_size(s) - 1; void* item = vector_item(s, top);
+  if (!item) { print_error(test_type, "NOT NULL", "return value of vector_item(Vector* s, int position)"); status = FAILURE; }
   if (strcmp((char*)item, "duck")) { print_error(test_type, "\"duck\"", "(char*)item"); status = FAILURE; }
-  stack_destroy(&s);
+  vector_destroy(&s);
   return status;
 }
 
@@ -419,7 +419,7 @@ Status test_symbol_table_destroy(void) {
   if (!s) { print_error(test_type, "NOT NULL", "struct symbol* s"); status = FAILURE; }
 
   status = hash_table_insert(ht, "foo", (void*)s);
-  stack_push(st->stack, ht);
+  vector_push(st->vector, ht);
   symbol_table_destroy(&st); ht = NULL; s = NULL; // tests keep failing here.
   if (st) { print_error(test_type, "NULL", "Symbol_table* st"); status = FAILURE; }
   if (ht) { print_error(test_type, "NULL", "struct hash_table* ht"); status = FAILURE; }
@@ -435,7 +435,7 @@ Status test_symbol_table_scope_level(void) {
   if (!st) { print_error(test_type, "NOT NULL", "Symbol_table* st"); status = FAILURE; }
   if (!ht) { print_error(test_type, "NOT NULL", "struct hash_table* ht"); status = FAILURE; }
 
-  stack_push(st->stack, ht); st->top++;
+  vector_push(st->vector, ht); st->top++;
   if (symbol_table_scope_level(st) != 1) { print_error(test_type, "1", "int symbol_table_scope_level(Symbol_table* st)"); status = FAILURE; }
   if (hash_table_size(ht)) { print_error(test_type, "0", "int hash_table_size(struct hash_table* ht)"); status = FAILURE; }
   symbol_table_destroy(&st);
@@ -460,8 +460,8 @@ Status test_symbol_table_scope_enter_multi(void) {
   if (!st) { print_error(test_type, "NOT NULL", "Symbol_table* st"); status = FAILURE; }
   symbol_table_scope_enter(st); symbol_table_scope_enter(st); symbol_table_scope_enter(st);
   if (symbol_table_scope_level(st) != 3) { print_error(test_type, "3", "int symbol_table_scope_level(Symbol_table* st)"); status = FAILURE; }
-  for (int i = st->stack->size - 1; i >= 0; i--) {
-    if (!st->stack->items[i]) { print_error(test_type, "NOT NULL", "hash tables after scope entry"); status = FAILURE; }
+  for (int i = st->vector->size - 1; i >= 0; i--) {
+    if (!st->vector->items[i]) { print_error(test_type, "NOT NULL", "hash tables after scope entry"); status = FAILURE; }
   }
   symbol_table_destroy(&st);
   return status;
@@ -474,7 +474,7 @@ Status test_symbol_table_scope_exit(void) {
   if (!st) { print_error(test_type, "NOT NULL", "Symbol_table* st"); status = FAILURE; }
   symbol_table_scope_enter(st); symbol_table_scope_exit(st);
   if (symbol_table_scope_level(st)) { print_error(test_type, "0", "int symbol_table_scope_level(Symbol_table* st)"); status = FAILURE; }
-  if (st->stack->items[stack_size(st->stack)]) { print_error(test_type, "NULL", "pointer value of topmost scope"); status = FAILURE; }
+  if (st->vector->items[vector_size(st->vector)]) { print_error(test_type, "NULL", "pointer value of topmost scope"); status = FAILURE; }
   symbol_table_destroy(&st);
   return status;
 }
@@ -487,10 +487,10 @@ Status test_symbol_table_scope_bind(void) {
   if (!st) { print_error(test_type, "NOT NULL", "Symbol_table* st"); status = FAILURE; }
   if (!s) { print_error(test_type, "NOT NULL", "struct symbol* s"); status = FAILURE; }
 
-  symbol_table_scope_enter(st); int top = stack_size(st->stack) - 1;
+  symbol_table_scope_enter(st); int top = vector_size(st->vector) - 1;
   symbol_table_scope_bind(st, "foo", s);
-  if (!hash_table_size(st->stack->items[top])) { print_error(test_type, "1", "int hash_table_size(struct hash_table* ht)"); status = FAILURE; }
-  if (!hash_table_lookup(st->stack->items[top], "foo")) {
+  if (!hash_table_size(st->vector->items[top])) { print_error(test_type, "1", "int hash_table_size(struct hash_table* ht)"); status = FAILURE; }
+  if (!hash_table_lookup(st->vector->items[top], "foo")) {
     print_error(test_type, "NOT NULL", "void* hash_table_lookup(struct hash_table* h, const char* key, void* value)");
     status = FAILURE;
   }
@@ -508,9 +508,9 @@ Status test_symbol_table_scope_bind_null(void)  {
   if (ht) { print_error(test_type, "NULL", "struct hash_table* ht"); status = FAILURE; }
   if (!s) { print_error(test_type, "NOT NULL", "struct symbol* s"); status = FAILURE; }
 
-  stack_push(st->stack, ht); int top = stack_size(st->stack) - 1;
+  vector_push(st->vector, ht); int top = vector_size(st->vector) - 1;
   symbol_table_scope_bind(st, "foo", s);
-  if (st->stack->items[top]) {
+  if (st->vector->items[top]) {
     print_error(test_type, "NULL", "struct hash_table* st->items[top]");
     status = FAILURE;
   }
@@ -518,7 +518,7 @@ Status test_symbol_table_scope_bind_null(void)  {
   return status;
 }
 
-Status test_symbol_table_scope_lookup_null_stack(void) {
+Status test_symbol_table_scope_lookup_null_vector(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   Symbol_table* st = NULL;
@@ -533,7 +533,7 @@ Status test_symbol_table_scope_lookup_null_stack(void) {
 Status test_symbol_table_scope_lookup_null_items(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Symbol_table* st = symbol_table_create(); free(st->stack->items); st->stack->items = NULL;
+  Symbol_table* st = symbol_table_create(); free(st->vector->items); st->vector->items = NULL;
   if (symbol_table_scope_lookup(st, "foo")) {
     print_error(test_type, "NULL", "struct symbol* symbol_table_scope_lookup(Symbol_table* st, const char* name)");
     status = FAILURE;
@@ -542,7 +542,7 @@ Status test_symbol_table_scope_lookup_null_items(void) {
   return status;
 }
 
-Status test_symbol_table_scope_lookup_empty_stack(void) {
+Status test_symbol_table_scope_lookup_empty_vector(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   Symbol_table* st = symbol_table_create();
@@ -559,7 +559,7 @@ Status test_symbol_table_scope_lookup_null_table(void) {
   Status status = SUCCESS;
   Symbol_table* st = symbol_table_create();
   struct hash_table* ht = NULL;
-  stack_push(st->stack, ht);
+  vector_push(st->vector, ht);
   if (symbol_table_scope_lookup(st, "foo")) {
     print_error(test_type, "NULL", "struct symbol* symbol_table_scope_lookup(Symbol_table* st, const char* name)");
     status = FAILURE;
@@ -634,7 +634,7 @@ Status test_symbol_table_scope_lookup_multi_table(void) {
   return status;
 }
 
-Status test_symbol_table_scope_lookup_current_null_stack(void) {
+Status test_symbol_table_scope_lookup_current_null_vector(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   Symbol_table* st = NULL;
@@ -649,7 +649,7 @@ Status test_symbol_table_scope_lookup_current_null_stack(void) {
 Status test_symbol_table_scope_lookup_current_null_items(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  Symbol_table* st = symbol_table_create(); free(st->stack->items); st->stack->items = NULL;
+  Symbol_table* st = symbol_table_create(); free(st->vector->items); st->vector->items = NULL;
   if (symbol_table_scope_lookup_current(st, "foo")) {
     print_error(test_type, "NULL", "struct symbol* symbol_table_scope_lookup_current(Symbol_table* st, const char* name)");
     status = FAILURE;
@@ -658,7 +658,7 @@ Status test_symbol_table_scope_lookup_current_null_items(void) {
   return status;
 }
 
-Status test_symbol_table_scope_lookup_current_empty_stack(void) {
+Status test_symbol_table_scope_lookup_current_empty_vector(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   Symbol_table* st = symbol_table_create();
@@ -675,7 +675,7 @@ Status test_symbol_table_scope_lookup_current_null_table(void) {
   Status status = SUCCESS;
   Symbol_table* st = symbol_table_create();
   struct hash_table* ht = NULL;
-  stack_push(st->stack, ht);
+  vector_push(st->vector, ht);
   if (symbol_table_scope_lookup_current(st, "foo")) {
     print_error(test_type, "NULL", "struct symbol* symbol_table_scope_lookup_current(Symbol_table* st, const char* name)");
     status = FAILURE;

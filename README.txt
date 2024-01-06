@@ -6,7 +6,7 @@ Changes since assignment 4:
 1. [main.c] renamed to [typecheck.c]
 2. symbol_table_clear() now no longer always creates non-verbose symbol tables.
    If the just destroyed table was verbose, then so is the new one created.
-3. 2 tests were added in tests/symbol_table/test_stack.c to test for correct generation of symbol->which values
+3. 2 tests were added in tests/symbol_table/test_data_structures.c to test for correct generation of symbol->which values
    upon scope entry and exit through binding via <struct>_resolve()
 4. Added 2 additional code files:
    register.h/register.c to handle all of the register allocation (and labels) for code generation
@@ -46,7 +46,7 @@ TESTS
 HIDDEN SYMBOLS
 
 symbol_table.h/.c now has an additional structure to hold these hidden symbols: Hidden_table.
-Under the hood still very much a hash table (much like how the Symbol_table's stack is).
+Under the hood still very much a hash table (much like how the Symbol_table's vector is).
 
 Additional functions have been added for Hidden_table:
 

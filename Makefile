@@ -1,12 +1,12 @@
 CFLAGS = -pedantic -Og -Wall -Wextra
 AST = tests/test_factory tests/test_print tests/test_ast
-SYM = tests/test_stack tests/test_symbol_table tests/test_typecheck
+SYM = tests/test_data_structures tests/test_symbol_table tests/test_typecheck
 TESTS = tests/test_scan tests/test_parse $(AST) $(SYM) tests/test_codegen test
 COMPILER = scan parse print typecheck codegen
 EXEC = $(COMPILER) $(TESTS)
 OBJECTS = src/*.o tests/scanner/*.o tests/parser/*.o tests/ast/*.o tests/symbol_table/*.o tests/codegen/*.o
 GEN = src/scanner.c src/parser.c
-INCLUDES = src/decl.o src/expr.o src/param_list.o src/stmt.o src/symbol.o src/type.o src/hash_table.o src/symbol_table.o src/stack.o src/register.o
+INCLUDES = src/decl.o src/expr.o src/param_list.o src/stmt.o src/symbol.o src/type.o src/hash_table.o src/symbol_table.o src/vector.o src/register.o
 
 ## compiles all targets
 all: $(EXEC)
@@ -30,7 +30,7 @@ tests/test_print: tests/ast/test_print.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
 tests/test_ast: tests/ast/test_ast.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-tests/test_stack: tests/symbol_table/test_stack.o src/scanner.o src/parser.o $(INCLUDES)
+tests/test_data_structures: tests/symbol_table/test_data_structures.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
 tests/test_symbol_table: tests/symbol_table/test_symbol_table.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^

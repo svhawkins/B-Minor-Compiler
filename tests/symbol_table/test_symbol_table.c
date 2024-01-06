@@ -373,11 +373,11 @@ Status test_stmt_resolve_block_empty(void) {
   Status status = SUCCESS;
   struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   Symbol_table* st = symbol_table_verbose_create();
-  symbol_table_scope_enter(st); int old_level = stack_size(st->stack);
+  symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
   stmt_resolve(st, s);
 
-  if ((stack_size(st->stack) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
-  if (hash_table_size(st->stack->items[stack_size(st->stack) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
+  if ((vector_size(st->vector) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
+  if (hash_table_size(st->vector->items[vector_size(st->vector) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
   symbol_table_destroy(&st); stmt_destroy(&s);
   return status;
 }
@@ -389,10 +389,10 @@ Status test_stmt_resolve_block(void) {
   struct stmt* body = stmt_create(STMT_DECL, decl_create(strdup("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, body, NULL, NULL);
   Symbol_table* st = symbol_table_verbose_create();
-  symbol_table_scope_enter(st); int old_level = stack_size(st->stack);
+  symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
   stmt_resolve(st, s);
-  if ((stack_size(st->stack) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
-  if (!hash_table_size(st->stack->items[stack_size(st->stack) - 1])) { print_error(test_type, "1", "topmost hashtable size"); status = FAILURE; }
+  if ((vector_size(st->vector) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
+  if (!hash_table_size(st->vector->items[vector_size(st->vector) - 1])) { print_error(test_type, "1", "topmost hashtable size"); status = FAILURE; }
   if (!symbol_table_scope_lookup_at(st, "duck", old_level)) { print_error(test_type, "NOT NULL", "current scope lookup [duck]"); status = FAILURE; }
   if (s->body->decl->symbol->kind != SYMBOL_LOCAL) { print_error(test_type, "SYMBOL_LOCAL", "symbol kind [duck]"); status = FAILURE; }
   symbol_table_destroy(&st); stmt_destroy(&s); type_destroy(&tvoid);
@@ -408,12 +408,12 @@ Status test_stmt_resolve_while(void) {
   struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), strdup("duck"));
 
   Symbol_table* st = symbol_table_verbose_create();
-  symbol_table_scope_enter(st); int old_level = stack_size(st->stack);
+  symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
   symbol_table_scope_bind(st, "duck", sym);
   stmt_resolve(st, s);
 
-  if ((stack_size(st->stack) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
-  if (hash_table_size(st->stack->items[stack_size(st->stack) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
+  if ((vector_size(st->vector) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
+  if (hash_table_size(st->vector->items[vector_size(st->vector) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
   if (!symbol_table_scope_lookup(st, "duck")) { print_error(test_type, "NOT NULL", "scope lookup [duck]"); status = FAILURE; }
   if (symbol_table_scope_lookup_at(st, "duck", old_level)) { print_error(test_type, "NULL", "current scope lookup [duck]"); status = FAILURE; }
   symbol_table_destroy(&st); stmt_destroy(&s);
@@ -429,12 +429,12 @@ Status test_stmt_resolve_if_else_null(void) {
   struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), strdup("duck"));
 
   Symbol_table* st = symbol_table_verbose_create();
-  symbol_table_scope_enter(st); int old_level = stack_size(st->stack);
+  symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
   symbol_table_scope_bind(st, "duck", sym);
   stmt_resolve(st, s);
 
-  if ((stack_size(st->stack) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
-  if (hash_table_size(st->stack->items[stack_size(st->stack) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
+  if ((vector_size(st->vector) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
+  if (hash_table_size(st->vector->items[vector_size(st->vector) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
   if (!symbol_table_scope_lookup(st, "duck")) { print_error(test_type, "NOT NULL", "scope lookup [duck]"); status = FAILURE; }
   if (symbol_table_scope_lookup_at(st, "duck", old_level)) { print_error(test_type, "NULL", "current scope lookup [duck]"); status = FAILURE; }
   symbol_table_destroy(&st); stmt_destroy(&s);
@@ -451,11 +451,11 @@ Status test_stmt_resolve_if_else(void) {
   struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), strdup("duck"));
 
   Symbol_table* st = symbol_table_verbose_create();
-  symbol_table_scope_enter(st); int old_level = stack_size(st->stack);
+  symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
   symbol_table_scope_bind(st, "duck", sym);
   stmt_resolve(st, s);
-  if ((stack_size(st->stack) - old_level) != 2) { print_error(test_type, "3", "scope level"); status = FAILURE; }
-  if (hash_table_size(st->stack->items[stack_size(st->stack) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
+  if ((vector_size(st->vector) - old_level) != 2) { print_error(test_type, "3", "scope level"); status = FAILURE; }
+  if (hash_table_size(st->vector->items[vector_size(st->vector) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
   if (!symbol_table_scope_lookup(st, "duck")) { print_error(test_type, "NOT NULL", "scope lookup [duck]"); status = FAILURE; }
   if (symbol_table_scope_lookup_at(st, "duck", old_level)) { print_error(test_type, "NULL", "current scope lookup [duck]"); status = FAILURE; }
   symbol_table_destroy(&st); stmt_destroy(&s);
@@ -474,13 +474,13 @@ Status test_stmt_resolve_for_expr(void) {
   struct symbol* sym_goose = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), strdup("goose"));
 
   Symbol_table* st = symbol_table_verbose_create();
-  symbol_table_scope_enter(st); int old_level = stack_size(st->stack);
+  symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
   symbol_table_scope_bind(st, "duck", sym_duck);
   symbol_table_scope_bind(st, "goose", sym_goose);
   stmt_resolve(st, s);
 
-  if ((stack_size(st->stack) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
-  if (hash_table_size(st->stack->items[stack_size(st->stack) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
+  if ((vector_size(st->vector) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
+  if (hash_table_size(st->vector->items[vector_size(st->vector) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
   if (!symbol_table_scope_lookup(st, "duck")) { print_error(test_type, "NOT NULL", "scope lookup [duck]"); status = FAILURE; }
   if (symbol_table_scope_lookup_at(st, "duck", old_level)) { print_error(test_type, "NULL", "current scope lookup [duck]"); status = FAILURE; }
   if (!symbol_table_scope_lookup(st, "goose")) { print_error(test_type, "NOT NULL", "scope lookup [goose]"); status = FAILURE; }
@@ -498,11 +498,11 @@ Status test_stmt_resolve_for_decl(void) {
  				stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
  				NULL, NULL);
   Symbol_table* st = symbol_table_verbose_create();
-  symbol_table_scope_enter(st); int old_level = stack_size(st->stack);
+  symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
   stmt_resolve(st, s);
 
-  if ((stack_size(st->stack) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
-  if (hash_table_size(st->stack->items[stack_size(st->stack) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
+  if ((vector_size(st->vector) - old_level) != 1) { print_error(test_type, "2", "scope level"); status = FAILURE; }
+  if (hash_table_size(st->vector->items[vector_size(st->vector) - 1])) { print_error(test_type, "0", "topmost hashtable size"); status = FAILURE; }
   if (!symbol_table_scope_lookup(st, "duck")) { print_error(test_type, "NOT NULL", "scope lookup [duck]"); status = FAILURE; }
   if (symbol_table_scope_lookup_at(st, "duck", old_level)) { print_error(test_type, "NULL", "current scope lookup [duck]"); status = FAILURE; }
   symbol_table_destroy(&st); stmt_destroy(&s);
@@ -528,7 +528,7 @@ Status test_decl_resolve_program(void) {
   symbol_table_scope_enter(st);
   decl_resolve(st, d);
 
-  if (stack_size(st->stack) != 3) { print_error(test_type, "3", "total tables"); status = FAILURE; }
+  if (vector_size(st->vector) != 3) { print_error(test_type, "3", "total tables"); status = FAILURE; }
   if (!symbol_table_scope_lookup_all(st, "main")) { print_error(test_type, "NOT NULL", "scope lookup [main]"); status = FAILURE; }
   if (!symbol_table_scope_lookup_all(st, "argc")) { print_error(test_type, "NOT NULL", "scope lookup [argc]"); status = FAILURE; }
   if (!symbol_table_scope_lookup_all(st, "argv")) { print_error(test_type, "NOT NULL", "scope lookup [argv]"); status = FAILURE; }

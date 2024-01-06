@@ -21,7 +21,7 @@ int main(void) {
     "tests/test_factory",
     "tests/test_print",
     "tests/test_ast",
-    "tests/test_stack",
+    "tests/test_data_structures",
     "tests/test_symbol_table",
     "tests/test_typecheck",
     "tests/test_codegen"
@@ -32,7 +32,7 @@ int main(void) {
 		   "test_factory",
 		   "test_print",
 		   "test_ast",
-		   "test_stack",
+		   "test_data_structures",
        "test_symbol_table",
 		   "test_typecheck",
 		   "test_codegen"
