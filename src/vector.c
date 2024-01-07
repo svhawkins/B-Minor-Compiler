@@ -40,7 +40,7 @@ if in any case of failure:
 item is set to NULL.
 */
 void vector_push(Vector* s, void* item) {
-  if (!s || !s->items) return;
+  if (!s || !s->items) { return; }
   if (s->size >= s->capacity) {
     int new_capacity = s->capacity << 1;
     void** new_buffer = (void**)calloc(new_capacity, sizeof(void*));
@@ -70,7 +70,7 @@ If in any case of failure:
 return NULL
 */
 void* vector_pop(Vector* s) {
-  if (!(s && s->items && s->size)) return NULL;
+  if (!(s && s->items && s->size)) { return NULL; }
   int new_capacity = s->capacity >> 1;
   if ((s->size - 1) < new_capacity) {
    void** new_buffer = (void**)calloc(new_capacity, sizeof(void*));
@@ -104,4 +104,6 @@ If either:
    - vector or items is unallocated
 return NULL.
 */
-void* vector_item(Vector* s, int position) { return ((s && s->items) && (position >= 0 && position < s->size)) ? s->items[position] : NULL; }
+void* vector_item(Vector* s, int position) {
+  return ((s && s->items) && (position >= 0 && position < s->size)) ? s->items[position] : NULL;
+}

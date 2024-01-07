@@ -28,19 +28,16 @@ struct hash_table *hash_table_create(int bucket_count, hash_func_t func)
 	struct hash_table *h;
 
 	h = (struct hash_table *) malloc(sizeof(struct hash_table));
-	if(!h)
-		return 0;
+	if (!h) { return 0; }
 
-	if(bucket_count < 1)
-		bucket_count = DEFAULT_SIZE;
-	if(!func)
-		func = DEFAULT_FUNC;
+	if (bucket_count < 1) { bucket_count = DEFAULT_SIZE; }
+	if (!func) { func = DEFAULT_FUNC; }
 
 	h->size = 0;
 	h->hash_func = func;
 	h->bucket_count = bucket_count;
 	h->buckets = (struct entry **) calloc(bucket_count, sizeof(struct entry *));
-	if(!h->buckets) {
+	if (!h->buckets) {
 		free(h);
 		return 0;
 	}
@@ -53,9 +50,9 @@ void hash_table_clear(struct hash_table *h)
 	struct entry *e, *f;
 	int i;
 
-	for(i = 0; i < h->bucket_count; i++) {
+	for (i = 0; i < h->bucket_count; i++) {
 		e = h->buckets[i];
-		while(e) {
+		while (e) {
 			f = e->next;
 			free(e->key);
 			free(e);
@@ -63,7 +60,7 @@ void hash_table_clear(struct hash_table *h)
 		}
 	}
 
-	for(i = 0; i < h->bucket_count; i++) {
+	for (i = 0; i < h->bucket_count; i++) {
 		h->buckets[i] = 0;
 	}
 }
@@ -85,8 +82,8 @@ void *hash_table_lookup(struct hash_table *h, const char *key)
 	index = hash % h->bucket_count;
 	e = h->buckets[index];
 
-	while(e) {
-		if(hash == e->hash && !strcmp(key, e->key)) {
+	while (e) {
+		if (hash == e->hash && !strcmp(key, e->key)) {
 			return e->value;
 		}
 		e = e->next;
@@ -104,26 +101,26 @@ static int hash_table_double_buckets(struct hash_table *h)
 {
 	struct hash_table *hn = hash_table_create(2 * h->bucket_count, h->hash_func);
 
-	if(!hn)
-		return 0;
+	if (!hn) { return 0; }
 
 	/* Move pairs to new hash */
 	char *key;
 	void *value;
 	hash_table_firstkey(h);
-	while(hash_table_nextkey(h, &key, &value))
-		if(!hash_table_insert(hn, key, value))
+	while (hash_table_nextkey(h, &key, &value)) {
+		if (!hash_table_insert(hn, key, value))
 		{
 			hash_table_delete(hn);
 			return 0;
 		}
+	}
 
 	/* Delete all old pairs */
 	struct entry *e, *f;
 	int i;
-	for(i = 0; i < h->bucket_count; i++) {
+	for (i = 0; i < h->bucket_count; i++) {
 		e = h->buckets[i];
-		while(e) {
+		while (e) {
 			f = e->next;
 			free(e->key);
 			free(e);
@@ -148,25 +145,22 @@ int hash_table_insert(struct hash_table *h, const char *key, const void *value)
 	struct entry *e;
 	unsigned hash, index;
 
-	if( ((float) h->size / h->bucket_count) > DEFAULT_LOAD )
-		hash_table_double_buckets(h);
+	if (((float) h->size / h->bucket_count) > DEFAULT_LOAD ) { hash_table_double_buckets(h); }
 
 	hash = h->hash_func(key);
 	index = hash % h->bucket_count;
 	e = h->buckets[index];
 
-	while(e) {
-		if(hash == e->hash && !strcmp(key, e->key))
-			return 0;
+	while (e) {
+		if (hash == e->hash && !strcmp(key, e->key)) { return 0; }
 		e = e->next;
 	}
 
 	e = (struct entry *) malloc(sizeof(struct entry));
-	if(!e)
-		return 0;
+	if (!e) { return 0; }
 
 	e->key = strdup(key);
-	if(!e->key) {
+	if (!e->key) {
 		free(e);
 		return 0;
 	}
@@ -191,8 +185,8 @@ void *hash_table_remove(struct hash_table *h, const char *key)
 	e = h->buckets[index];
 	f = 0;
 
-	while(e) {
-		if(hash == e->hash && !strcmp(key, e->key)) {
+	while (e) {
+		if (hash == e->hash && !strcmp(key, e->key)) {
 			if(f) {
 				f->next = e->next;
 			} else {
@@ -214,26 +208,24 @@ void *hash_table_remove(struct hash_table *h, const char *key)
 void hash_table_firstkey(struct hash_table *h)
 {
 	h->ientry = 0;
-	for(h->ibucket = 0; h->ibucket < h->bucket_count; h->ibucket++) {
+	for (h->ibucket = 0; h->ibucket < h->bucket_count; h->ibucket++) {
 		h->ientry = h->buckets[h->ibucket];
-		if(h->ientry)
-			break;
+		if(h->ientry) { break; }
 	}
 }
 
 int hash_table_nextkey(struct hash_table *h, char **key, void **value)
 {
-	if(h->ientry) {
+	if (h->ientry) {
 		*key = h->ientry->key;
 		*value = h->ientry->value;
 
 		h->ientry = h->ientry->next;
-		if(!h->ientry) {
+		if (!h->ientry) {
 			h->ibucket++;
-			for(; h->ibucket < h->bucket_count; h->ibucket++) {
+			for (; h->ibucket < h->bucket_count; h->ibucket++) {
 				h->ientry = h->buckets[h->ibucket];
-				if(h->ientry)
-					break;
+				if (h->ientry) { break; }
 			}
 		}
 		return 1;
@@ -318,7 +310,7 @@ static ub4 jenkins_hash(k, length, initval)
 	len = length;
 	a = b = 0x9e3779b9;	/* the golden ratio; an arbitrary value */
 	c = initval;					 /* the previous hash value *//*---------------------------------------- handle most of the key */
-	while(len >= 12) {
+	while (len >= 12) {
 		a += (k[0] + ((ub4) k[1] << 8) + ((ub4) k[2] << 16) + ((ub4) k[3] << 24));
 		b += (k[4] + ((ub4) k[5] << 8) + ((ub4) k[6] << 16) + ((ub4) k[7] << 24));
 		c += (k[8] + ((ub4) k[9] << 8) + ((ub4) k[10] << 16) + ((ub4) k[11] << 24));

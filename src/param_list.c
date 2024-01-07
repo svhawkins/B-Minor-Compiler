@@ -15,16 +15,16 @@ struct param_list* param_list_create(char* name, struct type* type, struct param
 }
 
 void param_list_fprint(FILE* fp, struct param_list* p) {
-  if (!p) return;
+  if (!p) { return; }
   fprintf(fp, "%s: ", p->name); type_fprint(fp, p->type);
-  if (p->next) fprintf(fp, ", "); // another item follows
+  if (p->next) { fprintf(fp, ", "); } // another item follows
   param_list_fprint(fp, p->next);
 }
 
 void param_list_print(struct param_list *p) { param_list_fprint(stdout, p); }
 
 void param_list_destroy(struct param_list** p) {
-  if (!(*p)) return;
+  if (!(*p)) { return; }
   free((*p)->name);
   type_destroy(&((*p)->type));
   param_list_destroy(&((*p)->next));
@@ -32,7 +32,7 @@ void param_list_destroy(struct param_list** p) {
 }
 
 struct param_list* param_list_copy(struct param_list* p) {
-  if (!p) return NULL;
+  if (!p) { return NULL; }
   struct param_list* copy = malloc(sizeof(struct param_list));
   if (copy) {
     copy->name = strdup(p->name);
@@ -45,13 +45,13 @@ struct param_list* param_list_copy(struct param_list* p) {
 
 bool param_list_equals(struct param_list* a, struct param_list* b) {
   if ((!a && b) || (a && !b)) { return false; }
-  if (!a && !b) return true;
+  if (!a && !b) { return true; }
   bool current = !strcmp(a->name, b->name) && type_equals(a->type, b->type);
   return current && param_list_equals(a->next, b->next);
 }
 
 int param_list_resolve(struct symbol_table* st, struct param_list* p) {
-  if (!st || !p) return error_status;
+  if (!st || !p) { return error_status; }
   struct symbol* s = symbol_create(SYMBOL_PARAM, type_copy(p->type), strdup(p->name));
   type_resolve(st, p->type); // parameters can be functions with their own parameters, put 'em in the table
 

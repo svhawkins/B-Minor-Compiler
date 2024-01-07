@@ -18,7 +18,7 @@ struct type* type_create(type_t kind, struct type* subtype, struct param_list* p
 }
 
 void type_fprint(FILE* fp, struct type* t) {
-  if (!t) return;
+  if (!t) { return; }
   switch(t->kind) {
     // base cases
     case TYPE_INTEGER: fprintf(fp, "integer"); break;
@@ -29,24 +29,28 @@ void type_fprint(FILE* fp, struct type* t) {
     case TYPE_AUTO: fprintf(fp, "auto"); break;
 
     // recursive cases
-    case TYPE_ARRAY: fprintf(fp, "array ["); expr_fprint(fp, t->size); fprintf(fp, "] ");
-		     type_fprint(fp, t->subtype);
-		     break;
-    case TYPE_FUNCTION: fprintf(fp, "function "); type_fprint(fp, t->subtype);
+    case TYPE_ARRAY:
+      fprintf(fp, "array ["); expr_fprint(fp, t->size); fprintf(fp, "] ");
+      type_fprint(fp, t->subtype);
+		break;
+    case TYPE_FUNCTION:
+      fprintf(fp, "function "); type_fprint(fp, t->subtype);
 			fprintf(fp, " (");
-			if (t->params) param_list_fprint(fp, t->params); else fprintf(fp, "void"); fprintf(fp, ")");
-			break;
+			if (t->params) { param_list_fprint(fp, t->params); }
+      else { fprintf(fp, "void"); }
+      fprintf(fp, ")");
+		break;
   }
 }
 void type_print(struct type* t) { type_fprint(stdout, t); }
 
 void type_subtype_leaf_assign(struct type* t, struct type* subtype) {
-  if (!t->subtype) t->subtype = subtype;
+  if (!t->subtype) { t->subtype = subtype; }
   else type_subtype_leaf_assign(t->subtype, subtype);
 }
 
 void type_destroy(struct type** t) {
-  if (!(*t)) return;
+  if (!(*t)) { return; }
   param_list_destroy(&((*t)->params));
   type_destroy(&((*t)->subtype));
   expr_destroy(&((*t)->size));
@@ -54,7 +58,7 @@ void type_destroy(struct type** t) {
 }
 
 struct type* type_copy(struct type* t) {
-  if (!t) return NULL;
+  if (!t) { return NULL; }
   struct type* copy = malloc(sizeof(struct type));
   if (copy) {
     copy->kind = t->kind;
@@ -66,19 +70,21 @@ struct type* type_copy(struct type* t) {
 }
 
 bool type_equals(struct type* a, struct type* b) {
-  if ((!a && b) || (a && !b)) return false;
-  if (!a && !b) return true;
+  if ((!a && b) || (a && !b)) { return false; }
+  if (!a && !b) { return true; }
   bool ret = false;
   if (a->kind == b->kind) {
-    if (a->kind && b->kind == TYPE_ARRAY) ret = type_equals(a->subtype, b->subtype);
-    else if (a->kind && b->kind == TYPE_FUNCTION) ret = type_equals(a->subtype, b->subtype) && param_list_equals(a->params, b->params);
-    else ret = true;
+    if (a->kind && b->kind == TYPE_ARRAY) { ret = type_equals(a->subtype, b->subtype); }
+    else if (a->kind && b->kind == TYPE_FUNCTION) {
+      ret = type_equals(a->subtype, b->subtype) && param_list_equals(a->params, b->params);
+    }
+    else { ret = true; }
   }
   return ret;
 }
 
 int type_resolve(struct symbol_table* st, struct type* t) {
-  if (!st || !t) return 0;
+  if (!st || !t) { return 0; }
   error_status = param_list_resolve(st, t->params);
   error_status = type_resolve(st, t->subtype);
   error_status = expr_resolve(st, t->size);

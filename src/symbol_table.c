@@ -21,32 +21,32 @@ int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
   fprintf(ERR_OUT, "ERROR %s (%d):\n", symbol_table_strerror(kind), kind);
   switch(kind) {
     case SYM_UNDEF: /* undefined symbol used. recover by adding it to table with default type integer */
-    fprintf(ERR_OUT, "Undefined symbol by name %s.\n Adding symbol as INTEGER.", ((struct expr*)ctx2)->name);
-    int scope = (symbol_table_scope_level((struct symbol_table*)ctx1) == 1) ? SYMBOL_GLOBAL : SYMBOL_LOCAL;
-    struct symbol* s = symbol_create(scope, type_create(TYPE_INTEGER, NULL, NULL, NULL), strdup(((struct expr*)ctx2)->name));
-    symbol_table_scope_bind((struct symbol_table*)ctx1, ((struct expr*)ctx2)->name, s);
-    ((struct expr*)ctx2)->symbol = s;
-    fprintf(ERR_OUT, "\n");
+      fprintf(ERR_OUT, "Undefined symbol by name %s.\n Adding symbol as INTEGER.", ((struct expr*)ctx2)->name);
+      int scope = (symbol_table_scope_level((struct symbol_table*)ctx1) == 1) ? SYMBOL_GLOBAL : SYMBOL_LOCAL;
+      struct symbol* s = symbol_create(scope, type_create(TYPE_INTEGER, NULL, NULL, NULL), strdup(((struct expr*)ctx2)->name));
+      symbol_table_scope_bind((struct symbol_table*)ctx1, ((struct expr*)ctx2)->name, s);
+      ((struct expr*)ctx2)->symbol = s;
+      fprintf(ERR_OUT, "\n");
     break;
     case SYM_REDEF: /* symbol name is already being used in current scope */
-    fprintf(ERR_OUT, "Symbol %s already defined in current scope as: ", ((struct symbol*)ctx2)->name);
-    symbol_fprint(ERR_OUT, (struct symbol*)ctx2);
-    fprintf(ERR_OUT, ".Failed to bind to new symbol "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
+      fprintf(ERR_OUT, "Symbol %s already defined in current scope as: ", ((struct symbol*)ctx2)->name);
+      symbol_fprint(ERR_OUT, (struct symbol*)ctx2);
+      fprintf(ERR_OUT, ".Failed to bind to new symbol "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
     break;
     case SYM_TYPE: /* symbol type does not match its value/return type */
-    if (((struct symbol*)ctx1)->type->kind == TYPE_FUNCTION) {
-      fprintf(ERR_OUT, "Return type: "); type_fprint(ERR_OUT, (struct type*)ctx2);
-      fprintf(ERR_OUT, " does not match declared type: "); type_fprint(ERR_OUT, ((struct symbol*)ctx1)->type->subtype);
-      fprintf(ERR_OUT, "\nin symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
-    } else {
-      fprintf(ERR_OUT, "Value type: "); type_fprint(ERR_OUT, (struct type*)ctx2);
-      fprintf(ERR_OUT, " does not match declared type in symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
-    }
+      if (((struct symbol*)ctx1)->type->kind == TYPE_FUNCTION) {
+        fprintf(ERR_OUT, "Return type: "); type_fprint(ERR_OUT, (struct type*)ctx2);
+        fprintf(ERR_OUT, " does not match declared type: "); type_fprint(ERR_OUT, ((struct symbol*)ctx1)->type->subtype);
+        fprintf(ERR_OUT, "\nin symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
+      } else {
+        fprintf(ERR_OUT, "Value type: "); type_fprint(ERR_OUT, (struct type*)ctx2);
+        fprintf(ERR_OUT, " does not match declared type in symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
+      }
     break;
     case SYM_PARAM: /* parameter types do not match definiton */
-    fprintf(ERR_OUT, "Parameter list declared by symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
-    fprintf(ERR_OUT, " does not match definition: "); type_fprint(ERR_OUT, (struct type*)ctx2);
-    fprintf(ERR_OUT, "\n");
+      fprintf(ERR_OUT, "Parameter list declared by symbol: "); symbol_fprint(ERR_OUT, (struct symbol*)ctx1);
+      fprintf(ERR_OUT, " does not match definition: "); type_fprint(ERR_OUT, (struct type*)ctx2);
+      fprintf(ERR_OUT, "\n");
     break;
   }
   fprintf(ERR_OUT, "\n");
@@ -69,7 +69,7 @@ void hash_table_fprint(FILE* fp, struct hash_table* ht) {
 
 // destroys a hash table and its contained symbols.
 void hash_table_destroy(struct hash_table** ht) {
-    if (!(*ht)) return;
+    if (!(*ht)) { return; }
     char* key; void* value;
     hash_table_firstkey(*ht);
     while (hash_table_nextkey(*ht, &key, &value)) {
@@ -81,10 +81,10 @@ void hash_table_destroy(struct hash_table** ht) {
 
 // searches through a symbol table from top to bottom
 struct symbol* symbol_table_search(struct symbol_table* st, const char* name, int top) {
-  if (!st || !st->vector->items || !st->vector->size) return NULL;
+  if (!st || !st->vector->items || !st->vector->size) { return NULL; }
   struct symbol* found = NULL;
   for (int i = top; i >= 0; i--) {
-    found = symbol_table_scope_lookup_at(st, name, i); if (found) break;
+    found = symbol_table_scope_lookup_at(st, name, i); if (found) { break; }
   }
   return found;
 }
@@ -125,7 +125,7 @@ Returns a NULL pointer upon any memory allocation failures.
 */
 struct symbol_table* symbol_table_verbose_create() {
   struct symbol_table* st = symbol_table_create();
-  if (st) st->verbose = true;
+  if (st) { st->verbose = true; }
   return st;
 }
 
@@ -164,14 +164,13 @@ void symbol_table_destroy(struct symbol_table** st) {
 	delete hash table
    delete vector
    */
-  if (!(*st)) return;
+  if (!(*st)) { return; }
   int top = (*st)->vector->size;
   for (int i = top - 1; i >= 0; i--) {
     struct hash_table* ht = vector_pop((*st)->vector);
     hash_table_destroy(&ht);
   }
   vector_destroy(&((*st)->vector));
-
   symbol_table_hidden_destroy(&((*st)->hidden_table));
 
   free(*st); *st = NULL;
@@ -237,7 +236,7 @@ Failure if:
         - empty symbol table
 */
 int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct symbol* sym) {
-  if (!st || !st->vector->items || !(st->top + 1) || !(st->vector->items[st->top])) return 0;
+  if (!st || !st->vector->items || !(st->top + 1) || !(st->vector->items[st->top])) { return 0; }
   int status = (hash_table_insert((struct hash_table*)st->vector->items[st->top], name, (void*)sym) == 1);
   // update which count for successful binding of non-globals
   if (status && (vector_size(st->vector) > 1) && sym && !(sym->kind == SYMBOL_GLOBAL)) {
@@ -287,7 +286,7 @@ Returns a NULL pointer in the following cases:
         - invalid key
 */
 struct symbol* symbol_table_scope_lookup(struct symbol_table* st, const char* name) {
-  if (!st || !st->vector->items || !st->vector->size) return NULL;
+  if (!st || !st->vector->items || !st->vector->size) { return NULL; }
   return symbol_table_search(st, name, st->top);
 }
 
@@ -304,7 +303,7 @@ Returns a NULL pointer in the following cases:
         - invalid key
 */
 struct symbol* symbol_table_scope_lookup_all(struct symbol_table* st, const char* name) {
-  if (!st || !st->vector->items || !st->vector->size) return NULL;
+  if (!st || !st->vector->items || !st->vector->size) { return NULL; }
   return symbol_table_search(st, name, vector_size(st->vector) - 1);
 }
 
@@ -346,9 +345,9 @@ void symbol_table_fprint(FILE* fp, struct symbol_table* st) {
   for (int i = top; i >= 0; i--) {
     // hash table header
     fprintf(fp, "\nSCOPE [%d]:", i);
-    if (i == st->top) fprintf(fp, " CURRENT (TOP)");
-    if (!i) fprintf(fp, " GLOBAL (BOTTOM)");
-    fprintf(fp, "\n"); for (int j = 0; j < 50; j++) fprintf(fp, "-"); fprintf(fp, "\n");
+    if (i == st->top) { fprintf(fp, " CURRENT (TOP)"); }
+    if (!i) { fprintf(fp, " GLOBAL (BOTTOM)"); }
+    fprintf(fp, "\n"); for (int j = 0; j < 50; j++) { fprintf(fp, "-"); } fprintf(fp, "\n");
 
     // print out hash table
     hash_table_fprint(fp, st->vector->items[i]);
@@ -372,7 +371,7 @@ void symbol_table_hidden_fprint(FILE* fp, Hidden_table* hst) {
 
   // hash table header
   fprintf(fp, "\nLITERAL --> LABEL\n");
-  fprintf(fp, "\n"); for (int j = 0; j < 50; j++) fprintf(fp, "-"); fprintf(fp, "\n");
+  fprintf(fp, "\n"); for (int j = 0; j < 50; j++) { fprintf(fp, "-"); } fprintf(fp, "\n");
 
   // print out hidden table
   if (!hst) { fprintf(fp, "\t\t[null table]\n\n"); return; }

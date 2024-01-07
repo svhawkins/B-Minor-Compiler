@@ -3,50 +3,70 @@ Assignment 5: Code Generator
 *******************************************************************************************************
 
 Changes since assignment 4:
-1. [main.c] renamed to [typecheck.c]
-2. symbol_table_clear() now no longer always creates non-verbose symbol tables.
-   If the just destroyed table was verbose, then so is the new one created.
-3. 2 tests were added in tests/symbol_table/test_data_structures.c to test for correct generation of symbol->which values
-   upon scope entry and exit through binding via <struct>_resolve()
-4. Added 2 additional code files:
-   register.h/register.c to handle all of the register allocation (and labels) for code generation
-   the scratch register functions and label functions are found here.
-   - also contains init/clear functions for easier setup/desetup.
-   - also contains error message handler with its own error counter.
-   - register_codegen_init() also toggles the global is_test through its bool parameter. when true,
-     this makes the error message handler not halt/exit the program and instead simply return.
 
+1. Name changes + Benign file changes:
+   - [main.c] renamed to [typecheck.c]
+   - [stack.c], [stack.h] renamed to [vector.c] and [vector.h]
+   - [test_data_structures.c] renamed to [test_data_structures.c] as it tests out more than just the former stack (now vector):
+         - vector functionality
+         - vector functionality with hash table integration
+         - symbol table functionality
+   - [test_stack] (now [test_data_structures]) split into 2 files:
+         - [test_data_structures.c] to explicity test data structure functionality
+         - [test_resolve.c] (former test_symbol_table.c) to test automatic symbol table integration with <struct>_resolve().
+         
+2. Symbol table:
+   - symbol_table_clear() now no longer always creates non-verbose symbol tables.
+      If the destroyed table was verbose, then so is the new one created.
+   - Minor internal structure changes due to a bug in scope entry/exits
+   - Now includes 'hidden' symbols: originally nameless array and string literals stored as symbols
+     under a new name: the label name generated from label_name() and label_create().
+     This makes sure that pass-by-reference string values are being stored and loaded correctly.
+
+3. Structures
+   - struct symbol now has an address field to have during code generation
+      this saves the address value for a symbol while they are being generated.
+   - Updated typechecker for constant expresion checking
+   - Error handlers now display the error enum name to be more descriptive. [resolves issue #6]
+
+4. Misc:
+   - Various code cleanups for better readability, code-style consistency, and better cohesion.
+   - executables now have help command line options (-h, --help)
+
+****************************
+FILES:
+Other than the addition of the code generation functions for the structures, new files have been added for register 
+handling: register.h and register.c. They handle register and label allocation. Also contains helper functions
+for initialization and clearing for easier setup/cleanup. Also has its own set of error messages with its own
+handler (which in occurence of an error simply exits if not explicitly stated for a test).
+
+Tree:
+****************************
+EXECUTABLES
+****************************
+ERROR MESSAGES
+
+Error messages can now be fatal (errors) or non-fatal (warnings). Errors stop code generation
+and exit. Warnings do continue with generation, though results may be undefined or unwarranted.
+
+register error messages:
    REG_INVALID -> out of bounds
    REG_AINUSE -> all registers in use
    REG_NINUSE -> register not in use
    REG_NOHIGH -> register name is unavailable in the high-byte bit type (64, 32, 16, high, low)
    LABEL_MAX -> max number of labels
 
-5. struct symbol now has an address field to have during code generation
-   this saves the address value for a symbol while they are being generated.
-
-6. symbol table now includes 'hidden' symbols: originally nameless array and string literals stored as symbols under a new name: the label
-  name generated from label_name() and label_create(). This makes sure that pass-by-reference values are being stored and loaded correctly.
-
-7. Updated typechecker for constant expressions.
-
-8. Error handlers now display the error enum name to be more descriptive. [resolves isue #6]
-
-9. Various code cleanups for better readability, code-style consistency, and better cohesion.
-
-****************************
-FILES
-****************************
-EXECUTABLES
-****************************
-ERROR MESSAGES
+codegen error messages:
+   expressions:
+   statements:
+   declarations:
 ****************************
 TESTS
 ****************************
 HIDDEN SYMBOLS
 
 symbol_table.h/.c now has an additional structure to hold these hidden symbols: Hidden_table.
-Under the hood still very much a hash table (much like how the Symbol_table's vector is).
+Pretty much a typedef hash table.
 
 Additional functions have been added for Hidden_table:
 
@@ -70,6 +90,9 @@ of the same declaration list, but did not work, so it has its own special functi
 
 *****************
  CAVEATS
+
+ - some functions (namely the codegen functions) have had their signatures modified.
+   Some return an error status and expr_codegen takes an additonal boolean option.
 *****************
 
 
@@ -94,7 +117,7 @@ use assembly emulator to help you.
 	- other operations
 		implement
 		test
-	- fcall (not necessarily declaration, just prologues and epilogues)
+	- fcall (not necessarily declaration, just stuff before and after call)
 		implement
 		test
 
@@ -114,6 +137,10 @@ use assembly emulator to help you.
 
 7. functions:
    - function declarations
+      - function prologue
+      - function epilogue
+      - function bodies
+      - nested function calls
 
 
 ****NOTES

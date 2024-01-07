@@ -18,7 +18,7 @@ struct symbol* symbol_create(symbol_t kind, struct type* type, char* name) {
 
 
 void symbol_destroy(struct symbol** s) {
-  if (!s || !(*s)) return;
+  if (!s || !(*s)) { return; }
   type_destroy(&((*s)->type));
   free((*s)->name);
   if ((*s)->address) free((*s)->address);
@@ -40,7 +40,7 @@ void symbol_fprint(FILE* fp, struct symbol* s) {
 }
 
 struct symbol* symbol_copy(struct symbol* s) {
-  if (!s) return NULL;
+  if (!s) { return NULL; }
   struct symbol* copy = malloc(sizeof(struct symbol));
   if (copy) {
     copy->kind = s->kind;

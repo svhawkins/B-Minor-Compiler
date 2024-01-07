@@ -55,7 +55,7 @@ struct decl* decl_create(char* name, struct type* type, struct expr* value, stru
 
 
 void decl_fprint(FILE* fp, struct decl* d, int indent) {
-  if (!d) return;
+  if (!d) { return; }
   print_indent(fp, indent);
 
   // name : type
@@ -69,15 +69,15 @@ void decl_fprint(FILE* fp, struct decl* d, int indent) {
       stmt_fprint(fp, d->code, indent);
       print_indent(fp, indent); fprintf(fp, "\n");
     }
-    else fprintf(fp, ";");
-    break;
+    else { fprintf(fp, ";"); }
+  break;
   default:
     if (d->value) {
       fprintf(fp, " = ");
       expr_fprint(fp, d->value);
     }
     fprintf(fp, ";");
-    break;
+  break;
   }
   if (d->next) { fprintf(fp, "\n"); }
   decl_fprint(fp, d->next, indent);
@@ -86,7 +86,7 @@ void decl_fprint(FILE* fp, struct decl* d, int indent) {
 void decl_print(struct decl* d, int indent) { decl_fprint(stdout, d, indent); }
 
 void decl_destroy(struct decl** d) {
-  if (!d || !(*d)) return;
+  if (!d || !(*d)) { return; }
   free((*d)->name);
   type_destroy(&((*d)->type));
   expr_destroy(&((*d)->value));
@@ -190,7 +190,7 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
 
   // check flags
   if (!generate_hidden) { symbol_table_hidden_codegen(st->hidden_table); generate_hidden = true; }
-  if(d->symbol->kind == SYMBOL_GLOBAL) { generate_expr = false; }
+  if (d->symbol->kind == SYMBOL_GLOBAL) { generate_expr = false; }
 
 
   /*

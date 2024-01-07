@@ -22,7 +22,7 @@ int main(void) {
     "tests/test_print",
     "tests/test_ast",
     "tests/test_data_structures",
-    "tests/test_symbol_table",
+    "tests/test_resolve",
     "tests/test_typecheck",
     "tests/test_codegen"
   };
@@ -33,7 +33,7 @@ int main(void) {
 		   "test_print",
 		   "test_ast",
 		   "test_data_structures",
-       "test_symbol_table",
+       "test_resolve",
 		   "test_typecheck",
 		   "test_codegen"
 		  };

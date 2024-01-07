@@ -47,7 +47,7 @@ void register_error_handle(reg_error_t kind, int ctx) {
   fprintf(REG_ERR_OUT, "\n");
   register_error_status = kind;
   register_error_count++;
-  if (!is_test) exit(kind);
+  if (!is_test) { exit(kind); }
 }
 
 /*
@@ -86,7 +86,7 @@ int register_scratch_alloc() {
   for (int i = 0; i < NSCRATCH; i++) {
     if (!scratch_register[i].inuse) { scratch_register[i].inuse = true; index = i; break; }
   }
-  if (index < 0) register_error_handle(REG_AINUSE, -1);
+  if (index < 0) { register_error_handle(REG_AINUSE, -1); }
   return index;
 }
 

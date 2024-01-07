@@ -37,7 +37,7 @@ int main(int argc, const char** argv) {
   print_header();
   while (1) {
     token_t t = yylex();
-    if (!t || t == TOKEN_EOF) break;
+    if (!t || t == TOKEN_EOF) { break; }
     print_token(t);
   } fclose(yyin);
   if (!has_match) { printf("%s\n", error_text); }
@@ -106,19 +106,22 @@ token_t print_token(token_t kind) {
     case DEFAULT:
       if (kind >= TOKEN_IDENT && kind <= TOKEN_CH && kind != TOKEN_BOOL) {
         printf("%10c%-48s", ' ', yytext);
-      } break;
+      }
+    break;
     case COLUMN:
       printf("%10.d", n_col);
       if (kind >= TOKEN_IDENT && kind <= TOKEN_CH && kind != TOKEN_BOOL) {
         printf("%10c%-48s", ' ', yytext);
-      } break;
+      }
+    break;
     case ALL:
       printf("%10c%-48s", ' ', yytext);
-      break;
+    break;
     case VERBOSE:
       printf("%10.d%10c%-48s", n_col, ' ', yytext);
-  } printf("\n");
-  if (kind == TOKEN_ERROR) printf("%s\n", error_text);
+  }
+  printf("\n");
+  if (kind == TOKEN_ERROR) { printf("%s\n", error_text); }
   add_col(false);
   return kind;
 }
