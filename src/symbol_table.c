@@ -55,7 +55,7 @@ int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
 }
 
 // prints out the key value pairs within a hash table
-void hash_table_fprint(FILE* fp, struct hash_table* ht) {
+inline void hash_table_fprint(FILE* fp, struct hash_table* ht) {
   if (!ht) { fprintf(fp, "\t\t[null table]\n\n"); return; }
   if (!hash_table_size(ht)) { fprintf(fp, "\t\t[empty table]\n\n"); return; }
   char* key; void* value;
@@ -68,7 +68,7 @@ void hash_table_fprint(FILE* fp, struct hash_table* ht) {
 }
 
 // destroys a hash table and its contained symbols.
-void hash_table_destroy(struct hash_table** ht) {
+inline void hash_table_destroy(struct hash_table** ht) {
     if (!(*ht)) { return; }
     char* key; void* value;
     hash_table_firstkey(*ht);
@@ -79,8 +79,46 @@ void hash_table_destroy(struct hash_table** ht) {
     hash_table_delete(*ht); *ht = NULL;
 }
 
+// creates a Scope_level object
+inline Scope_level* scope_level_create() {
+  Scope_level* sl = NULL;
+  sl->count = 0;
+  sl->symbols = vector_create();
+  return sl;
+}
+
+// destroys a Scope_level object
+inline void scope_level_destroy(Scope_level** sl) {
+  if (!sl || !(*sl)) { return; }
+
+  // destroy the individual tables
+  if ((*sl)->symbols) {
+    int size = vector_size(*(sl));
+    for (int i = 0; i < size; i++) {
+      struct hash_table* ht = vector_pop((*sl)->symbols);
+      hash_table_destroy(&ht);
+    }
+  }
+  vector_destroy(sl);
+}
+
+// destroys a Table object
+inline void table_destroy(Table** t) {
+  if (!t || !(*t)) { return; }
+
+  // destroy the individual scope levels
+  if ((*t)->items) {
+    int size = vector_size((*t));
+    for (int i = 0; i < size; i++) {
+      struct scope_level* sl = vector_pop((*t));
+      scope_level_destroy(&sl);
+    }
+  }
+  vector_destroy(t);
+}
+
 // searches through a symbol table from top to bottom
-struct symbol* symbol_table_search(struct symbol_table* st, const char* name, int top) {
+inline struct symbol* symbol_table_search(struct symbol_table* st, const char* name, int top) {
   if (!st || !st->vector->items || !st->vector->size) { return NULL; }
   struct symbol* found = NULL;
   for (int i = top; i >= 0; i--) {
@@ -93,7 +131,7 @@ struct symbol* symbol_table_search(struct symbol_table* st, const char* name, in
 Creates a hidden symbol table.
 Returns a NULL pointer upon any memory allocation failures.
 */
-Hidden_table* symbol_table_hidden_create() {
+inline Hidden_table* symbol_table_hidden_create() {
   Hidden_table* hst = hash_table_create(0, 0);
   return hst;
 }
@@ -107,10 +145,11 @@ struct symbol_table* symbol_table_create() {
   struct symbol_table* st = malloc(sizeof(struct symbol_table));
   if (st) {
     st->vector = vector_create();
+    st->table = vector_create();
+    st->hidden_table = hash_table_create(0, 0);
     st->verbose = false;
     st->top = -1;
     st->show_hidden = false; // true iff from command line option
-    st->hidden_table = symbol_table_hidden_create();
   }
   global_error_count = 0;
   error_status = 0;
@@ -134,7 +173,7 @@ Destroys a hidden symbol table.
 Sets hst to NULL upon success.
 Does nothing if NULL hidden symbol table.
 */
-void symbol_table_hidden_destroy(Hidden_table** hst) {
+inline void symbol_table_hidden_destroy(Hidden_table** hst) {
   if (!hst || !(*hst)) { return; }
 
   // delete all of the individual keys (strdupped)
@@ -172,6 +211,7 @@ void symbol_table_destroy(struct symbol_table** st) {
   }
   vector_destroy(&((*st)->vector));
   symbol_table_hidden_destroy(&((*st)->hidden_table));
+  table_destroy(&((*st)->table));
 
   free(*st); *st = NULL;
   global_error_count = 0;
@@ -198,7 +238,9 @@ Does nothing if:
 */
 void symbol_table_scope_enter(struct symbol_table* st) {
   st->top++;
-  if ((st->top) >= vector_size(st->vector)) { vector_push(st->vector, (void*)hash_table_create(0, 0)); }
+  if ((st->top) >= vector_size(st->vector)) {
+    vector_push(st->vector, (void*)hash_table_create(0, 0));
+  }
   // start which count
   if (st->top == 1) { which_count = -1; }
 }

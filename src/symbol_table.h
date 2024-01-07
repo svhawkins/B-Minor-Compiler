@@ -51,8 +51,15 @@ This ensures for proper scope lookups even with verbose enabled.
 The show_hidden field is for printing purposes. It prints the hidden symbol table, a seperate structure.
 */
 typedef struct hash_table Hidden_table;
+typedef struct vector Table;
+struct scope_level {
+        Vector* symbols; /* hash tables residing within current scope level */
+        int count; /* number of scopes encountered at this scope level, PER PASS */
+}; typedef struct scope_level Scope_level;
+
 struct symbol_table {
   Vector* vector;
+  Table* table;
   bool verbose;
   int top;
   bool show_hidden;

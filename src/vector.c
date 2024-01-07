@@ -25,7 +25,8 @@ sets vector pointer to NULL once done
 void vector_destroy(Vector** s) {
   if (*s) {
     free((*s)->items);
-    free(*s); *s = NULL;
+    free(*s);
+    *s = NULL;
   }
 }
 

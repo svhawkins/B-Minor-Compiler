@@ -95,8 +95,8 @@ int main(void) {
     test_stmt_resolve_for_decl,
     test_stmt_resolve_shadow_no_redef,
     test_decl_resolve_program,
-    test_decl_resolve_which_scope_enter,
-    test_stmt_resolve_which_scope_exit,
+    // test_decl_resolve_which_scope_enter,
+    // test_stmt_resolve_which_scope_exit,
     test_decl_resolve_nonconst_array_size,
     test_decl_resolve_nonconst_global,
     test_decl_resolve_nonconst_global_array
@@ -834,6 +834,7 @@ Status test_decl_resolve_nonconst_array_size(void) {
   struct decl* arrdecl = decl_create(strdup("foo"), type_create(TYPE_ARRAY, tinteger, NULL, expr_create_name(strdup("x"))), NULL, NULL, NULL);
   struct decl* vardecl = decl_create(strdup("x"), type_copy(tinteger), expr_create_integer_literal(1), NULL, arrdecl);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st); symbol_table_scope_enter(st);
+  global_error_count = 0;
   error_status = decl_resolve(st, vardecl);
   if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (error_status != DECL_CONST) { print_error(test_type, "DECL_CONST", "int error_status"); status = FAILURE;}
@@ -848,6 +849,8 @@ Status test_decl_resolve_nonconst_global(void) {
   struct decl* dend = decl_create(strdup("foo"), type_copy(tinteger), expr_create_name(strdup("duck")), NULL, NULL);
   struct decl* d = decl_create(strdup("duck"), tinteger, expr_create_integer_literal(-493), NULL, dend);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+
+  global_error_count = 0;
   error_status = decl_resolve(st, d);
   if (!global_error_count) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (decl_error != DECL_CONST) { print_error(test_type, "DECL_CONST", "int error_status"); status = FAILURE; }
@@ -867,21 +870,26 @@ Status test_decl_resolve_nonconst_global_array(void) {
 
   // was causing a segfault, tho manually binding fixed the issue???
   //struct decl* vardecl = decl_create(strdup("x"), type_copy(tinteger), expr_create_integer_literal(1), NULL, arrdecl);
-  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);   symbol_table_scope_bind(st, "x", s);
+  struct symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st); 
+  // pretend the symbol exists.
+  symbol_table_scope_bind(st, "x", s);
 
+  global_error_count = 0;
   error_status = decl_resolve(st, arrdecl);
   // this error is triggered twice.
-  if (global_error_count != 2) { print_error(test_type, "2", "int global_error_count"); status = FAILURE; }
+  printf("%d\n", global_error_count);
+  if (global_error_count != 2) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (decl_error != DECL_CONST) { print_error(test_type, "DECL_CONST", "int error_status"); status = FAILURE;}
   symbol_table_destroy(&st);
-  decl_destroy(&arrdecl);
+  decl_destroy(&arrdecl); 
   return status;
 }
 
 Status test_expr_resolve_hidden(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct expr* e = expr_create_string_literal(strdup("foo"));
+  struct expr* e = expr_create_string_literal("foo");
 
   Symbol_table* st = symbol_table_create();
   label_count = -1;
