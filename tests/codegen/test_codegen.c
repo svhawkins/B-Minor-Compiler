@@ -63,15 +63,19 @@ Status test_decl_codegen_global(void); // covers init and uninit
 Status test_decl_codegen_local(void);
 Status test_decl_codegen_global_uninit(void);
 Status test_decl_codegen_local_uninit(void);
-// Status test_decl_codegen_array_literal_global(void);
-// Status test_decl_codegen_array_literal_local(void);
-// Status test_decl_codegen_array_string_literal_global(void);
-// Status test_decl_codegen_array_string_literal_local(void);
-// Status test_decl_codegen_array_global_uninit(void);
-// Status test_decl_codegen_array_local_uninit(void);
-// Status test_decl_codegen_array_size_mismatch(void);
-// Status test_decl_codegen_array_size_infer_uninit(void);
-// Status test_decl_codegen_array_size_infer_init(void);
+
+// arrays
+Status test_decl_codegen_array_literal_global(void);
+Status test_decl_codegen_array_literal_local(void);
+Status test_decl_codegen_array_string_literal_global(void);
+Status test_decl_codegen_array_string_literal_local(void);
+Status test_decl_codegen_array_global_uninit(void);
+Status test_decl_codegen_array_local_uninit(void);
+Status test_decl_codegen_array_size_mismatch_fatal(void);
+Status test_decl_codegen_array_size_mismatch_nonfatal(void);
+Status test_decl_codegen_array_size_infer_uninit(void);
+Status test_decl_codegen_array_size_infer_init(void);
+Status test_decl_codegen_array_multidim(void);
 
 /*
   test function preamables:
@@ -144,7 +148,18 @@ int main(void) {
        test_decl_codegen_global,
        test_decl_codegen_global_uninit,
        test_decl_codegen_local,
-       test_decl_codegen_local_uninit
+       test_decl_codegen_local_uninit,
+       test_decl_codegen_array_literal_global,
+       test_decl_codegen_array_literal_local,
+       test_decl_codegen_array_string_literal_global,
+       test_decl_codegen_array_string_literal_local,
+       test_decl_codegen_array_global_uninit,
+       test_decl_codegen_array_local_uninit,
+       test_decl_codegen_array_size_mismatch_fatal,
+       test_decl_codegen_array_size_mismatch_nonfatal,
+       test_decl_codegen_array_size_infer_uninit,
+       test_decl_codegen_array_size_infer_init,
+       test_decl_codegen_array_multidim
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -969,6 +984,7 @@ MOVQ $1, %rbx\nMOVQ %rbx, -8(%rbp)\n\
       print_error(test_type, "true", "bool scratch_register[d->value->reg].inuse");
       status = FAILURE;
     }
+    if (d->symbol->which != 0) { print_error(test_type, "0", "int d->symbol->which"); return FAILURE; }
     decl_destroy(&d);
     symbol_table_destroy(&st);
     register_codegen_clear();
@@ -1014,6 +1030,8 @@ MOVQ $0, -8(%rbp)\n";
     error_status = decl_typecheck(st, d);
     error_status = decl_codegen(st, d);
 
+    if (d->symbol->which != 0) { print_error(test_type, "0", "int d->symbol->which"); return FAILURE; }
+
     decl_destroy(&d);
     symbol_table_destroy(&st);
     register_codegen_clear();
@@ -1022,4 +1040,70 @@ MOVQ $0, -8(%rbp)\n";
   fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
   if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
   return status;
+}
+
+Status test_decl_codegen_array_literal_global(void) {
+  /* tests that a global non-string array (init) is generated properly */
+  return FAILURE;
+}
+
+Status test_decl_codegen_array_literal_local(void) {
+  /* tests that a local non-string array (init) is generated properly */
+  return FAILURE;
+}
+
+Status test_decl_codegen_array_string_literal_global(void) {
+  /* tests that a global STRING array (init) is generated properly */
+  return FAILURE;
+}
+
+Status test_decl_codegen_array_string_literal_local(void) {
+  /* tests that a local STRING array (init) is generated properly */
+}
+
+Status test_decl_codegen_array_global_uninit(void) {
+  /* tests that a global uninit array is generated properly */
+  return FAILURE;
+}
+
+Status test_decl_codegen_array_local_uninit(void) {
+  /* tests that a local uninit array is generated properly */
+  return FAILURE;
+}
+
+Status test_decl_codegen_array_size_mismatch_fatal(void) {
+  /* tests that array size mismatches are handled properly:
+
+  1. negative sizes of either size or actual_size is fatal
+  */
+  return FAILURE; 
+}
+
+Status test_decl_codegen_array_size_mismatch_nonfatal(void) {
+/* tests that array size mismatches are handled properly
+  2. differing non-negative sizes of size or actual_size gives warning
+      - if size < actual_size, true size is size.
+      - if size > actual_size,  remaining elements are 'uninit' padded. (true size is actual_size)
+*/
+return FAILURE;
+}
+
+Status test_decl_codegen_array_size_infer_uninit(void) {
+  /* tests that array code is generated for length of [size] (actual_size) properly */
+  return FAILURE;
+}
+
+Status test_decl_codegen_array_size_infer_init(void) {
+ /* tests that array code is generated of for length of initializer list size properly */
+ return FAILURE; 
+}
+
+Status test_decl_codegen_array_multidim(void) {
+  /* tests that a multidimensional array is generated properly
+  
+  1. 2-dimensional
+  3. 3-dimensional
+  */
+
+  return FAILURE;
 }

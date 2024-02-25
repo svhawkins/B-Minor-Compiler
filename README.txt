@@ -18,7 +18,7 @@ Changes since assignment 4:
 2. Symbol table:
    - symbol_table_clear() now no longer always creates non-verbose symbol tables.
       If the destroyed table was verbose, then so is the new one created.
-   - Minor internal structure changes due to a bug in scope entry/exits
+   - Minor internal structure changes due to a bug in scope entry/exits [POSTPONED]
    - Now includes 'hidden' symbols: originally nameless array and string literals stored as symbols
      under a new name: the label name generated from label_name() and label_create().
      This makes sure that pass-by-reference string values are being stored and loaded correctly.

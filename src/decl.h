@@ -11,7 +11,8 @@
 struct symbol_table; // forward decl for reasons
 typedef enum { NO_ERROR = 0, DECL_NULL = 1, DECL_NINT, DECL_CONST } decl_error_t;
 int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2);
-decl_error_t decl_error; extern bool is_const_expr;
+decl_error_t decl_error;
+extern bool is_const_expr; 
 
 
 struct decl {

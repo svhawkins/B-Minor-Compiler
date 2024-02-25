@@ -38,7 +38,43 @@ int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2) {
   return kind;
 }
 
+/* generates a decl expression. single expression. */
+void decl_codegen_expr(Symbol_table* st, struct decl* d, struct expr* e)
+{
+    // get the resulting expression register
+    // global decls don't print anything, locals don't put to stack until end
+    error_status = expr_codegen(st, e);
 
+    switch(d->symbol->kind) {
+      case SYMBOL_GLOBAL:
+        /*
+          .quad <value>
+          .zero 8 # if no value
+        */
+        if (e && e->string_literal) {
+          fprintf(CODEGEN_OUT, ".quad %s\n", symbol_table_hidden_lookup(st->hidden_table, e->string_literal));
+        }
+        else if (e) { fprintf(CODEGEN_OUT, ".quad %ld\n", e->literal_value); }
+        else { fprintf(CODEGEN_OUT, ".zero %d\n", QUAD); }
+      break;
+      case SYMBOL_LOCAL:
+        /*
+        MOVQ e->reg, symbol_codegen(e->symbol)
+
+        if undefined, value is default 0.
+        */
+        symbol_codegen(d->symbol); /* to keep regenerating the same thing, slightly altered which field */
+        fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", (e) ? register_scratch_name(e->reg) : "$0",
+                               d->symbol->address);
+        st->which_count->items[symbol_table_scope_level(st)]++;
+    }
+}
+
+/*********************
+ * 
+ * 'EXTERNAL' FUNCTIONS
+ * 
+**********************/
 struct decl* decl_create(char* name, struct type* type, struct expr* value, struct stmt* code, struct decl* next)
 {
   struct decl* d = malloc(sizeof(struct decl));
@@ -189,49 +225,87 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
   if (!d) { return error_status; }
 
   // check flags
+  /* only generate hidden symbol TABLE if not done so already  */
   if (!generate_hidden) { symbol_table_hidden_codegen(st->hidden_table); generate_hidden = true; }
-  if (d->symbol->kind == SYMBOL_GLOBAL) { generate_expr = false; }
+  /* for expr codegen */
+  generate_expr = !(d->symbol->kind == SYMBOL_GLOBAL);
 
+  /* per scope */
+  int current_scope_level = symbol_table_scope_level(st);
+  while (current_scope_level >= st->which_count->size) {
+    int val = 0;
+    vector_push(st->which_count, (void*)&val);
+  }
 
-  /*
-  TO DO:
-  - refactor
-  - arrays need to do expr_codegen for every expression in its list
-    same global/const rules apply.
-  */
-  if (d->type->kind != TYPE_FUNCTION) {
+  /* per declaration */
+  switch (d->symbol->kind) {
+    case SYMBOL_LOCAL:
+      /* case SYMBOL_PARAM: ??? <-- TO DO */
+      // assign the which count the count from previous scope
+      d->symbol->which = (st->which_count->size == 1) ? 0 : *(int*)(st->which_count->items[current_scope_level - 1]);
+    break;
+    case SYMBOL_GLOBAL:
+      // generate the declaration label
+      if (!d->symbol->address) { symbol_codegen(d->symbol); }
+      fprintf(CODEGEN_OUT, "%s:\n\t", d->symbol->address);
+    break;
+  }
 
-    // get the resulting expression register
-    error_status = expr_codegen(st, d->value);
-    if (!d->symbol->address) { symbol_codegen(d->symbol); }
-    if (d->symbol->kind == SYMBOL_GLOBAL) {
-      /*
-      <name>:
-            .quad <value>
-            .zero 8 # if no value
-      */
-     if (d->value) {
-      // global string literals are assigned the label to the string
-      if (d->value->string_literal) {
-        fprintf(CODEGEN_OUT, "%s:\n\t.quad %s\n",
-                             d->symbol->address,
-                             symbol_table_hidden_lookup(st->hidden_table, d->value->string_literal));
-      } else {
-        // other global literals use the exact value, NOT the register!
-        fprintf(CODEGEN_OUT, "%s:\n\t.quad %ld\n", d->symbol->address, d->value->literal_value);
-      }
-      // undefined-though-declared values are 'zeroed'
-     } else { fprintf(CODEGEN_OUT, "%s:\n\t.zero %d\n", d->symbol->address, QUAD); }
-    } else {
-      /*
-      MOVQ e->reg, symbol_codegen(e->symbol)
+ // generate the expression(s)/statement(s)
+ switch (d->type->kind)
+ {
+  case TYPE_FUNCTION: /* TO DO */
+  break;
 
-      if undefined, value is default 0.
-      */
-     fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", (d->value) ? register_scratch_name(d->value->reg) : "$0",
-                               d->symbol->address);
+  /* TO DO: refactor */
+  case TYPE_ARRAY: /* multiple decl_codegen_expr, size checking */
+    generate_expr = false;
+    error_status = expr_codegen(st, d->type->size);
+    d->type->actual_size = d->type->size->literal_value;
+    generate_expr = !(d->symbol->kind == SYMBOL_GLOBAL);    
+
+    // compare true size and actual size
+    // TO DO: make recursive for nested init expressions by looking at SUBTYPE.
+    int array_size = 0; if (d->value) { for (struct expr* e = d->value->left; e != NULL; e=e->right, array_size++) {} }
+
+    // check for size errors
+    if (array_size < 0 || d->type->actual_size < 0)
+    {
+      // FATAL ERROR: negative size values, must be nonnegative
     }
 
-  } else {
-  }
+    // determine size for generation loop
+    int size;
+    if (!d->type->size && d->value) { size = array_size; }
+    else if (d->type->size && !d->value) { size = d->type->actual_size; }
+    else if (d->type->size && d->value && array_size != d->type->actual_size) {
+      // inequal sizes. allocate always for maximum of the two
+      size = (array_size >= d->type->actual_size) ? array_size : d->type->actual_size;
+      if (array_size < d->type->actual_size) {
+        // NON FATAL ERROR (WARNING)
+        // pad with zeros for the difference between array_size and actual_size
+      }
+      if (array_size > d->type->actual_size) {
+        // NON FATAL ERROR (WARNING)
+      }
+    }
+
+    int old_which = (d->symbol->kind == SYMBOL_LOCAL) ? d->symbol->which : 0;
+
+    // generate the expression
+    struct expr* e = (d->value) ? d->value->left : NULL;
+    for (int i = 0; i < size; i++)
+    {
+      decl_codegen_expr(st, d, (d->value && e) ? e : NULL);
+
+      // prepare next iteration
+      if (d->value && e) { e = e->right; }
+      d->symbol->which = st->which_count->items[current_scope_level];
+    }
+    d->symbol->which = old_which;
+  break;
+  default: /* primitive type */
+    decl_codegen_expr(st, d, d->value);
+  break;
+ }
 }

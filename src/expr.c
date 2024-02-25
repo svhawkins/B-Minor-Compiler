@@ -827,8 +827,8 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
    case EXPR_EXP:
       // will be like fcall in (de)allocating registers before and after call.
       // will call runtime library function exp() instead of having a statement body to just generate.
-   case EXPR_INIT: // this expression only occurs in declarations
-   case EXPR_COMMA: // TODO: test multiple register allocations here
+   case EXPR_INIT: /* this expression only occurs in declarations */ break;
+   case EXPR_COMMA: /* this expression is dealt with in helper functions -> singly linked list */ break;
    case EXPR_FCALL:
     /*
     TO DO:

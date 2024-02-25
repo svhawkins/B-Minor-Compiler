@@ -878,7 +878,6 @@ Status test_decl_resolve_nonconst_global_array(void) {
   global_error_count = 0;
   error_status = decl_resolve(st, arrdecl);
   // this error is triggered twice.
-  printf("%d\n", global_error_count);
   if (global_error_count != 2) { print_error(test_type, "1", "int global_error_count"); status = FAILURE; }
   if (decl_error != DECL_CONST) { print_error(test_type, "DECL_CONST", "int error_status"); status = FAILURE;}
   symbol_table_destroy(&st);

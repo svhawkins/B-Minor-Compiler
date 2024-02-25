@@ -150,6 +150,7 @@ struct symbol_table* symbol_table_create() {
     st->verbose = false;
     st->top = -1;
     st->show_hidden = false; // true iff from command line option
+    st->which_count = vector_create();
   }
   global_error_count = 0;
   error_status = 0;
@@ -201,7 +202,11 @@ void symbol_table_destroy(struct symbol_table** st) {
 		retrieve the symbol
 		delete the symbol
 	delete hash table
-   delete vector
+
+  for the symbol table:
+  delete hash-table vector
+  delete hidden symbol table
+  delete which count vector
    */
   if (!(*st)) { return; }
   int top = (*st)->vector->size;
@@ -212,6 +217,7 @@ void symbol_table_destroy(struct symbol_table** st) {
   vector_destroy(&((*st)->vector));
   symbol_table_hidden_destroy(&((*st)->hidden_table));
   table_destroy(&((*st)->table));
+  vector_destroy(&((*st)->which_count));
 
   free(*st); *st = NULL;
   global_error_count = 0;
