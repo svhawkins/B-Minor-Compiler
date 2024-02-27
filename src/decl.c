@@ -14,6 +14,15 @@ char* decl_strerror(decl_error_t kind) {
   return buffer;
 }
 
+char* decl_codegen_strerror(decl_codegen_error_t kind) {
+  switch(kind) {
+    case DECL_NEGSIZE: strcpy(buffer, "ENEGSIZE"); break;
+    case DECL_SIZE: strcpy(buffer, "WSIZE"); break;
+    case DECL_PADSIZE: strcpy(buffer, "WPADSIZE"); break;
+  }
+  return buffer;
+}
+
 int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2) {
   fprintf(ERR_OUT, "ERROR %s (%d): ", decl_strerror(kind), kind);
   switch (kind) {
@@ -38,6 +47,33 @@ int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2) {
   return kind;
 }
 
+int decl_codegen_error_handle(decl_codegen_error_t kind, void* ctx1, void* ctx2) {
+  bool is_fatal = false;
+  switch(kind) {
+    case DECL_NEGSIZE: /* negative size detected */
+    is_fatal = true;
+    fprintf(ERR_OUT, "ERROR %s (%d): ", decl_codegen_strerror(kind), kind);
+    fprintf(ERR_OUT, "Negative size field detected in declaration. In declaration:\n");
+    decl_fprint(ERR_OUT, ((struct decl*)ctx1), 0);
+    fprintf(ERR_OUT, " with given size: %ld", ((struct decl*)ctx1)->type->actual_size);
+    break;
+    case DECL_SIZE: /* size mismatch, using size determined from value field.*/
+    fprintf(ERR_OUT, "WARNING %s (%d): ", decl_codegen_strerror(kind), kind);
+    fprintf(ERR_OUT, "Declared size and list size mismatch.");
+    fprintf(ERR_OUT, "True array size is list size: %ld", *((int*)ctx2));
+    break;
+    case DECL_PADSIZE: /* provided size is greater than elements provided in initializer list. pad remaining with 0s.*/
+    fprintf(ERR_OUT, "WARNING %s (%d): ", decl_codegen_strerror(kind), kind);
+    fprintf(ERR_OUT, "Declared size and list size mismatch.");
+    fprintf(ERR_OUT, "True array size is declared size: %ld", ((struct decl*)ctx1)->type->actual_size);
+    fprintf(ERR_OUT, "Any remaining elements to be 0.");
+  }
+  fprintf(ERR_OUT, "\n\n");
+  global_error_count++;
+  if (!is_fatal || is_test) { return kind; }
+  exit(kind);
+}
+
 /* generates a decl expression. single expression. */
 void decl_codegen_expr(Symbol_table* st, struct decl* d, struct expr* e)
 {
@@ -52,10 +88,10 @@ void decl_codegen_expr(Symbol_table* st, struct decl* d, struct expr* e)
           .zero 8 # if no value
         */
         if (e && e->string_literal) {
-          fprintf(CODEGEN_OUT, ".quad %s\n", symbol_table_hidden_lookup(st->hidden_table, e->string_literal));
+          fprintf(CODEGEN_OUT, "\t.quad %s\n", symbol_table_hidden_lookup(st->hidden_table, e->string_literal));
         }
-        else if (e) { fprintf(CODEGEN_OUT, ".quad %ld\n", e->literal_value); }
-        else { fprintf(CODEGEN_OUT, ".zero %d\n", QUAD); }
+        else if (e) { fprintf(CODEGEN_OUT, "\t.quad %ld\n", e->literal_value); }
+        else { fprintf(CODEGEN_OUT, "\t.zero %d\n", QUAD); }
       break;
       case SYMBOL_LOCAL:
         /*
@@ -247,7 +283,7 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
     case SYMBOL_GLOBAL:
       // generate the declaration label
       if (!d->symbol->address) { symbol_codegen(d->symbol); }
-      fprintf(CODEGEN_OUT, "%s:\n\t", d->symbol->address);
+      fprintf(CODEGEN_OUT, "%s:\n", d->symbol->address);
     break;
   }
 
@@ -261,17 +297,19 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
   case TYPE_ARRAY: /* multiple decl_codegen_expr, size checking */
     generate_expr = false;
     error_status = expr_codegen(st, d->type->size);
-    d->type->actual_size = d->type->size->literal_value;
-    generate_expr = !(d->symbol->kind == SYMBOL_GLOBAL);    
+    d->type->actual_size = (d->type->size) ? d->type->size->literal_value : 0;
+    generate_expr = !(d->symbol->kind == SYMBOL_GLOBAL);   
 
     // compare true size and actual size
     // TO DO: make recursive for nested init expressions by looking at SUBTYPE.
-    int array_size = 0; if (d->value) { for (struct expr* e = d->value->left; e != NULL; e=e->right, array_size++) {} }
+    int array_size = 0;
+    if (d->value) { 
+      for (struct expr* e = d->value->left; e != NULL; e=e->right, array_size++) {}
+    }
 
     // check for size errors
-    if (array_size < 0 || d->type->actual_size < 0)
-    {
-      // FATAL ERROR: negative size values, must be nonnegative
+    if (array_size < 0 || d->type->actual_size < 0) { /* fatal --> error */
+      return error_status = decl_codegen_error_handle(DECL_NEGSIZE, d, NULL);
     }
 
     // determine size for generation loop
@@ -281,13 +319,13 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
     else if (d->type->size && d->value && array_size != d->type->actual_size) {
       // inequal sizes. allocate always for maximum of the two
       size = (array_size >= d->type->actual_size) ? array_size : d->type->actual_size;
-      if (array_size < d->type->actual_size) {
-        // NON FATAL ERROR (WARNING)
-        // pad with zeros for the difference between array_size and actual_size
+      if (array_size < d->type->actual_size) { /* non-fatal --> warning */
+        return error_status = decl_codegen_error_handle(DECL_PADSIZE, d, &array_size);
       }
-      if (array_size > d->type->actual_size) {
-        // NON FATAL ERROR (WARNING)
+      if (array_size > d->type->actual_size) { /* non-fatal --> warning */
+        return error_status = decl_codegen_error_handle(DECL_SIZE, d, NULL);
       }
+    else { size = array_size; }
     }
 
     int old_which = (d->symbol->kind == SYMBOL_LOCAL) ? d->symbol->which : 0;
@@ -296,11 +334,12 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
     struct expr* e = (d->value) ? d->value->left : NULL;
     for (int i = 0; i < size; i++)
     {
-      decl_codegen_expr(st, d, (d->value && e) ? e : NULL);
+      // print the right child on last iteration instead of left
+      decl_codegen_expr(st, d, (i < array_size) ? ((i == size - 1) ? e : e->left) : NULL);
 
       // prepare next iteration
-      if (d->value && e) { e = e->right; }
-      d->symbol->which = st->which_count->items[current_scope_level];
+      d->symbol->which++;
+      if (d->value && e->right) { e = e->right;}
     }
     d->symbol->which = old_which;
   break;
@@ -308,4 +347,5 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
     decl_codegen_expr(st, d, d->value);
   break;
  }
+ return error_status = decl_codegen(st, d->next);
 }

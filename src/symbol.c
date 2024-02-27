@@ -54,6 +54,7 @@ struct symbol* symbol_copy(struct symbol* s) {
 /* generates the proper address/label for a symbol */
 const char* symbol_codegen(struct symbol* s) {
   if (!s) { /* TO DO: error message, null, failed to generate address */ return NULL; }
+  if (s->address) { free(s->address); }
   switch (s->kind) {
     case SYMBOL_GLOBAL: strcpy(symbol_address, s->name); break;
     default: strcpy(symbol_address, "\0"); sprintf(symbol_address, "-%d(%%rbp)", (s->which + 1) * QUAD); break;
