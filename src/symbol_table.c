@@ -150,11 +150,11 @@ struct symbol_table* symbol_table_create() {
     st->verbose = false;
     st->top = -1;
     st->show_hidden = false; // true iff from command line option
+    st->hidden_generated = false;
     st->which_count = vector_create();
   }
   global_error_count = 0;
   error_status = 0;
-  generate_hidden = false;
   generate_expr = true;
   return st;
 }

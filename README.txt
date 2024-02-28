@@ -27,7 +27,7 @@ Changes since assignment 4:
    - struct symbol now has an address field to have during code generation
       this saves the address value for a symbol while they are being generated.
    - Updated typechecker for constant expresion checking
-   - Error handlers now display the error enum name to be more descriptive. [resolves issue #6]
+   - Error handlers now display the error enum name to be more descriptive.
 
 4. Misc:
    - Various code cleanups for better readability, code-style consistency, and better cohesion.
@@ -43,25 +43,59 @@ handler (which in occurence of an error simply exits if not explicitly stated fo
 Tree:
 ****************************
 EXECUTABLES
+
+// codegen executables
+// features/commands/how to build
 ****************************
 ERROR MESSAGES
 
 Error messages can now be fatal (errors) or non-fatal (warnings). Errors stop code generation
 and exit. Warnings do continue with generation, though results may be undefined or unwarranted.
 
-register error messages:
+Register Error Messages:
    REG_INVALID -> out of bounds
    REG_AINUSE -> all registers in use
    REG_NINUSE -> register not in use
    REG_NOHIGH -> register name is unavailable in the high-byte bit type (64, 32, 16, high, low)
    LABEL_MAX -> max number of labels
 
-codegen error messages:
-   expressions:
-   statements:
-   declarations:
+Codegen Error Messages:
+  Expressions:
+      Errors:
+         EXPR_BYZERO --> Division or Modulus by zero deteted
+      Warnings:
+         ERR_OVERFLOW --> Integer overflow detected
+         ERR_UNDERFLOW --> Integer underflow detected
+  Statements:
+      Errors:
+      Warnings:
+  Declarations:
+      Errors:
+         DECL_NEGSIZE --> Array's declared size evaluated to negative
+      Warnings:
+         DECL_SIZE --> Array's evaluated declared size is smaller than initializer list size
+         DECL_PADSIZE --> Array's evaluated declared size is larger than intializer list size, list is zero-padded.
 ****************************
 TESTS
+
+The code generator has seperate code files for each generation component*:
+
+[test_sym_codegen.c]
+   * Tests Register and label handling, symbol code generation, and hidden symbol management
+- [test_expr_codegen.c]
+   * Tests expr_codegen
+- [test_decl_codegen.c]
+   * Tests decl_codegen for primitive function declarations
+- [test_decl_array_codegen.c]
+   * Tests decl_codegen for array declarations
+- [test_stmt_codegen.c] --> TODO
+   * Tests stmt_codegen 
+- [test_codegen] --> TODO
+   * Tests the code generator at a 'program' level, using test programs
+
+*they were originally all together, but I kept running into memory issues, the issue went away once splitting them apart.
+(stack overflow perhaps?)
+
 ****************************
 HIDDEN SYMBOLS
 
@@ -93,6 +127,10 @@ of the same declaration list, but did not work, so it has its own special functi
 
  - some functions (namely the codegen functions) have had their signatures modified.
    Some return an error status and expr_codegen takes an additonal boolean option.
+
+ - expr_codegen only does 'intermediate value tracking' (evaluates the expression during generation) with literals (so far).
+   if an expression contains an identifier and has underflow, overflow, divsion-by-zero, etc.,
+   the code generator will fail to express that.
 *****************
 
 
@@ -124,7 +162,8 @@ use assembly emulator to help you.
 5. implement + test decl codegen
    DONE- global non-function/array declarations
    DONE- local non-function/array declarations
-   - array declarations (global, local) (requires EXPR_INIT)
+   DONE- array declarations (global, local) (requires EXPR_INIT)
+   - multidimensional array declarations
 
 6. implement + test stmt codegen
    - expression statements

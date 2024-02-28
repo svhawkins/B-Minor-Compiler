@@ -1,7 +1,8 @@
 CFLAGS = -pedantic -Og -Wall -Wextra
 AST = tests/test_factory tests/test_print tests/test_ast
 SYM = tests/test_data_structures tests/test_resolve tests/test_typecheck
-TESTS = tests/test_scan tests/test_parse $(AST) $(SYM) tests/test_codegen test
+CODEGEN = tests/test_sym_codegen  tests/test_expr_codegen tests/test_decl_codegen tests/test_decl_array_codegen tests/test_codegen
+TESTS = tests/test_scan tests/test_parse $(AST) $(SYM) $(CODEGEN) test
 COMPILER = scan parse print typecheck codegen
 EXEC = $(COMPILER) $(TESTS)
 OBJECTS = src/*.o tests/scanner/*.o tests/parser/*.o tests/ast/*.o tests/symbol_table/*.o tests/codegen/*.o
@@ -37,6 +38,14 @@ tests/test_resolve: tests/symbol_table/test_resolve.o src/scanner.o src/parser.o
 tests/test_typecheck: tests/symbol_table/test_typecheck.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
 tests/test_codegen: tests/codegen/test_codegen.o src/scanner.o src/parser.o $(INCLUDES)
+	gcc -o $@ $^
+tests/test_sym_codegen: tests/codegen/test_sym_codegen.o src/scanner.o src/parser.o $(INCLUDES)
+	gcc -o $@ $^
+tests/test_expr_codegen: tests/codegen/test_expr_codegen.o src/scanner.o src/parser.o $(INCLUDES)
+	gcc -o $@ $^
+tests/test_decl_codegen: tests/codegen/test_decl_codegen.o src/scanner.o src/parser.o $(INCLUDES)
+	gcc -o $@ $^
+tests/test_decl_array_codegen: tests/codegen/test_decl_array_codegen.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
 
 ## root targets

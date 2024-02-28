@@ -120,43 +120,43 @@ int main(void) {
   ERR_OUT = REG_ERR_OUT = fopen("error_output_codegen.txt", "w");
   if (!ERR_OUT || !REG_ERR_OUT) { ERR_OUT = REG_ERR_OUT = stderr; }
   Status (*tests[])(void) = {
-       test_scratch_alloc_success,
-       test_scratch_alloc_fail_ainuse,
-       test_scratch_free_success,
-       test_scratch_free_fail_invalid,
-       test_scratch_free_fail_ninuse,
-       test_scratch_name_success,
-       test_scratch_name_fail_invalid,
-       test_scratch_name_fail_nohigh,
-       test_label_create_success,
-       test_label_create_fail_max,
-       test_label_name,
-       test_symbol_codegen,
-       test_symbol_table_hidden_codegen,
-       test_expr_codegen_literal,
-       test_expr_codegen_string,
-       test_expr_codegen_name_literal,
-       test_expr_codegen_binary,
-       test_expr_codegen_unary,
-       test_expr_codegen_muldivmod,
-       test_expr_codegen_relate,
-       test_expr_codegen_divmod_zero,
-       test_expr_codegen_overflow,
-       test_expr_codegen_mult_underflow_overflow,
-       test_expr_codegen_underflow,
-       test_decl_codegen_global,
-       test_decl_codegen_global_uninit,
-       test_decl_codegen_local,
-       test_decl_codegen_local_uninit,
-       //test_decl_codegen_array_literal_global, // FIXME: segfault
-       test_decl_codegen_array_literal_local,
-       test_decl_codegen_array_string_literal_global,
-       test_decl_codegen_array_string_literal_local,
-       test_decl_codegen_array_global_uninit,
-       test_decl_codegen_array_local_uninit,
-       test_decl_codegen_array_size_mismatch_fatal,
-       //test_decl_codegen_array_size_mismatch_nonfatal, //FIXME: segfault
-       test_decl_codegen_array_size_infer_init,
+      //  test_scratch_alloc_success,
+      //  test_scratch_alloc_fail_ainuse,
+      //  test_scratch_free_success,
+      //  test_scratch_free_fail_invalid,
+      //  test_scratch_free_fail_ninuse,
+      //  test_scratch_name_success,
+      //  test_scratch_name_fail_invalid,
+      //  test_scratch_name_fail_nohigh,
+      //  test_label_create_success,
+      //  test_label_create_fail_max,
+      //  test_label_name,
+      // test_symbol_codegen,
+      // test_symbol_table_hidden_codegen,
+      //  test_expr_codegen_literal,
+      //  test_expr_codegen_string,
+      //  test_expr_codegen_name_literal,
+      //  test_expr_codegen_binary,
+      //  test_expr_codegen_unary,
+      //  test_expr_codegen_muldivmod,
+      //  test_expr_codegen_relate,
+      //  test_expr_codegen_divmod_zero,
+      //  test_expr_codegen_overflow,
+      //  test_expr_codegen_mult_underflow_overflow,
+      //  test_expr_codegen_underflow,
+       //test_decl_codegen_global,
+       //test_decl_codegen_global_uninit,
+       //test_decl_codegen_local,
+       //test_decl_codegen_local_uninit,
+      test_decl_codegen_array_literal_global,
+      test_decl_codegen_array_literal_local,
+      test_decl_codegen_array_string_literal_global,
+      test_decl_codegen_array_string_literal_local,
+      test_decl_codegen_array_global_uninit,
+      test_decl_codegen_array_local_uninit,
+      test_decl_codegen_array_size_mismatch_fatal,
+      test_decl_codegen_array_size_mismatch_nonfatal,
+      test_decl_codegen_array_size_infer_init,
        //test_decl_codegen_array_multidim
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
@@ -1059,9 +1059,9 @@ Status test_decl_codegen_array_literal_global(void) {
   struct expr* eright = expr_create(EXPR_COMMA, expr_create_integer_literal(493), erightright);
   struct expr* e = expr_create(EXPR_INIT, eright, NULL);
   struct decl* d = decl_create(strdup("foo"), t, e, NULL, NULL);
-  //error_status = decl_resolve(st, d);
-  // error_status = decl_typecheck(st, d);
-  // error_status = decl_codegen(st, d);
+  error_status = decl_resolve(st, d);
+  error_status = decl_typecheck(st, d);
+  error_status = decl_codegen(st, d);
 
   decl_destroy(&d);
   symbol_table_destroy(&st);
@@ -1257,10 +1257,10 @@ strcpy(test_type, "Testing: test_decl_codegen_array_size_mismatch_nonfatal");
 Status status = SUCCESS;
 
 char* expect =
-"foo:\n\
+"bar:\n\
 \t.quad 1\n\
 \t.quad 2\n\
-bar:\n\
+foo:\n\
 \t.quad 1\n\
 \t.zero 8\n";
 
@@ -1283,12 +1283,12 @@ struct decl* dlist = decl_create(strdup("bar"), tlist, elist, NULL, ddecl);
 
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   struct symbol_table* st = symbol_table_create();
-  symbol_table_scope_enter(st); symbol_table_scope_enter(st);
+  symbol_table_scope_enter(st);
   register_codegen_init(true);
 
-  // error_status = decl_resolve(st, dlist);
-  // error_status = decl_typecheck(st, dlist);
-  // error_status = decl_codegen(st, dlist);
+  error_status = decl_resolve(st, dlist);
+  error_status = decl_typecheck(st, dlist);
+  error_status = decl_codegen(st, dlist);
 
   decl_destroy(&dlist);
   symbol_table_destroy(&st);
@@ -1297,6 +1297,8 @@ struct decl* dlist = decl_create(strdup("bar"), tlist, elist, NULL, ddecl);
   CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
   fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
   if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
+
+  //for (int i = 0; i < strlen(expect); i++) { printf("[%c], [%c]\n", expect[i], buffer[i]); }
   return status;
 }
 

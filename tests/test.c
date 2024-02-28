@@ -14,7 +14,7 @@ int main(void) {
   int total_pass = 0, total_tests = 0;
 
   // executables list
-  int n_exec = 9;
+  int n_exec = 12;
   char* path[] = {
     "tests/test_scan",
     "tests/test_parse",
@@ -24,7 +24,10 @@ int main(void) {
     "tests/test_data_structures",
     "tests/test_resolve",
     "tests/test_typecheck",
-    "tests/test_codegen"
+    "tests/test_sym_codegen",
+    "tests/test_expr_codegen",
+    "tests/test_decl_codegen",
+    "tests/test_decl_array_codegen",
   };
   char* name[] = {
        "test_scan",
@@ -35,7 +38,10 @@ int main(void) {
 		   "test_data_structures",
        "test_resolve",
 		   "test_typecheck",
-		   "test_codegen"
+		   "test_sym_codegen",
+       "test_expr_codegen",
+       "test_decl_codegen",
+       "test_decl_array_codegen",
 		  };
 
   // what to print per pre-execution
@@ -49,7 +55,10 @@ int main(void) {
         "SYMBOL TABLE DATA STRUCTURES",
 		    "SYMBOL TABLE",
 		    "TYPECHECKING",
-		    "CODE GENERATION"
+		    "CODE GENERATION UTILITIES",
+        "CODE GENERATION EXPRESSIONS",
+        "CODE GENERATION DECLARATIONS",
+        "CODE GENERATION ARRAY DECLARATIONS"
 		   };
 
   // executions, output is written to pipe

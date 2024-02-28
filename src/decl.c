@@ -59,14 +59,14 @@ int decl_codegen_error_handle(decl_codegen_error_t kind, void* ctx1, void* ctx2)
     break;
     case DECL_SIZE: /* size mismatch, using size determined from value field.*/
     fprintf(ERR_OUT, "WARNING %s (%d): ", decl_codegen_strerror(kind), kind);
-    fprintf(ERR_OUT, "Declared size and list size mismatch.");
-    fprintf(ERR_OUT, "True array size is list size: %ld", *((int*)ctx2));
+    fprintf(ERR_OUT, "Declared size and list size mismatch. ");
+    fprintf(ERR_OUT, "True array size is list size: %ld.", *((int*)ctx2));
     break;
     case DECL_PADSIZE: /* provided size is greater than elements provided in initializer list. pad remaining with 0s.*/
     fprintf(ERR_OUT, "WARNING %s (%d): ", decl_codegen_strerror(kind), kind);
-    fprintf(ERR_OUT, "Declared size and list size mismatch.");
-    fprintf(ERR_OUT, "True array size is declared size: %ld", ((struct decl*)ctx1)->type->actual_size);
-    fprintf(ERR_OUT, "Any remaining elements to be 0.");
+    fprintf(ERR_OUT, "Declared size and list size mismatch. ");
+    fprintf(ERR_OUT, "True array size is declared size: %ld. ", ((struct decl*)ctx1)->type->actual_size);
+    fprintf(ERR_OUT, "Any remaining elements to be zero-initialized.");
   }
   fprintf(ERR_OUT, "\n\n");
   global_error_count++;
@@ -262,13 +262,14 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
 
   // check flags
   /* only generate hidden symbol TABLE if not done so already  */
-  if (!generate_hidden) { symbol_table_hidden_codegen(st->hidden_table); generate_hidden = true; }
+  if (st->hidden_generated == false) { symbol_table_hidden_codegen(st->hidden_table); st->hidden_generated = true; }
   /* for expr codegen */
   generate_expr = !(d->symbol->kind == SYMBOL_GLOBAL);
 
   /* per scope */
   int current_scope_level = symbol_table_scope_level(st);
-  while (current_scope_level >= st->which_count->size) {
+  int which_size = st->which_count->size;
+  for (int i = which_size; i < current_scope_level; i++) {
     int val = 0;
     vector_push(st->which_count, (void*)&val);
   }
@@ -298,48 +299,39 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
     generate_expr = false;
     error_status = expr_codegen(st, d->type->size);
     d->type->actual_size = (d->type->size) ? d->type->size->literal_value : 0;
-    generate_expr = !(d->symbol->kind == SYMBOL_GLOBAL);   
+    generate_expr = !(d->symbol->kind == SYMBOL_GLOBAL);   ;
 
     // compare true size and actual size
     // TO DO: make recursive for nested init expressions by looking at SUBTYPE.
     int array_size = 0;
-    if (d->value) { 
-      for (struct expr* e = d->value->left; e != NULL; e=e->right, array_size++) {}
-    }
+    if (d->value) {  for (struct expr* e = d->value->left; e != NULL; e=e->right, array_size++) {} }
 
     // check for size errors
     if (array_size < 0 || d->type->actual_size < 0) { /* fatal --> error */
       return error_status = decl_codegen_error_handle(DECL_NEGSIZE, d, NULL);
     }
 
-    // determine size for generation loop
-    int size;
-    if (!d->type->size && d->value) { size = array_size; }
-    else if (d->type->size && !d->value) { size = d->type->actual_size; }
-    else if (d->type->size && d->value && array_size != d->type->actual_size) {
-      // inequal sizes. allocate always for maximum of the two
-      size = (array_size >= d->type->actual_size) ? array_size : d->type->actual_size;
-      if (array_size < d->type->actual_size) { /* non-fatal --> warning */
-        return error_status = decl_codegen_error_handle(DECL_PADSIZE, d, &array_size);
+    int size = (array_size >= d->type->actual_size) ? array_size : d->type->actual_size;
+    int min_size = (array_size <= d->type->actual_size) ? array_size : d->type->actual_size;
+
+    if (d->type->size && d->value) {
+      /* non-fatal warnings */
+      if (array_size < d->type->actual_size) {
+        error_status = decl_codegen_error_handle(DECL_PADSIZE, d, NULL);
       }
-      if (array_size > d->type->actual_size) { /* non-fatal --> warning */
-        return error_status = decl_codegen_error_handle(DECL_SIZE, d, NULL);
+      else if (array_size > d->type->actual_size) {
+        error_status = decl_codegen_error_handle(DECL_SIZE, d, &array_size);
       }
-    else { size = array_size; }
     }
 
-    int old_which = (d->symbol->kind == SYMBOL_LOCAL) ? d->symbol->which : 0;
-
     // generate the expression
-    struct expr* e = (d->value) ? d->value->left : NULL;
-    for (int i = 0; i < size; i++)
-    {
-      // print the right child on last iteration instead of left
-      decl_codegen_expr(st, d, (i < array_size) ? ((i == size - 1) ? e : e->left) : NULL);
-
-      // prepare next iteration
+    int old_which = (d->symbol->kind == SYMBOL_LOCAL) ? d->symbol->which : 0;
+    struct expr* e = (d->value) ? d->value->left : NULL; // get inner init expression
+    for (int i = 0; i < size; i++) {
+      if (e && e->right) { decl_codegen_expr(st, d, e->left); e = e->right; }
+      else if (e) { decl_codegen_expr(st, d, e);  e = e->right; }
+      else { decl_codegen_expr(st, d, NULL); }
       d->symbol->which++;
-      if (d->value && e->right) { e = e->right;}
     }
     d->symbol->which = old_which;
   break;
@@ -347,5 +339,6 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
     decl_codegen_expr(st, d, d->value);
   break;
  }
- return error_status = decl_codegen(st, d->next);
+ error_status = decl_codegen(st, d->next);
+ return error_status;
 }

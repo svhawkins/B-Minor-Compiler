@@ -152,29 +152,34 @@ int expr_type_error_handle(type_error_t kind, void* ctx1, void* type_ctx1, void*
 
 char* expr_codegen_strerror(codegen_error_t kind) {
   switch(kind) {
-    case ERR_OVERFLOW: strcpy(buffer, "EOVERFLOW"); break;
-    case ERR_UNDERFLOW: strcpy(buffer, "EUNDERFLOW"); break;
+    case ERR_OVERFLOW: strcpy(buffer, "WOVERFLOW"); break;
+    case ERR_UNDERFLOW: strcpy(buffer, "WUNDERFLOW"); break;
     case EXPR_BYZERO: strcpy(buffer, "EBYZERO"); break;
   }
   return buffer;
 }
 
 int expr_codegen_error_handle(codegen_error_t kind, struct expr* e) {
-  fprintf(ERR_OUT, "ERROR %s (%d):\n", expr_codegen_strerror(kind), kind);
+  bool is_fatal = false;
   switch(kind) {
     case ERR_OVERFLOW: /* operation detected integer overflow */
-      fprintf(ERR_OUT, "WARNING: integer overflow detected in expression: ");
+      fprintf(ERR_OUT, "WARNING %s (%d):\n", expr_codegen_strerror(kind), kind);
+      fprintf(ERR_OUT, "integer overflow detected in expression: ");
       break;
     case ERR_UNDERFLOW: /* operation detected integer underflow*/
-      fprintf(ERR_OUT, "WARNING: integer underflow detected in expression: ");
+      fprintf(ERR_OUT, "WARNING %s (%d):\n", expr_codegen_strerror(kind), kind);
+      fprintf(ERR_OUT, "Integer underflow detected in expression: ");
       break;
     case EXPR_BYZERO: /* modulus or division by zero detected */
-      fprintf(ERR_OUT, "WARNING: division or modulus by zero attempted in expression: ");
+      is_fatal = true;
+      fprintf(ERR_OUT, "ERROR %s (%d):\n", expr_codegen_strerror(kind), kind);
+      fprintf(ERR_OUT, "Division or modulus by zero attempted in expression: ");
       break;
   }
   expr_fprint(ERR_OUT, e);
   fprintf(ERR_OUT, "\n\n");
   global_error_count++;
+  if (is_fatal && !is_test) { exit(kind); }
   return kind;
 }
 
