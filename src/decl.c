@@ -205,12 +205,13 @@ void decl_fprint(FILE* fp, struct decl* d, int indent) {
 
 void decl_print(struct decl* d, int indent) { decl_fprint(stdout, d, indent); }
 
+void name_destroy(char* name) { free(name); }
 void decl_destroy(struct decl** d) {
   if (!d || !(*d)) { return; }
-  free((*d)->name);
   type_destroy(&((*d)->type));
-  expr_destroy(&((*d)->value));
   stmt_destroy(&((*d)->code));
+  expr_destroy(&((*d)->value));
+  //name_destroy((*d)->name);
   decl_destroy(&((*d)->next));
   free(*d);
   *d = NULL;
