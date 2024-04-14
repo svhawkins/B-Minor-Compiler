@@ -24,11 +24,12 @@ void param_list_fprint(FILE* fp, struct param_list* p) {
 void param_list_print(struct param_list *p) { param_list_fprint(stdout, p); }
 
 void param_list_destroy(struct param_list** p) {
-  if (!(*p)) { return; }
+  if (!p || !(*p)) { return; }
   free((*p)->name);
   type_destroy(&((*p)->type));
   param_list_destroy(&((*p)->next));
-  free(*p); *p = NULL;
+  free(*p);
+  *p = NULL;
 }
 
 struct param_list* param_list_copy(struct param_list* p) {

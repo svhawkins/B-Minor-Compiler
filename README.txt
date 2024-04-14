@@ -73,8 +73,7 @@ Codegen Error Messages:
       Errors:
          DECL_NEGSIZE --> Array's declared size evaluated to negative
       Warnings:
-         DECL_SIZE --> Array's evaluated declared size is smaller than initializer list size
-         DECL_PADSIZE --> Array's evaluated declared size is larger than intializer list size, list is zero-padded.
+         DECL_SIZE --> Array's evaluated declared size does not match initializer list size, true size is list size
 ****************************
 TESTS
 
@@ -131,6 +130,13 @@ of the same declaration list, but did not work, so it has its own special functi
  - expr_codegen only does 'intermediate value tracking' (evaluates the expression during generation) with literals (so far).
    if an expression contains an identifier and has underflow, overflow, divsion-by-zero, etc.,
    the code generator will fail to express that.
+
+- some features of B-Minor code generation do NOT correlate with C code generation:
+   - B-Minor parser disallows empty initializer lists, even though valid in C.
+      (Grammar can be later updated to allow this, giving another way to zero-initialize multidimensional arrays!)
+   - C sets array sizes to smallest of either declared or list (or just one or the other), B-Minor always uses list size in
+     case of mismatches. As a result, it is considered a fatal error in greater than 1 dimension if they don't match,
+     whereas C just emits a warning for 'excess elements in array initializer' regardless of dimension.
 *****************
 
 

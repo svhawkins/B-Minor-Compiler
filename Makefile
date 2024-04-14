@@ -1,4 +1,4 @@
-CFLAGS = -pedantic -Og -Wall -Wextra
+CFLAGS = -pedantic -Og -Wall -Wextra -g3
 AST = tests/test_factory tests/test_print tests/test_ast
 SYM = tests/test_data_structures tests/test_resolve tests/test_typecheck
 CODEGEN = tests/test_sym_codegen  tests/test_expr_codegen tests/test_decl_codegen tests/test_decl_array_codegen tests/test_codegen

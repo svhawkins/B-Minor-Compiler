@@ -50,7 +50,7 @@ void type_subtype_leaf_assign(struct type* t, struct type* subtype) {
 }
 
 void type_destroy(struct type** t) {
-  if (!(*t)) { return; }
+  if (!t || !(*t)) { return; }
   param_list_destroy(&((*t)->params));
   type_destroy(&((*t)->subtype));
   expr_destroy(&((*t)->size));

@@ -326,12 +326,13 @@ void expr_fprint(FILE* fp, struct expr* e) {
 void expr_print(struct expr* e) { expr_fprint(stdout, e); }
 
 void expr_destroy(struct expr** e) {
-  if (!e || !(*e)) { return; }
+  if (!e) { return; }
+  if (!(*e)) { return; }
   expr_destroy(&((*e)->left));
   expr_destroy(&((*e)->right));
 
   // free the pointers
-  if ((*e)->kind == EXPR_NAME) { free((void*)(*e)->name); }
+  if ((*e)->kind == EXPR_NAME) { free((*e)->name); }
 
   // since string literals are part of the symbol table
   //if ((*e)->string_literal) { free((void*)(*e)->string_literal); }

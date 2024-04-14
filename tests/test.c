@@ -14,7 +14,6 @@ int main(void) {
   int total_pass = 0, total_tests = 0;
 
   // executables list
-  int n_exec = 12;
   char* path[] = {
     "tests/test_scan",
     "tests/test_parse",
@@ -29,6 +28,8 @@ int main(void) {
     "tests/test_decl_codegen",
     "tests/test_decl_array_codegen",
   };
+  int n_exec = sizeof(path)/sizeof(path[0]);
+
   char* name[] = {
        "test_scan",
 		   "test_parse",
