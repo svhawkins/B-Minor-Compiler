@@ -29,13 +29,32 @@ int main(int argc, const char** argv) {
   get_options(argc, argv);
   bool infile = setup_genfile();
 
-  // set up symbol table
+  for (int i = 0; !eof; i++) {
+      // set up symbol table
   Symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-
-  // what is generated is dependent upon parser result
-
-  printf("Hello world!\n");
+  //symbol_table_scope_enter(st); // global scope
+    register_codegen_init(false); // for labels
+    printf("%d: ", i);
+    if (yyparse() == 0) {
+      if (test_parser_result) {
+        stmt_print(test_parser_result, 0);
+ 	      stmt_resolve(st, test_parser_result);
+	      stmt_typecheck(st, test_parser_result, NULL);
+	      symbol_table_print(st);
+        printf("Total errors: %d\n", global_error_count);
+	      stmt_destroy(&test_parser_result);
+      }
+    } else { print_error_message(); }
+  if (parser_result) {
+    decl_resolve(st, parser_result);
+    decl_typecheck(st, parser_result);
+    printf("\n");
+    decl_codegen(st, parser_result);
+    printf("Total errors: %d\n", global_error_count);
+  }
+  register_codegen_clear();
   symbol_table_destroy(&st);
+  }
   if (infile) { fclose(CODEGEN_OUT); CODEGEN_OUT = NULL; }
   return 0;
 }
@@ -45,7 +64,7 @@ void help(void) {
   printf("Options:\n");
   printf("--help (-h): print this help\n");
   printf("--output_file (-o <outfile>): specify the output file to be <outfile>\n");
-  printf("--input_file (-i) <infile>: specify the input file to be <infile>\n");
+  printf("--input_file (-i <infile>): specify the input file to be <infile>\n");
   printf("--interactive (-I): input and output file descriptors are STDIN and STDOUT\n");
   printf("--verbose (-v): generated assembly code will have brief explanatory comments.\n");
 }

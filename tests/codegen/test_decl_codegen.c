@@ -120,8 +120,8 @@ foo:\n\t.quad 1\n\
     error_status = decl_codegen(st, d);
 
     if (d->value->reg != 0) { print_error(test_type, "0", "int d->value->reg"); return FAILURE; }
-    if (!scratch_register[d->value->reg].inuse) {
-      print_error(test_type, "true", "bool scratch_register[d->value->reg].inuse");
+    if (scratch_register[d->value->reg].inuse) {
+      print_error(test_type, "false", "bool scratch_register[d->value->reg].inuse");
       status = FAILURE;
     }
     decl_destroy(&d);
@@ -218,8 +218,8 @@ MOVQ $1, %rbx\nMOVQ %rbx, -8(%rbp)\n\
     error_status = decl_codegen(st, d);
 
     if (d->value->reg != 0) { print_error(test_type, "0", "int d->value->reg"); return FAILURE; }
-    if (!scratch_register[d->value->reg].inuse) {
-      print_error(test_type, "true", "bool scratch_register[d->value->reg].inuse");
+    if (scratch_register[d->value->reg].inuse) {
+      print_error(test_type, "false", "bool scratch_register[d->value->reg].inuse");
       status = FAILURE;
     }
     if (d->symbol->which != 0) { print_error(test_type, "0", "int d->symbol->which"); return FAILURE; }

@@ -86,8 +86,9 @@ void decl_codegen_expr(Symbol_table* st, struct decl* d, struct expr* e)
         error_status = expr_codegen(st, e);
         if (e && e->string_literal) {
           fprintf(CODEGEN_OUT, "\t.quad %s\n", symbol_table_hidden_lookup(st->hidden_table, e->string_literal));
+          register_scratch_free(e->reg);
         }
-        else if (e) { fprintf(CODEGEN_OUT, "\t.quad %ld\n", e->literal_value); }
+        else if (e) { fprintf(CODEGEN_OUT, "\t.quad %ld\n", e->literal_value); register_scratch_free(e->reg); }
         else { fprintf(CODEGEN_OUT, "\t.zero %d\n", QUAD); }
       break;
       case SYMBOL_LOCAL:
@@ -102,6 +103,7 @@ void decl_codegen_expr(Symbol_table* st, struct decl* d, struct expr* e)
         fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", (e) ? register_scratch_name(e->reg) : "$0",
                                d->symbol->address);
         st->which_count->items[symbol_table_scope_level(st)]++;
+        if (e) { register_scratch_free(e->reg); } // it got moved to the stack, the intermediary register is free now.
     }
 }
 
@@ -125,6 +127,7 @@ int decl_codegen_array(Symbol_table* st, struct decl* d, struct expr* e, struct 
     // TO DO: ERROR, mismatch sizes of nested array sizes
    }
    return size_left + size_right;
+   //return (e->left != NULL) + (e->right != NULL);
   }
   else if ((e && e->kind == EXPR_INIT) || (!e && t->kind == TYPE_ARRAY)) {
 
@@ -211,7 +214,7 @@ void decl_destroy(struct decl** d) {
   type_destroy(&((*d)->type));
   stmt_destroy(&((*d)->code));
   expr_destroy(&((*d)->value));
-  //name_destroy((*d)->name);
+  name_destroy((*d)->name);
   decl_destroy(&((*d)->next));
   free(*d);
   *d = NULL;
