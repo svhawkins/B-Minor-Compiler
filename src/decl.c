@@ -99,24 +99,31 @@ void decl_codegen_expr(Symbol_table* st, struct decl* d, struct expr* e)
         */
         generate_expr = true;
         error_status = expr_codegen(st, e);
-        symbol_codegen(d->symbol); /* to keep regenerating the same thing, slightly altered which field */
+        struct symbol* s = d->symbol;
+        s->which = st->which_count->items[symbol_table_scope_level(st)];
+        symbol_codegen(s); /* to keep regenerating the same thing, slightly altered which field */
         fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", (e) ? register_scratch_name(e->reg) : "$0",
-                               d->symbol->address);
+                               s->address);
         st->which_count->items[symbol_table_scope_level(st)]++;
-        if (e) { register_scratch_free(e->reg); } // it got moved to the stack, the intermediary register is free now.
+        if (e) {
+        e->symbol = s;
+        register_scratch_free(e->reg); // it got moved to the stack, the intermediary register is free now.
+      }
     }
 }
 
-/* generates array declarations
+/* 
+   generates array declarations
    return value is either size of array or -1, indicating error.
  */
 enum { DECL_ERROR = -1, DECL_SUCCESS = 1};
+
+// TODO: UPDATE actual_size fields for multidim array subtypes!
 int decl_codegen_array(Symbol_table* st, struct decl* d, struct expr* e, struct type* t, bool init_parent)
 {
   if (e && e->kind != EXPR_INIT && e->kind != EXPR_COMMA) {
     // base case
     decl_codegen_expr(st, d, e); // TODO: make this return an error_status
-    d->symbol->which++;
     return DECL_SUCCESS;
   }
   else if (e && e->kind != EXPR_INIT && e->kind == EXPR_COMMA) {
@@ -347,40 +354,7 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
 
   /* TO DO: refactor */
   case TYPE_ARRAY: /* multiple decl_codegen_expr, size checking */
-    // generate_expr = false;
-    // error_status = expr_codegen(st, d->type->size);
-    // d->type->actual_size = (d->type->size) ? d->type->size->literal_value : 0;
-    // generate_expr = !(d->symbol->kind == SYMBOL_GLOBAL);   ;
-
-    // // compare true size and actual size
-    // // TO DO: make recursive for nested init expressions by looking at SUBTYPE.
-    // int array_size = 0;
-    // if (d->value) {  for (struct expr* e = d->value->left; e != NULL; e=e->right, array_size++) {} }
-
-    // // check for size errors
-    // if (array_size < 0 || d->type->actual_size < 0) { /* fatal --> error */
-    //   return error_status = decl_codegen_error_handle(DECL_NEGSIZE, d, NULL);
-    // }
-
-    // int size = (array_size >= d->type->actual_size) ? array_size : d->type->actual_size;
-    // int min_size = (array_size <= d->type->actual_size) ? array_size : d->type->actual_size;
-
-    // if (d->type->size && d->value) {
-    //   /* non-fatal warnings */
-    //   if (array_size > d->type->actual_size) {
-    //     error_status = decl_codegen_error_handle(DECL_SIZE, d, &array_size);
-    //   }
-    // }
-
-    // generate the expression
     old_which = (d->symbol->kind == SYMBOL_LOCAL) ? d->symbol->which : 0;
-    // struct expr* e = (d->value) ? d->value->left : NULL; // get inner init expression
-    // for (int i = 0; i < size; i++) {
-    //   if (e && e->right) { decl_codegen_expr(st, d, e->left); e = e->right; }
-    //   else if (e) { decl_codegen_expr(st, d, e);  e = e->right; }
-    //   else { decl_codegen_expr(st, d, NULL); }
-    //   d->symbol->which++;
-    // }
     error_status = decl_codegen_array(st, d, d->value, d->type, true);
     d->symbol->which = old_which;
   break;

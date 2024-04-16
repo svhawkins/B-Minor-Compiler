@@ -155,6 +155,7 @@ char* expr_codegen_strerror(codegen_error_t kind) {
     case ERR_OVERFLOW: strcpy(buffer, "WOVERFLOW"); break;
     case ERR_UNDERFLOW: strcpy(buffer, "WUNDERFLOW"); break;
     case EXPR_BYZERO: strcpy(buffer, "EBYZERO"); break;
+    case EXPR_BOUNDS: strcpy(buffer, "EBOUNDS"); break;
   }
   return buffer;
 }
@@ -175,7 +176,14 @@ int expr_codegen_error_handle(codegen_error_t kind, struct expr* e) {
       fprintf(ERR_OUT, "ERROR %s (%d):\n", expr_codegen_strerror(kind), kind);
       fprintf(ERR_OUT, "Division or modulus by zero attempted in expression: ");
       break;
+    case EXPR_BOUNDS: /* out of bounds indexing detected */
+     is_fatal = true;
+     fprintf(ERR_OUT, "ERROR: %s (%d):\n", expr_codegen_strerror(kind), kind);
+     fprintf(ERR_OUT, "Out-of-bounds indexing detected in expression: ");
+     expr_fprint(ERR_OUT, e);
+     //fprintf(ERR_OUT, "\n%d is not within indexing range of %d and %d\n", *(int*)index, 0, *(int*)size);
   }
+  error_status = kind;
   expr_fprint(ERR_OUT, e);
   fprintf(ERR_OUT, "\n\n");
   global_error_count++;
@@ -184,11 +192,24 @@ int expr_codegen_error_handle(codegen_error_t kind, struct expr* e) {
 }
 
 // helper functions
-bool expr_is_primitive(expr_t kind) { return (kind >= EXPR_NAME); }
-bool expr_is_unary(expr_t kind) { return (kind >= EXPR_INC && kind <= EXPR_NOT); }
-bool expr_is_binary(expr_t kind) { return (kind >= EXPR_EXP && kind <= EXPR_COMMA); }
+inline bool expr_is_primitive(expr_t kind) { return (kind >= EXPR_NAME); }
+inline bool expr_is_unary(expr_t kind) { return (kind >= EXPR_INC && kind <= EXPR_NOT); }
+inline bool expr_is_binary(expr_t kind) { return (kind >= EXPR_EXP && kind <= EXPR_COMMA); }
 // excludes subscript [] and fcall () since those have right subtree within operator.
-bool expr_is_wrap(expr_t kind) { return (kind >= EXPR_SUBSCRIPT && kind <= EXPR_INIT); }
+inline bool expr_is_wrap(expr_t kind) { return (kind >= EXPR_SUBSCRIPT && kind <= EXPR_INIT); }
+
+int64_t get_offset(struct expr* e, struct type* t) {
+  int64_t size = 1, index = 0;
+
+  // offset = (INDEX_OUT * SIZE_IN) + INDEX_IN...
+  if (e && t) {
+    size = (t->subtype == TYPE_ARRAY) ? t->subtype->actual_size : 1; // actual size list size in declaration
+    index = e->right->literal_value;
+    if (index < 0 || index > size) { error_status = expr_codegen_error_handle(EXPR_BOUNDS, e); return 0;}
+    // continue down the rest of the tree to outer dimensions
+    return (index * size);
+  } else { return 0; }
+}
 
 
 // adds parentheses to child expression if nonprimitive
@@ -394,7 +415,7 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
   return error_status;
 }
 
-type_t invalid_type(type_t kind) { return (kind == TYPE_VOID || kind == TYPE_ARRAY || kind == TYPE_FUNCTION); }
+inline type_t invalid_type(type_t kind) { return (kind == TYPE_VOID || kind == TYPE_ARRAY || kind == TYPE_FUNCTION); }
 struct type* expr_typecheck(struct symbol_table* st, struct expr* e) {
   if (!e) return NULL;
   struct type* left_expr_type = expr_typecheck(st, e->left);
@@ -536,6 +557,7 @@ If any error occurs that is NOT due to register allocation such as but not limit
         - modulus by 0 --> error (fatal)
         - integer underflow --> warning (nonfatal)
         - integer overflow --> warning (nonfatal)
+        - out-of-range array indexing --> error (fatal)
 An error/warning code is emitted and send to the error message handler.
 */
 int expr_codegen(struct symbol_table* st, struct expr* e) {
@@ -591,6 +613,8 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
       }
       register_scratch_free(e->left->reg);
       e->reg = e->right->reg;
+
+      // TODO?: if this is a 'root' assignment, then it's being stored somewhere in memory. free also the right register.
 
       if (!e->string_literal) { e->literal_value = e->right->literal_value; }
       //else { e->string_literal = strdup(e->right->string_literal); }
@@ -744,7 +768,44 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
                             e->left->literal_value % e->right->literal_value;
       }
       break;
+
+
+    /*
+    offset + label(%RIP)
+    which(%RBP)
+
+    there are no additional x86 instructions here since it is an addressing mode, not an instruction. 
+
+    also somehow incorporate value tracking if able.
+    actually 'return' the value stored in the expr structure...
+    */
     case EXPR_SUBSCRIPT:
+    // don't need previous registers
+    register_scratch_free(e->right->reg);
+    register_scratch_free(e->left->reg);
+
+    // only generate code if reached 'base' subscript expression: name of the array + whatever
+   if (e->left->kind != EXPR_SUBSCRIPT) {
+      bool old_generate_expr = generate_expr;
+      generate_expr= false;
+      struct expr* subexpr = e;
+      struct type* t = e->symbol->type;
+      int64_t offset = QUAD * get_offset(subexpr, t);
+      e->reg = register_scratch_alloc(); // using 'dummy' register
+
+      switch (e->symbol->kind) {
+        case SYMBOL_GLOBAL:
+          fprintf(CODEGEN_OUT, "%d+%s(%rip)", offset, symbol_codegen(e->symbol));
+        break;
+        case SYMBOL_LOCAL:
+          fprintf(CODEGEN_OUT, "%s", symbol_codegen(e->symbol));
+        break;
+      }
+      // TODO: value tracking by 'getting' the expression's literal value corresponding to the indices/total offset
+      // TODO: don't generate the code of the children...
+      generate_expr = old_generate_expr;
+   }
+   break;
 
    // relational expressions
    /* CMP %RL, %RR

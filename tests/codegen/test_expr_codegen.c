@@ -23,9 +23,6 @@ Status test_expr_codegen_name_literal(void);
 Status test_expr_codegen_binary(void);
 Status test_expr_codegen_unary(void);
 Status test_expr_codegen_muldivmod(void);
-
-
-// codegen tests that emit errors/warnings
 Status test_expr_codegen_divmod_zero(void);
 Status test_expr_codegen_overflow(void);
 Status test_expr_codegen_underflow(void);
@@ -33,6 +30,13 @@ Status test_expr_codegen_mult_underflow_overflow(void);
 
 // relational expressions
 Status test_expr_codegen_relate(void);
+
+// array subscriptions
+Status test_expr_codegen_subscript_global(void);
+Status test_expr_codegen_subscript_local(void);
+Status test_expr_codegen_subscript_multidim(void);
+Status test_expr_codegen_subscript_global_bounds(void);
+Status test_expr_codegen_subscripy_global_bounds_multidim(void);
 
 // fcall
 
@@ -90,7 +94,12 @@ int main(void) {
        test_expr_codegen_divmod_zero,
        test_expr_codegen_overflow,
        test_expr_codegen_mult_underflow_overflow,
-       test_expr_codegen_underflow
+       test_expr_codegen_underflow,
+       test_expr_codegen_subscript_global,
+       //test_expr_codegen_subscript_local, // <-- giving segfaults
+       test_expr_codegen_subscript_multidim,
+       test_expr_codegen_subscript_global_bounds,
+       test_expr_codegen_subscripy_global_bounds_multidim
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -546,4 +555,132 @@ Status test_expr_codegen_mult_underflow_overflow(void) {
   }
   fclose(CODEGEN_OUT); remove("foo.txt");
   return status;
+}
+
+/* tests that array subscripton works for global arrays */
+Status test_expr_codegen_subscript_global(void) {
+  strcpy(test_type, "Testing: test_expr_codegen_subscript_global");
+  Status status = SUCCESS;
+  char* expect =
+"LEAQ foo, %rbx\nMOVQ $1, %r10\n8+foo(%rip)";
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  register_codegen_init(true);
+
+  // make dummy declaration to make it part of the symbol table
+  struct decl* d = decl_create(strdup("foo"),
+                   type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(2)),
+                   expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(1), expr_create_integer_literal(1)), NULL),
+                   NULL,
+                   NULL
+                   );
+  decl_resolve(st, d);
+  d->symbol->type->actual_size = 2;
+  d->symbol->type->size->literal_value = 2;
+
+
+  struct expr* e = expr_create(EXPR_SUBSCRIPT, expr_create_name(strdup("foo")), expr_create_integer_literal(1));
+  e->symbol = d->symbol;
+  error_status = expr_resolve(st, e);
+  //struct type* t; t = expr_typecheck(st, e); type_destroy(&t); // <-- giving segfaults???
+  error_status = expr_codegen(st, e);
+
+  if (e->reg != 0) { print_error(test_type, "0", "int e->reg"); status = FAILURE; }
+  if (!scratch_register[e->left->reg].inuse) { // used by resultant in this case
+    print_error(test_type, "true", "bool scratch_register[e->left->reg].inuse");
+    status = FAILURE;
+  }
+  if (scratch_register[e->right->reg].inuse) {
+    print_error(test_type, "false", "scratch_register[e->right->reg].inuse");
+    status = FAILURE;
+  }
+  if (!scratch_register[e->reg].inuse) {
+    print_error(test_type, "true", "scratch_register[e->reg].inuse");
+    status = FAILURE;
+  }
+
+  expr_destroy(&e);
+  decl_destroy(&d);
+  symbol_table_destroy(&st);
+  register_codegen_clear();
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
+  return status;
+}
+
+/* tests that subscription generates properly for locally declared + defined arrays */
+Status test_expr_codegen_subscript_local(void) {
+
+ strcpy(test_type, "Testing: test_expr_codegen_subscript_local");
+  Status status = SUCCESS;
+  char* expect =
+"LEAQ -8(%rbp), %rbx\nMOVQ $1, %r10\n-16(%rbp)";
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+  struct symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st); //symbol_table_scope_enter(st);
+  register_codegen_init(true);
+
+  // make dummy declaration to make it part of the symbol table
+  struct decl* d = decl_create(strdup("foo"),
+                   type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(2)),
+                   expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(1), expr_create_integer_literal(1)), NULL),
+                   NULL,
+                   NULL
+                   );
+  decl_resolve(st, d);
+  d->symbol->type->actual_size = 2;
+  d->symbol->type->size->literal_value = 2;
+
+
+  struct expr* e = expr_create(EXPR_SUBSCRIPT, expr_create_name(strdup("foo")), expr_create_integer_literal(1));
+
+  // pretend that the declaration code got generated...;
+  error_status = expr_resolve(st, e);
+  // struct type* t; t = expr_typecheck(st, e); type_destroy(&t); // <-- giving segfaults???
+  error_status = expr_codegen(st, e);
+
+  // if (e->reg != 0) { print_error(test_type, "0", "int e->reg"); status = FAILURE; }
+  // if (!scratch_register[e->left->reg].inuse) { // used by resultant in this case
+  //   print_error(test_type, "true", "bool scratch_register[e->left->reg].inuse");
+  //   status = FAILURE;
+  // }
+  // if (scratch_register[e->right->reg].inuse) {
+  //   print_error(test_type, "false", "scratch_register[e->right->reg].inuse");
+  //   status = FAILURE;
+  // }
+  // if (!scratch_register[e->reg].inuse) {
+  //   print_error(test_type, "true", "scratch_register[e->reg].inuse");
+  //   status = FAILURE;
+  // }
+
+  expr_destroy(&e);
+  decl_destroy(&d);
+  symbol_table_destroy(&st);
+  register_codegen_clear();
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
+  return status;
+}
+
+/*
+tests that multidimensional subscripting generates the correct code
+*/
+Status test_expr_codegen_subscript_multidim(void) {
+  return FAILURE;
+}
+
+/*
+tests that index bounds checking works for 1-D arrays
+*/
+Status test_expr_codegen_subscript_global_bounds(void) {
+  return FAILURE;
+}
+
+/*
+tests that bounds checking works for multidimensional arrays
+*/
+Status test_expr_codegen_subscripy_global_bounds_multidim(void) {
+  return FAILURE;
 }

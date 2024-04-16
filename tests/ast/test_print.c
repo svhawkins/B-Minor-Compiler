@@ -44,6 +44,7 @@ Status test_expr_print_fcall_list(void);
 Status test_expr_print_fcall_nest(void);
 Status test_expr_print_subscript_nest(void);
 Status test_expr_print_subscript_list(void);
+Status test_expr_print_subscript_list_many(void);
 Status test_expr_print_init_list(void);
 Status test_expr_print_init_nest(void);
 Status test_expr_print_init_list_nest(void);
@@ -166,6 +167,7 @@ int main(void) {
     test_expr_print_fcall_list,
     test_expr_print_fcall_nest,
     test_expr_print_subscript_list,
+    test_expr_print_subscript_list_many,
     test_expr_print_subscript_nest,
     test_type_print_atomic,
     test_type_print_array,
@@ -485,11 +487,31 @@ Status test_expr_print_subscript_nest(void) {
 }
 
 Status test_expr_print_subscript_list(void) {
-  strcpy(test_type, "Testing: test_expr_print_fcall_list");
+  strcpy(test_type, "Testing: test_expr_print_subscript_list");
   Status status = SUCCESS;
   struct expr* left = expr_create(EXPR_SUBSCRIPT, expr_create_name(strdup("foo")), expr_create_name(strdup("i")));
   struct expr* e = expr_create(EXPR_SUBSCRIPT, left, expr_create_name(strdup("j")));
   char* expect = "foo[i][j]";
+  tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
+  expr_fprint(tmp, e);
+  tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
+  fileread(tmp, output, MAX_BUFFER); remove("temp.txt");
+
+  if (strcmp(output, expect)) { print_error(test_type, expect, output); status = FAILURE; }
+  expr_destroy(&e);
+  return status;
+}
+
+Status test_expr_print_subscript_list_many(void) {
+  strcpy(test_type, "Testing: test_expr_print_subscript_list_many");
+  Status status = SUCCESS;
+  struct expr* left = expr_create(EXPR_SUBSCRIPT, expr_create_name(strdup("foo")), expr_create_name(strdup("i")));
+  struct expr* leftleft = expr_create(EXPR_SUBSCRIPT, left, expr_create_name(strdup("j")));
+  struct expr* leftleftleft = expr_create(EXPR_SUBSCRIPT, leftleft, expr_create_name(strdup("k")));
+  struct expr* l4 = expr_create(EXPR_SUBSCRIPT, leftleftleft, expr_create_name(strdup("l")));
+  struct expr* l5 = expr_create(EXPR_SUBSCRIPT, l4, expr_create_name(strdup("m")));
+  struct expr* e = expr_create(EXPR_SUBSCRIPT, l5, expr_create_name(strdup("n")));
+  char* expect = "foo[i][j][k][l][m][n]";
   tmp = fopen("temp.txt", "w"); if (!tmp) { return file_error(test_type); }
   expr_fprint(tmp, e);
   tmp = freopen("temp.txt", "r", tmp); if (!tmp) { return file_error(test_type); }
