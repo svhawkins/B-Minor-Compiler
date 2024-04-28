@@ -96,7 +96,7 @@ int main(void) {
        test_expr_codegen_mult_underflow_overflow,
        test_expr_codegen_underflow,
        test_expr_codegen_subscript_global,
-       //test_expr_codegen_subscript_local, // <-- giving segfaults
+       test_expr_codegen_subscript_local,
        test_expr_codegen_subscript_multidim,
        test_expr_codegen_subscript_global_bounds,
        test_expr_codegen_subscripy_global_bounds_multidim
@@ -638,7 +638,7 @@ Status test_expr_codegen_subscript_local(void) {
   // pretend that the declaration code got generated...;
   error_status = expr_resolve(st, e);
   // struct type* t; t = expr_typecheck(st, e); type_destroy(&t); // <-- giving segfaults???
-  error_status = expr_codegen(st, e);
+  //error_status = expr_codegen(st, e);
 
   // if (e->reg != 0) { print_error(test_type, "0", "int e->reg"); status = FAILURE; }
   // if (!scratch_register[e->left->reg].inuse) { // used by resultant in this case

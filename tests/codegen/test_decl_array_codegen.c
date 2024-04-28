@@ -87,13 +87,13 @@ int main(void) {
       test_decl_codegen_array_size_mismatch_big,
       test_decl_codegen_array_size_mismatch_small,
       test_decl_codegen_array_size_uninit_size,
-      //test_decl_codegen_array_multidim,
-      //test_decl_codegen_array_multidim_uninit,
-      //test_decl_codegen_array_multidim_uninit_size,
-      //test_decl_codegen_array_matrix, // <-- still causing issues!
-      //  //test_decl_codegen_array_multidim_mismatch_small,
+      test_decl_codegen_array_multidim,
+      test_decl_codegen_array_multidim_uninit,
+      test_decl_codegen_array_multidim_uninit_size,
+      // test_decl_codegen_array_matrix, // <-- still causing issues!
+      // test_decl_codegen_array_multidim_mismatch_small,
       //  //test_decl_codegen_array_mulitidim_mismatch_big,
-      //test_decl_codegen_array_multidim_mismatch_elements, // <-- causing issues!
+      // test_decl_codegen_array_multidim_mismatch_elements, // <-- causing issues!
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -559,18 +559,20 @@ Status test_decl_codegen_array_matrix(void) {
                                            NULL,
                                            expr_create_integer_literal(2));
 
-  struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
-                                                      expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
-                                                                             expr_create_integer_literal(1),
-                                                                             expr_create_integer_literal(0)), NULL),
-                                                      expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
-                                                                             expr_create_integer_literal(0),
-                                                                             expr_create_integer_literal(1)), NULL)), NULL);
+  // struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
+  //                                                     expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
+  //                                                                            expr_create_integer_literal(1),
+  //                                                                            expr_create_integer_literal(0)), NULL),
+  //                                                     expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
+  //                                                                            expr_create_integer_literal(0),
+  //                                                                            expr_create_integer_literal(1)), NULL)), NULL);
+
+  struct expr* e = expr_create(EXPR_INIT,  expr_create(EXPR_COMMA, expr_create_integer_literal(1), expr_create_integer_literal(0)), NULL);
   struct decl* d = decl_create(strdup("foo"), t, e, NULL, NULL);
 
   error_status = decl_resolve(st, d);
-  error_status = decl_typecheck(st, d);
-  error_status = decl_codegen(st, d);
+  // error_status = decl_typecheck(st, d);
+  // error_status = decl_codegen(st, d);
 
   decl_destroy(&d);
   symbol_table_destroy(&st);
