@@ -137,6 +137,19 @@ of the same declaration list, but did not work, so it has its own special functi
    - C sets array sizes to smallest of either declared or list (or just one or the other), B-Minor always uses list size in
      case of mismatches. As a result, it is considered a fatal error in greater than 1 dimension if they don't match,
      whereas C just emits a warning for 'excess elements in array initializer' regardless of dimension.
+
+
+BUGS:
+- Multidimensional array code-generation results in segmentation faults. I am not sure of the exact cause, but
+  it may be call-stack related. The AST structures involved in a non-zero-initialized 2+ dimensional array use a lot
+  of recursion, local variables, and dynamic memory allocation.
+  The parser was not updated for this limitation.
+
+- The sybmbol table 'reuses' former scopes for local variables. In multiple global function defintions, the local variables
+from all of them would be part of the same scope.
+
+- Array subscriptions may sometimes result in a segmentation fault. I do not know why, though I suspect it may be related
+to the other array-related problems I've been facing.
 *****************
 
 
@@ -158,9 +171,9 @@ use assembly emulator to help you.
 	DONE- relational expressions
 		DONEimplement
 		DONEtest
-	- other operations
-		implement
-		test
+	DONE- other operations
+		DONEimplement
+		DONEtest (for the most part, still plagued with segfaults when arrays are involved however...)
 	- fcall (not necessarily declaration, just stuff before and after call)
 		implement
 		test
@@ -169,7 +182,7 @@ use assembly emulator to help you.
    DONE- global non-function/array declarations
    DONE- local non-function/array declarations
    DONE- array declarations (global, local) (requires EXPR_INIT)
-   - multidimensional array declarations
+   BUGGY->POSTPONED- multidimensional array declarations
 
 6. implement + test stmt codegen
    - expression statements
@@ -209,8 +222,3 @@ similar behavior with storing literals from names:
 decl codegen associates expression value with name (value determined via its own expr codegen),
 which can then be further referenced in expr codegen for intermediate value tracking.
 now intermediate value tracking of values works for both literals and names.
-
-
-constant expressions in global scope must NOT have their full expression generated, but rather the resulting value.
-entirely constant expressions (ie not containing only literals) can be optimised to NOT generate the expression(s) to
-reach their value, just that a register be stored with the end result.
