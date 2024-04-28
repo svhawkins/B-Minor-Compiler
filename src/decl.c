@@ -131,7 +131,7 @@ int decl_codegen_array(Symbol_table* st, struct decl* d, struct expr* e, struct 
    unsigned int size_right = decl_codegen_array(st, d, e->right, t, init_parent);
    if (size_left == DECL_ERROR || size_right == DECL_ERROR) { return DECL_ERROR; }
    if (init_parent && size_left != size_right) {
-    // TO DO: ERROR, mismatch sizes of nested array sizes
+    // TODO: ERROR, mismatch sizes of nested array sizes
    }
    return size_left + size_right;
    //return (e->left != NULL) + (e->right != NULL);
@@ -334,7 +334,7 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
   /* per declaration */
   switch (d->symbol->kind) {
     case SYMBOL_LOCAL:
-      /* case SYMBOL_PARAM: ??? <-- TO DO */
+      /* case SYMBOL_PARAM: ??? <-- TODO */
       // assign the which count the count from previous scope
       d->symbol->which = (st->which_count->size == 1) ? 0 : *(int*)(st->which_count->items[current_scope_level - 1]);
     break;
@@ -349,13 +349,53 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
  int old_which;
  switch (d->type->kind)
  {
-  case TYPE_FUNCTION: /* TO DO */
+  case TYPE_FUNCTION: /* TODO */
   break;
 
-  /* TO DO: refactor */
+  /* TODO: refactor */
   case TYPE_ARRAY: /* multiple decl_codegen_expr, size checking */
-    old_which = (d->symbol->kind == SYMBOL_LOCAL) ? d->symbol->which : 0;
-    error_status = decl_codegen_array(st, d, d->value, d->type, true);
+
+    // multidim version is BUGGY LIMIT to 1-D ONLY
+    // old_which = (d->symbol->kind == SYMBOL_LOCAL) ? d->symbol->which : 0;
+    // error_status = decl_codegen_array(st, d, d->value, d->type, true);
+    // d->symbol->which = old_which;
+
+    generate_expr = false;
+    error_status = expr_codegen(st, d->type->size);
+    d->type->actual_size = (d->type->size) ? d->type->size->literal_value : 0;
+    generate_expr = !(d->symbol->kind == SYMBOL_GLOBAL);
+
+    // compare true size and actual size
+    // TO DO: make recursive for nested init expressions by looking at SUBTYPE.
+    int array_size = 0;
+    if (d->value) {  for (struct expr* e = d->value->left; e != NULL; e=e->right, array_size++) {} }
+
+    // check for size errors
+    if (array_size < 0 || d->type->actual_size < 0) { /* fatal --> error */
+      return error_status = decl_codegen_error_handle(DECL_NEGSIZE, d, NULL);
+    }
+
+
+    // true size is list size unless null, otherwise use declared size
+    int size = (array_size != 0) ? array_size : d->type->actual_size;
+
+    if (d->type->size && d->value) {
+      /* non-fatal warnings */
+      if (array_size != d->type->actual_size) {
+        /* warning, declared size does not match list size, using list size */
+        error_status = decl_codegen_error_handle(DECL_SIZE, d, (int*)&array_size);
+      }
+    }
+
+    // generate the expression
+    int old_which = (d->symbol->kind == SYMBOL_LOCAL) ? d->symbol->which : 0;
+    struct expr* e = (d->value) ? d->value->left : NULL; // get inner init expression
+    for (int i = 0; i < size; i++) {
+      if (e && e->right) { decl_codegen_expr(st, d, e->left); e = e->right; }
+      else if (e) { decl_codegen_expr(st, d, e);  e = e->right; }
+      else { decl_codegen_expr(st, d, NULL); }
+      d->symbol->which++;
+    }
     d->symbol->which = old_which;
   break;
   default: /* primitive type */

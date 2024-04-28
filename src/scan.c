@@ -79,7 +79,7 @@ scanmode_t get_options(int argc, const char** argv) {
       case '?': default: fprintf(stderr, "invalid argument.\n"); exit(-1);
     }
   }
-  if (!yyin) {} // TO DO: also error */
+  if (!yyin) {} // TODO: also error */
   return mode;
 }
 

@@ -24,7 +24,7 @@ int main(int argc, const char** argv) {
 
   // set up file I/O defaults
   strcpy(in_filename, "stdin");
-  strcpy(out_filename, "stdout"); // TO DO: change to output.s eventually.
+  strcpy(out_filename, "stdout"); // TODO: change to output.s eventually.
   ERR_OUT = REG_ERR_OUT = stderr;
   get_options(argc, argv);
   bool infile = setup_genfile();
@@ -32,7 +32,6 @@ int main(int argc, const char** argv) {
   for (int i = 0; !eof; i++) {
       // set up symbol table
   Symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  //symbol_table_scope_enter(st); // global scope
     register_codegen_init(false); // for labels
     printf("%d: ", i);
     if (yyparse() == 0) {
@@ -40,7 +39,7 @@ int main(int argc, const char** argv) {
         stmt_print(test_parser_result, 0);
  	      stmt_resolve(st, test_parser_result);
 	      stmt_typecheck(st, test_parser_result, NULL);
-	      symbol_table_print(st);
+	      //stmt_codegen(st, parser_result);
         printf("Total errors: %d\n", global_error_count);
 	      stmt_destroy(&test_parser_result);
       }

@@ -52,7 +52,7 @@ Status test_expr_codegen_mult_underflow_overflow(void);
 Status test_expr_codegen_relate(void);
 
 // array expressions
-// Status test_expr_codegen_array_literal(void); // TODO --> expr inint
+// Status test_expr_codegen_array_literal(void); // TODO --> expr init
 // Status test_expr_codegen_array_string(void); // TODO --> expr init
 // subscript stuff here
 

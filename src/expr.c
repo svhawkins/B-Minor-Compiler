@@ -33,7 +33,7 @@ inline bool flow_check(expr_t kind, int64_t result, int64_t left, int64_t right,
       underflow = false;
       overflow = (left == INT64_MIN && right == - 1); /* overflow only occurs with negative operands */
     break;
-    case EXPR_EXP: // TO DO /* overflow: NaN, underflow: unnormalized*/
+    case EXPR_EXP: // TODO /* overflow: NaN, underflow: unnormalized*/
     default: break; /* do nothing */
   }
   return (is_overflow) ? overflow : underflow;
