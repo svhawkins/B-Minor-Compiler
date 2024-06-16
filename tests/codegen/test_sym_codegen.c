@@ -263,11 +263,11 @@ Status test_symbol_codegen(void) {
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct param_list* p = param_list_create(strdup("x"), type_copy(integer), NULL);
+  struct param_list* p = param_list_create(("x"), type_copy(integer), NULL);
   struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), p, NULL);
-  struct stmt* s = stmt_create(STMT_DECL, decl_create(strdup("y"), type_copy(integer), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* s = stmt_create(STMT_DECL, decl_create(("y"), type_copy(integer), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* function_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, s, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tfuncv), NULL, function_body, NULL);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   error_status = decl_resolve(st, d); error_status = decl_typecheck(st, d);

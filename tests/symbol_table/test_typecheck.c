@@ -164,11 +164,11 @@ Status test_expr_typecheck_primitive(void) {
 			    expr_create_boolean_literal(true),
 			    expr_create_char_literal('a'),
 			    expr_create_string_literal("foo"),
-			    expr_create_name(strdup("foo"))
+			    expr_create_name(("foo"))
 			  };
   struct type* t = NULL; struct symbol* s = NULL;
   for (int i = 0; i < 5; i++) {
-    if (i == VOID) { s = symbol_create(SYMBOL_GLOBAL, type_copy(types[i]), strdup("foo")); symbol_table_scope_bind(st, "foo", s); }
+    if (i == VOID) { s = symbol_create(SYMBOL_GLOBAL, type_copy(types[i]), "foo"); symbol_table_scope_bind(st, "foo", s); }
     expr_resolve(st, exprs[i]); t = expr_typecheck(st, exprs[i]);
     if (!exprs[i]) { print_error(test_type, "NOT NULL", "struct expr* e"); return FAILURE; }
     if (!t) { print_error(test_type, "NOT NULL", "struct type* t"); return FAILURE; }
@@ -198,7 +198,7 @@ Status test_param_list_equals_left_null(void) {
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct param_list* left = NULL;
-  struct param_list* right = param_list_create(strdup("x"), type_copy(tvoid), NULL);
+  struct param_list* right = param_list_create(("x"), type_copy(tvoid), NULL);
   if (param_list_equals(left, right)) {
     print_error(test_type, "false", "bool param_list_equals(struct param_list* left, struct param_list* right)");
     status = FAILURE;
@@ -211,7 +211,7 @@ Status test_param_list_equals_right_null(void) {
   strcpy(test_type, "Testing: test_param_list_equals_right_null");
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
-  struct param_list* left = param_list_create(strdup("y"), type_copy(tvoid), NULL);
+  struct param_list* left = param_list_create(("y"), type_copy(tvoid), NULL);
   struct param_list* right = NULL;
   if (param_list_equals(left, right)) {
     print_error(test_type, "false", "bool param_list_equals(struct param_list* left, struct param_list* right)");
@@ -226,8 +226,8 @@ Status test_param_list_equals_diff(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* string = type_create(TYPE_STRING, NULL, NULL, NULL);
-  struct param_list* left = param_list_create(strdup("x"), type_copy(integer), NULL);
-  struct param_list* right = param_list_create(strdup("y"), type_copy(string), NULL);
+  struct param_list* left = param_list_create(("x"), type_copy(integer), NULL);
+  struct param_list* right = param_list_create(("y"), type_copy(string), NULL);
   if (param_list_equals(left, right)) {
     print_error(test_type, "false", "bool param_list_equals(struct param_list* left, struct param_list* right)");
     status = FAILURE;
@@ -241,7 +241,7 @@ Status test_param_list_equals_same(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* string = type_create(TYPE_STRING, NULL, NULL, NULL);
-  struct param_list* left = param_list_create(strdup("x"), type_copy(integer), param_list_create(strdup("y"), type_copy(string), NULL));
+  struct param_list* left = param_list_create(("x"), type_copy(integer), param_list_create(("y"), type_copy(string), NULL));
   struct param_list* right = param_list_copy(left);
   if (!param_list_equals(left, right)) {
     print_error(test_type, "true", "bool param_list_equals(struct param_list* left, struct param_list* right)");
@@ -263,10 +263,10 @@ Status test_decl_typecheck(void) {
   struct type* types[N_TYPES] = { integer, boolean, character, string, tvoid, tauto };
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
 
-  struct decl* decls[4] = { decl_create(strdup("foo"), type_copy(integer), expr_create_integer_literal(2), NULL, NULL),
-			                      decl_create(strdup("bar"), type_copy(boolean), expr_create_boolean_literal(true), NULL, NULL),
-                            decl_create(strdup("baz"), type_copy(character), expr_create_char_literal('a'), NULL, NULL),
-                            decl_create(strdup("qux"), type_copy(string), expr_create_string_literal("bar"), NULL, NULL),
+  struct decl* decls[4] = { decl_create(("foo"), type_copy(integer), expr_create_integer_literal(2), NULL, NULL),
+			                      decl_create(("bar"), type_copy(boolean), expr_create_boolean_literal(true), NULL, NULL),
+                            decl_create(("baz"), type_copy(character), expr_create_char_literal('a'), NULL, NULL),
+                            decl_create(("qux"), type_copy(string), expr_create_string_literal("bar"), NULL, NULL),
                           };
 
   for (int i = 0; i < 4; i++) {
@@ -288,9 +288,9 @@ Status test_decl_typecheck_name(void) {
   strcpy(test_type, "Testing: test_decl_typecheck_name");
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(integer), expr_create_name(strdup("x")), NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(integer), expr_create_name(("x")), NULL, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st); symbol_table_scope_enter(st);
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup("x")); symbol_table_scope_bind(st, "x", s);
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, type_copy(integer), "x"); symbol_table_scope_bind(st, "x", s);
   decl_resolve(st, d); decl_typecheck(st, d);
   if (!d) { print_error(test_type, "NOT NULL", "struct decl* d"); return FAILURE; }
   if (!(type_equals(d->type, integer))) {
@@ -306,7 +306,7 @@ Status test_decl_typecheck_auto_primitive(void) {
   Status status = SUCCESS;
   struct type* tauto = type_create(TYPE_AUTO, NULL, NULL, NULL);
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tauto), expr_create_integer_literal(493), NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tauto), expr_create_integer_literal(493), NULL, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st); symbol_table_scope_enter(st);
   decl_resolve(st, d); decl_typecheck(st, d);
   if (!d) { print_error(test_type, "NOT NULL", "struct decl* d"); return FAILURE; }
@@ -327,7 +327,7 @@ Status test_decl_typecheck_auto_array(void) {
   Status status = SUCCESS;
   struct type* tauto = type_create(TYPE_AUTO, NULL, NULL, NULL);
   struct type* array_integer = type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tauto), expr_create(EXPR_INIT, expr_create_integer_literal(493), NULL), NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tauto), expr_create(EXPR_INIT, expr_create_integer_literal(493), NULL), NULL, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st); symbol_table_scope_enter(st);
   decl_resolve(st, d); decl_typecheck(st, d);
   if (!d) { print_error(test_type, "NOT NULL", "struct decl* d"); return FAILURE; }
@@ -495,13 +495,13 @@ Status test_expr_typecheck_equality_bad_type_mismatch(void) {
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
 
   // add in symbols
-  symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup("foo")));
-  symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_GLOBAL, type_copy(boolean), strdup("bar")));
+  symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, type_copy(integer), "foo"));
+  symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_GLOBAL, type_copy(boolean), "bar"));
 
   for (int i = 0; i < 2; i++) {
       symbol_table_scope_enter(st); 
-      struct expr* left = expr_create_name(strdup("foo"));
-      struct expr* right = expr_create_name(strdup("bar"));
+      struct expr* left = expr_create_name(("foo"));
+      struct expr* right = expr_create_name(("bar"));
       struct expr* e = expr_create(operators[i], left, right); 
       expr_resolve(st, e);
       struct type* t = expr_typecheck(st, e);
@@ -532,10 +532,10 @@ Status test_expr_typecheck_equality_bad_type_invalid(void) {
   for (int i = 0; i < 2; i++) {
       symbol_table_scope_enter(st); 
       // add in symbols
-      symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_LOCAL, type_copy(tvoid), strdup("foo")));
-      symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_LOCAL, type_copy(tvoid), strdup("bar")));
-      struct expr* left = expr_create_name(strdup("foo"));
-      struct expr* right = expr_create_name(strdup("bar"));
+      symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_LOCAL, type_copy(tvoid), "foo"));
+      symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_LOCAL, type_copy(tvoid), "bar"));
+      struct expr* left = expr_create_name(("foo"));
+      struct expr* right = expr_create_name(("bar"));
       struct expr* e = expr_create(operators[i], left, right); 
       expr_resolve(st, e);
       struct type* t = expr_typecheck(st, e);
@@ -549,10 +549,10 @@ Status test_expr_typecheck_equality_bad_type_invalid(void) {
     for (int i = 0; i < 2; i++) {
       symbol_table_scope_enter(st); 
       // add in symbols
-      symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_LOCAL, type_copy(tfunction), strdup("foo")));
-      symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_LOCAL, type_copy(tfunction), strdup("bar")));
-      struct expr* left = expr_create_name(strdup("foo"));
-      struct expr* right = expr_create_name(strdup("bar"));
+      symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_LOCAL, type_copy(tfunction), "foo"));
+      symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_LOCAL, type_copy(tfunction), "bar"));
+      struct expr* left = expr_create_name(("foo"));
+      struct expr* right = expr_create_name(("bar"));
       struct expr* e = expr_create(operators[i], left, right); 
       expr_resolve(st, e);
       struct type* t = expr_typecheck(st, e);
@@ -565,10 +565,10 @@ Status test_expr_typecheck_equality_bad_type_invalid(void) {
     for (int i = 0; i < 2; i++) {
       symbol_table_scope_enter(st); 
       // add in symbols
-      symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_LOCAL, type_copy(tarray), strdup("foo")));
-      symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_LOCAL, type_copy(tarray), strdup("bar")));
-      struct expr* left = expr_create_name(strdup("foo"));
-      struct expr* right = expr_create_name(strdup("bar"));
+      symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_LOCAL, type_copy(tarray), "foo"));
+      symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_LOCAL, type_copy(tarray), "bar"));
+      struct expr* left = expr_create_name(("foo"));
+      struct expr* right = expr_create_name(("bar"));
       struct expr* e = expr_create(operators[i], left, right); 
       expr_resolve(st, e);
       struct type* t = expr_typecheck(st, e);
@@ -593,12 +593,12 @@ Status test_expr_typecheck_equality_good(void) {
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
 
   // add in symbols
-  symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, type_copy(boolean), strdup("foo")));
-  symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_GLOBAL, type_copy(boolean), strdup("bar")));
+  symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, type_copy(boolean), "foo"));
+  symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_GLOBAL, type_copy(boolean), "bar"));
 
   for (int i = 0; i < 2; i++) {
-    struct expr* left = expr_create_name(strdup("foo"));
-    struct expr* right = expr_create_name(strdup("bar"));
+    struct expr* left = expr_create_name(("foo"));
+    struct expr* right = expr_create_name(("bar"));
     struct expr* e = expr_create(operators[i], left, right);
     expr_resolve(st, e);
     struct type* t = expr_typecheck(st, e);
@@ -619,8 +619,8 @@ Status test_expr_typecheck_subscript_bad_array(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  struct expr* left = expr_create_name(strdup("foo"));
-  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup(left->name)));
+  struct expr* left = expr_create_name(("foo"));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(integer), left->name));
   struct expr* right = expr_create_integer_literal(493);
   struct expr* e = expr_create(EXPR_SUBSCRIPT, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
@@ -637,8 +637,8 @@ Status test_expr_typecheck_subscript_bad_integer(void) {
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* array_integer = type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  struct expr* left = expr_create_name(strdup("foo"));
-  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(array_integer), strdup(left->name)));
+  struct expr* left = expr_create_name(("foo"));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(array_integer), left->name));
   struct expr* right = expr_create_char_literal('a');
   struct expr* e = expr_create(EXPR_SUBSCRIPT, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
@@ -656,8 +656,8 @@ Status test_expr_typecheck_subscript_good(void) {
   struct type* array_integer = type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  struct expr* left = expr_create_name(strdup("foo"));
-  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(array_integer), strdup(left->name)));
+  struct expr* left = expr_create_name(("foo"));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(array_integer), left->name));
 
   struct expr* right = expr_create_integer_literal(0);
   struct expr* e = expr_create(EXPR_SUBSCRIPT, left, right); expr_resolve(st, e);
@@ -692,9 +692,9 @@ Status test_expr_typecheck_assign_bad(void) {
   strcpy(test_type, "Testing: test_expr_typecheck_assign_bad");
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct expr* left = expr_create_name(strdup("foo"));
+  struct expr* left = expr_create_name(("foo"));
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup(left->name)));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(integer), left->name));
   struct expr* right = expr_create_boolean_literal(true);
   struct expr* e = expr_create(EXPR_ASSIGN, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
@@ -709,9 +709,9 @@ Status test_expr_typecheck_assign_good(void) {
   strcpy(test_type, "Testing: test_expr_typecheck_assign_good");
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct expr* left = expr_create_name(strdup("foo"));
+  struct expr* left = expr_create_name(("foo"));
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup(left->name)));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(integer), left->name));
   struct expr* right = expr_create_integer_literal(493);
   struct expr* e = expr_create(EXPR_ASSIGN, left, right); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
@@ -742,9 +742,9 @@ Status test_expr_typecheck_assign_good_subscript(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* iarray = type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL);
-  struct expr* arr = expr_create_name(strdup("foo"));
+  struct expr* arr = expr_create_name(("foo"));
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  symbol_table_scope_bind(st, arr->name, symbol_create(SYMBOL_GLOBAL, type_copy(iarray), strdup(arr->name)));
+  symbol_table_scope_bind(st, arr->name, symbol_create(SYMBOL_GLOBAL, type_copy(iarray), arr->name));
   struct expr* left = expr_create(EXPR_SUBSCRIPT, arr, expr_create_integer_literal(0));
   struct expr* right = expr_create_integer_literal(493);
   struct expr* e = expr_create(EXPR_ASSIGN, left, right); expr_resolve(st, e);
@@ -764,8 +764,8 @@ Status test_expr_typecheck_fcall_bad_function(void) {
   struct type* function_integer = type_create(TYPE_FUNCTION, type_copy(integer), NULL, NULL);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  struct expr* left = expr_create_name(strdup("foo"));
-  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup(left->name)));
+  struct expr* left = expr_create_name(("foo"));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(integer), left->name));
 
   struct expr* right = expr_create_integer_literal(493);
   struct expr* e = expr_create(EXPR_FCALL, left, right); expr_resolve(st, e);
@@ -782,12 +782,12 @@ Status test_expr_typecheck_fcall_bad_param(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* boolean = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
-  struct param_list* p = param_list_create(strdup("x"), type_copy(boolean), NULL);
+  struct param_list* p = param_list_create(("x"), type_copy(boolean), NULL);
   struct type* function_integer = type_create(TYPE_FUNCTION, type_copy(integer), p, NULL);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  struct expr* left = expr_create_name(strdup("foo"));
-  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(function_integer), strdup(left->name)));
+  struct expr* left = expr_create_name(("foo"));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(function_integer), left->name));
 
   struct expr* e = expr_create(EXPR_FCALL, left, expr_create_integer_literal(493)); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
@@ -804,8 +804,8 @@ Status test_expr_typecheck_fcall_good_no_param(void) {
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* function_integer = type_create(TYPE_FUNCTION, type_copy(integer), NULL, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  struct expr* left = expr_create_name(strdup("foo"));
-  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(function_integer), strdup(left->name)));
+  struct expr* left = expr_create_name(("foo"));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(function_integer), left->name));
   struct expr* e = expr_create(EXPR_FCALL, left, NULL); expr_resolve(st, e);
   struct type* t = expr_typecheck(st, e);
   if (!type_equals(t, integer)) { print_error(test_type, "true", "bool type_equals(t, integer)"); status = FAILURE; }
@@ -821,12 +821,12 @@ Status test_expr_typecheck_fcall_good_one_param(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* boolean = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
-  struct param_list* p = param_list_create(strdup("x"), type_copy(boolean), NULL);
+  struct param_list* p = param_list_create(("x"), type_copy(boolean), NULL);
   struct type* function_integer = type_create(TYPE_FUNCTION, type_copy(integer), p, NULL);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  struct expr* left = expr_create_name(strdup("foo"));
-  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(function_integer), strdup(left->name)));
+  struct expr* left = expr_create_name(("foo"));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(function_integer), left->name));
 
   struct expr* right = expr_create_boolean_literal(false);
   struct expr* e = expr_create(EXPR_FCALL, left, right); expr_resolve(st, e);
@@ -844,12 +844,12 @@ Status test_expr_typecheck_fcall_good_many_param(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* boolean = type_create(TYPE_BOOLEAN, NULL, NULL, NULL);
-  struct param_list* p = param_list_create(strdup("x"), type_copy(boolean), param_list_create(strdup("y"), type_copy(integer), NULL));
+  struct param_list* p = param_list_create(("x"), type_copy(boolean), param_list_create(("y"), type_copy(integer), NULL));
   struct type* function_integer = type_create(TYPE_FUNCTION, type_copy(integer), p, NULL);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  struct expr* left = expr_create_name(strdup("foo"));
-  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(function_integer), strdup(left->name)));
+  struct expr* left = expr_create_name(("foo"));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(function_integer), left->name));
 
   struct expr* right_left = expr_create_boolean_literal(false);
   struct expr* right_right = expr_create_integer_literal(493);
@@ -948,7 +948,7 @@ Status test_decl_typecheck_value_type_mismatch(void) {
   strcpy(test_type, "Testing: test_decl_typecheck_value_type_mismatch");
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(integer), expr_create_string_literal("hello"), NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(integer), expr_create_string_literal("hello"), NULL, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st); symbol_table_scope_enter(st);
   decl_resolve(st, d);
   decl_typecheck(st, d);
@@ -964,7 +964,7 @@ Status test_decl_typecheck_function_ret_type_integer(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct stmt* function_body = stmt_create(STMT_RETURN, NULL, NULL, expr_create_integer_literal(0), NULL, NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_create(TYPE_FUNCTION, type_copy(integer), NULL, NULL), NULL, function_body, NULL);
+  struct decl* d = decl_create(("foo"), type_create(TYPE_FUNCTION, type_copy(integer), NULL, NULL), NULL, function_body, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
@@ -978,7 +978,7 @@ Status test_decl_typecheck_function_ret_type_null(void) {
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct stmt* function_body = stmt_create(STMT_RETURN, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL), NULL, function_body, NULL);
+  struct decl* d = decl_create(("foo"), type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL), NULL, function_body, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
@@ -992,7 +992,7 @@ Status test_decl_typecheck_function_ret_type_mismatch(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct stmt* function_body = stmt_create(STMT_RETURN, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_create(TYPE_FUNCTION, type_copy(integer), NULL, NULL), NULL, function_body, NULL);
+  struct decl* d = decl_create(("foo"), type_create(TYPE_FUNCTION, type_copy(integer), NULL, NULL), NULL, function_body, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
@@ -1007,7 +1007,7 @@ Status test_decl_typecheck_array_null_size(void) {
   strcpy(test_type, "Testing: test_decl_typecheck_array_null_size");
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL), NULL,NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL), NULL,NULL, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
@@ -1023,7 +1023,7 @@ Status test_decl_typecheck_array_null_size_nonnull_body(void) {
   Status status = SUCCESS;
   struct expr* e = expr_create(EXPR_INIT, expr_create_integer_literal(493), NULL);
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL), e,NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_create(TYPE_ARRAY, type_copy(integer), NULL, NULL), e,NULL, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st); symbol_table_scope_enter(st);
   decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
@@ -1039,7 +1039,7 @@ Status test_decl_typecheck_array_nint_size(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct expr* size = expr_create_char_literal('z');
-  struct decl* d = decl_create(strdup("foo"), type_create(TYPE_ARRAY, type_copy(integer), NULL, size), NULL,NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_create(TYPE_ARRAY, type_copy(integer), NULL, size), NULL,NULL, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st); symbol_table_scope_enter(st);
   decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
@@ -1078,9 +1078,9 @@ Status test_stmt_typecheck_print_bad(void) {
   Status status = SUCCESS;
 
   // non-literals (array, function, void): as names
-  struct stmt* stmts[3] = { stmt_create(STMT_PRINT, NULL, NULL, expr_create_name(strdup("foo")), NULL, NULL, NULL, NULL),
-                            stmt_create(STMT_PRINT, NULL, NULL, expr_create_name(strdup("bar")), NULL, NULL, NULL, NULL),
-                            stmt_create(STMT_PRINT, NULL, NULL, expr_create_name(strdup("baz")), NULL, NULL, NULL, NULL)
+  struct stmt* stmts[3] = { stmt_create(STMT_PRINT, NULL, NULL, expr_create_name(("foo")), NULL, NULL, NULL, NULL),
+                            stmt_create(STMT_PRINT, NULL, NULL, expr_create_name(("bar")), NULL, NULL, NULL, NULL),
+                            stmt_create(STMT_PRINT, NULL, NULL, expr_create_name(("baz")), NULL, NULL, NULL, NULL)
                           };
   
   // associate names to symbols of invalid types
@@ -1088,9 +1088,9 @@ Status test_stmt_typecheck_print_bad(void) {
   struct type* tarray = type_create(TYPE_ARRAY, NULL, NULL, NULL);
   struct type* tfunction = type_create(TYPE_FUNCTION, NULL, NULL, NULL);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, type_copy(tvoid), strdup("foo")));
-  symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_GLOBAL, type_copy(tarray), strdup("bar")));
-  symbol_table_scope_bind(st, "baz", symbol_create(SYMBOL_GLOBAL, type_copy(tfunction), strdup("baz")));
+  symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, type_copy(tvoid), "foo"));
+  symbol_table_scope_bind(st, "bar", symbol_create(SYMBOL_GLOBAL, type_copy(tarray), "bar"));
+  symbol_table_scope_bind(st, "baz", symbol_create(SYMBOL_GLOBAL, type_copy(tfunction), "baz"));
   for (int i = 0; i < 3; i++) {
     error_status = stmt_resolve(st, stmts[i]);
     error_status = stmt_typecheck(st, stmts[i], NULL);
@@ -1159,9 +1159,9 @@ Status test_stmt_typecheck_expr_bad_assign(void) {
   strcpy(test_type, "Testing: test_stmt_typecheck_expr_bad_assign");
   Status status = SUCCESS;
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  struct expr* e = expr_create(EXPR_ASSIGN, expr_create_name(strdup("x")), expr_create_boolean_literal(true));
+  struct expr* e = expr_create(EXPR_ASSIGN, expr_create_name(("x")), expr_create_boolean_literal(true));
   struct stmt* s = stmt_create(STMT_IF_ELSE, NULL, NULL, e, NULL, NULL, NULL, NULL);
-  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_BOOLEAN, NULL, NULL, NULL), strdup("x"));
+  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_BOOLEAN, NULL, NULL, NULL), "x");
   symbol_table_scope_bind(st, "x", sym);
   error_status = stmt_resolve(st, s);
   error_status = stmt_typecheck(st, s, NULL);
@@ -1177,9 +1177,9 @@ Status test_expr_typecheck_assign_bad_string(void) {
   strcpy(test_type, "Testing: test_expr_typecheck_assign_bad_string");
   Status status = SUCCESS;
   struct type* string = type_create(TYPE_STRING, NULL, NULL, NULL);
-  struct expr* left = expr_create_name(strdup("x"));
+  struct expr* left = expr_create_name(("x"));
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
-  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(string), strdup(left->name)));
+  symbol_table_scope_bind(st, left->name, symbol_create(SYMBOL_GLOBAL, type_copy(string), left->name));
 
   struct expr* right = expr_create_string_literal("duck");
   struct expr* e = expr_create(EXPR_ASSIGN, left, right);

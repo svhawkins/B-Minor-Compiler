@@ -121,8 +121,8 @@ Status test_expr_resolve_name(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct expr* e = expr_create_name(strdup("x"));
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup("x"));
+  struct expr* e = expr_create_name(("x"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, type_copy(integer), "x");
 
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
@@ -142,10 +142,10 @@ Status test_expr_resolve_binary_op(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct expr* x = expr_create_name(strdup("x"));
-  struct symbol* sx = symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup("x"));
-  struct expr* y = expr_create_name(strdup("y"));
-  struct symbol* sy = symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup("y"));
+  struct expr* x = expr_create_name(("x"));
+  struct symbol* sx = symbol_create(SYMBOL_GLOBAL, type_copy(integer), "x");
+  struct expr* y = expr_create_name(("y"));
+  struct symbol* sy = symbol_create(SYMBOL_GLOBAL, type_copy(integer), "y");
   struct expr* e = expr_create(EXPR_ADD, x, y);
 
   Symbol_table* st = symbol_table_create();
@@ -174,7 +174,7 @@ Status test_decl_resolve_atomic_uninit(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("x"), type_copy(integer), NULL, NULL, NULL);
+  struct decl* d = decl_create(("x"), type_copy(integer), NULL, NULL, NULL);
 
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
@@ -194,11 +194,11 @@ Status test_decl_resolve_atomic_init(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct expr* y = expr_create_name(strdup("y"));
-  struct decl* d = decl_create(strdup("x"), type_copy(integer), y, NULL, NULL);
-  struct symbol* sy = symbol_create(SYMBOL_GLOBAL, type_copy(integer), strdup("y"));
+  struct expr* y = expr_create_name(("y"));
+  struct decl* d = decl_create(("x"), type_copy(integer), y, NULL, NULL);
+  struct symbol* sy = symbol_create(SYMBOL_GLOBAL, type_copy(integer), "y");
 
-  char* keyname = strdup("y");
+  char* keyname = "y";
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
   symbol_table_scope_bind(st, keyname, sy);
@@ -217,7 +217,6 @@ Status test_decl_resolve_atomic_init(void) {
   if (y->symbol->kind != SYMBOL_GLOBAL) { print_error(test_type, "SYMBOL_GLOBAL", "int ret->kind"); status = FAILURE; }
 
   symbol_table_destroy(&st); decl_destroy(&d); type_destroy(&integer);
-  free(keyname);
   return status;
 }
 
@@ -225,7 +224,7 @@ Status test_decl_resolve_function_uninit_no_param(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* fvoid = type_create(TYPE_FUNCTION, type_create(TYPE_VOID, NULL, NULL, NULL), NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(fvoid), NULL, NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(fvoid), NULL, NULL, NULL);
 
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
@@ -244,9 +243,9 @@ Status test_decl_resolve_function_uninit_no_param(void) {
 Status test_decl_resolve_function_uninit_one_param(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct param_list* p = param_list_create(strdup("x"), type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL);
+  struct param_list* p = param_list_create(("x"), type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL);
   struct type* fvoid_p = type_create(TYPE_FUNCTION, type_create(TYPE_VOID, NULL, NULL, NULL), p, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(fvoid_p), NULL, NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(fvoid_p), NULL, NULL, NULL);
 
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
@@ -267,10 +266,10 @@ Status test_decl_resolve_function_uninit_many_param(void) {
   Status status = SUCCESS;
 
   struct type* targv = type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, NULL);
-  struct param_list* pend = param_list_create(strdup("argv"), targv, NULL);
-  struct param_list* p = param_list_create(strdup("argc"), type_create(TYPE_INTEGER, NULL, NULL, NULL), pend);
+  struct param_list* pend = param_list_create(("argv"), targv, NULL);
+  struct param_list* p = param_list_create(("argc"), type_create(TYPE_INTEGER, NULL, NULL, NULL), pend);
   struct type* t = type_create(TYPE_FUNCTION, type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL);
-  struct decl* d = decl_create(strdup("main"), type_copy(t), NULL, NULL, NULL);
+  struct decl* d = decl_create(("main"), type_copy(t), NULL, NULL, NULL);
 
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
@@ -290,8 +289,8 @@ Status test_stmt_resolve_expr(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
-  struct stmt* s = stmt_create(STMT_EXPR, NULL, NULL, expr_create_name(strdup("duck")), NULL, NULL, NULL, NULL);
-  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_copy(tvoid), strdup("duck"));
+  struct stmt* s = stmt_create(STMT_EXPR, NULL, NULL, expr_create_name(("duck")), NULL, NULL, NULL, NULL);
+  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_copy(tvoid), "duck");
 
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
@@ -311,8 +310,8 @@ Status test_stmt_resolve_print(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
-  struct stmt* s = stmt_create(STMT_PRINT, NULL, NULL, expr_create_name(strdup("duck")), NULL, NULL, NULL, NULL);
-  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_copy(tvoid), strdup("duck"));
+  struct stmt* s = stmt_create(STMT_PRINT, NULL, NULL, expr_create_name(("duck")), NULL, NULL, NULL, NULL);
+  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_copy(tvoid), "duck");
 
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
@@ -332,8 +331,8 @@ Status test_stmt_resolve_return(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
-  struct stmt* s = stmt_create(STMT_RETURN, NULL, NULL, expr_create_name(strdup("duck")), NULL, NULL, NULL, NULL);
-  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_copy(tvoid), strdup("duck"));
+  struct stmt* s = stmt_create(STMT_RETURN, NULL, NULL, expr_create_name(("duck")), NULL, NULL, NULL, NULL);
+  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_copy(tvoid), "duck");
 
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
@@ -353,7 +352,7 @@ Status test_stmt_resolve_decl(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
-  struct stmt* s = stmt_create(STMT_DECL, decl_create(strdup("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* s = stmt_create(STMT_DECL, decl_create(("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
 
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
@@ -386,7 +385,7 @@ Status test_stmt_resolve_block(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
-  struct stmt* body = stmt_create(STMT_DECL, decl_create(strdup("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* body = stmt_create(STMT_DECL, decl_create(("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, body, NULL, NULL);
   Symbol_table* st = symbol_table_verbose_create();
   symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
@@ -402,10 +401,10 @@ Status test_stmt_resolve_block(void) {
 Status test_stmt_resolve_while(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct expr* e = expr_create_name(strdup("duck"));
+  struct expr* e = expr_create_name(("duck"));
   struct stmt* body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* s = stmt_create(STMT_WHILE, NULL, NULL, e, NULL, body, NULL, NULL);
-  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), strdup("duck"));
+  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), "duck");
 
   Symbol_table* st = symbol_table_verbose_create();
   symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
@@ -423,10 +422,10 @@ Status test_stmt_resolve_while(void) {
 Status test_stmt_resolve_if_else_null(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct expr* e = expr_create_name(strdup("duck"));
+  struct expr* e = expr_create_name(("duck"));
   struct stmt* body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* s = stmt_create(STMT_IF_ELSE, NULL, NULL, e, NULL, body, NULL, NULL);
-  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), strdup("duck"));
+  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), "duck");
 
   Symbol_table* st = symbol_table_verbose_create();
   symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
@@ -444,11 +443,11 @@ Status test_stmt_resolve_if_else_null(void) {
 Status test_stmt_resolve_if_else(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct expr* e = expr_create_name(strdup("duck"));
+  struct expr* e = expr_create_name(("duck"));
   struct stmt* body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* else_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* s = stmt_create(STMT_IF_ELSE, NULL, NULL, e, NULL, body, else_body, NULL);
-  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), strdup("duck"));
+  struct symbol* sym = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), "duck");
 
   Symbol_table* st = symbol_table_verbose_create();
   symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
@@ -465,13 +464,13 @@ Status test_stmt_resolve_if_else(void) {
 Status test_stmt_resolve_for_expr(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct expr* duck = expr_create_name(strdup("duck"));
-  struct expr* duck2 = expr_create_name(strdup("duck"));
-  struct expr* goose = expr_create_name(strdup("goose"));
+  struct expr* duck = expr_create_name(("duck"));
+  struct expr* duck2 = expr_create_name(("duck"));
+  struct expr* goose = expr_create_name(("goose"));
   struct stmt* body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* s = stmt_create(STMT_FOR, NULL, duck, duck2, goose, body, NULL, NULL);
-  struct symbol* sym_duck = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), strdup("duck"));
-  struct symbol* sym_goose = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), strdup("goose"));
+  struct symbol* sym_duck = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), "duck");
+  struct symbol* sym_goose = symbol_create(SYMBOL_GLOBAL, type_create(TYPE_VOID, NULL, NULL, NULL), "goose");
 
   Symbol_table* st = symbol_table_verbose_create();
   symbol_table_scope_enter(st); int old_level = vector_size(st->vector);
@@ -493,7 +492,7 @@ Status test_stmt_resolve_for_expr(void) {
 Status test_stmt_resolve_for_decl(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct stmt* s = stmt_create(STMT_FOR, decl_create(strdup("duck"), type_create(TYPE_VOID, NULL, NULL, NULL), NULL, NULL, NULL),
+  struct stmt* s = stmt_create(STMT_FOR, decl_create(("duck"), type_create(TYPE_VOID, NULL, NULL, NULL), NULL, NULL, NULL),
 				NULL, NULL, NULL,
  				stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
  				NULL, NULL);
@@ -513,15 +512,15 @@ Status test_decl_resolve_program(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   // components of statements for better readability
-  struct param_list* pend = param_list_create(strdup("argv"), type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, NULL), NULL);
-  struct param_list* p = param_list_create(strdup("argc"), type_create(TYPE_INTEGER, NULL, NULL, NULL), pend);
-  struct decl* i = decl_create(strdup("i"), type_create(TYPE_INTEGER, NULL, NULL, NULL), expr_create_integer_literal(0), NULL, NULL);
+  struct param_list* pend = param_list_create(("argv"), type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, NULL), NULL);
+  struct param_list* p = param_list_create(("argc"), type_create(TYPE_INTEGER, NULL, NULL, NULL), pend);
+  struct decl* i = decl_create(("i"), type_create(TYPE_INTEGER, NULL, NULL, NULL), expr_create_integer_literal(0), NULL, NULL);
 
   // structs that make up stmts in code
-  struct stmt* return_stmt = stmt_create(STMT_RETURN, NULL, NULL, expr_create_name(strdup("i")), NULL, NULL, NULL, NULL);
+  struct stmt* return_stmt = stmt_create(STMT_RETURN, NULL, NULL, expr_create_name(("i")), NULL, NULL, NULL, NULL);
   struct stmt* i_init = stmt_create(STMT_DECL, i, NULL, NULL, NULL, NULL, NULL, return_stmt);
   struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, i_init, NULL, NULL);
-  struct decl* d = decl_create(strdup("main"), type_create(TYPE_FUNCTION, type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL), NULL, s, NULL);
+  struct decl* d = decl_create(("main"), type_create(TYPE_FUNCTION, type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL), NULL, s, NULL);
 
 
   Symbol_table* st = symbol_table_verbose_create();
@@ -541,7 +540,7 @@ Status test_expr_resolve_sym_undef(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct expr* e = expr_create_name(strdup("x"));
+  struct expr* e = expr_create_name(("x"));
 
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st); symbol_table_scope_enter(st);
@@ -566,8 +565,8 @@ Status test_decl_resolve_sym_redef(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* character = type_create(TYPE_CHARACTER, NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("x"), type_copy(integer), NULL, NULL, NULL);
-  struct decl* d2 = decl_create(strdup("x"), type_copy(character), NULL, NULL, d);
+  struct decl* d = decl_create(("x"), type_copy(integer), NULL, NULL, NULL);
+  struct decl* d2 = decl_create(("x"), type_copy(character), NULL, NULL, d);
 
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
@@ -591,10 +590,10 @@ Status test_decl_resolve_function_param_redef(void) {
   Status status = SUCCESS;
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* character = type_create(TYPE_CHARACTER, NULL, NULL, NULL);
-  struct param_list* pend = param_list_create(strdup("x"), type_copy(integer), NULL);
-  struct param_list* p = param_list_create(strdup("x"), type_copy(character), pend);
+  struct param_list* pend = param_list_create(("x"), type_copy(integer), NULL);
+  struct param_list* p = param_list_create(("x"), type_copy(character), pend);
   struct type* tfuncv = type_create(TYPE_FUNCTION, type_create(TYPE_VOID, NULL, NULL, NULL), p, NULL);
-  struct decl* d = decl_create(strdup("foo"), tfuncv, NULL, NULL, NULL);
+  struct decl* d = decl_create(("foo"), tfuncv, NULL, NULL, NULL);
 
   Symbol_table* st = symbol_table_verbose_create();
   symbol_table_scope_enter(st);
@@ -616,8 +615,8 @@ Status test_decl_resolve_function_sym_redef_undef_undef(void) {
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL);
-  struct decl* dend = decl_create(strdup("foo"), type_copy(tfuncv), NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv), NULL, NULL, dend);
+  struct decl* dend = decl_create(("foo"), type_copy(tfuncv), NULL, NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tfuncv), NULL, NULL, dend);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   error_status = decl_resolve(st, d);
@@ -633,8 +632,8 @@ Status test_decl_resolve_function_sym_redef_undef_def(void) {
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL);
   struct stmt* function_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-  struct decl* dend = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv), NULL, NULL, dend);
+  struct decl* dend = decl_create(("foo"), type_copy(tfuncv), NULL, function_body, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tfuncv), NULL, NULL, dend);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   error_status = decl_resolve(st, d);
@@ -653,8 +652,8 @@ Status test_decl_resolve_function_sym_redef_def_undef(void) {
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL);
   struct stmt* function_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-  struct decl* dend = decl_create(strdup("foo"), type_copy(tfuncv), NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body, dend);
+  struct decl* dend = decl_create(("foo"), type_copy(tfuncv), NULL, NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tfuncv), NULL, function_body, dend);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   error_status = decl_resolve(st, d);
@@ -672,8 +671,8 @@ Status test_decl_resolve_function_sym_redef_def_def(void) {
   struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL);
   struct stmt* function_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* function_body2 = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-  struct decl* dend = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body2, dend);
+  struct decl* dend = decl_create(("foo"), type_copy(tfuncv), NULL, function_body, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tfuncv), NULL, function_body2, dend);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   error_status = decl_resolve(st, d);
@@ -687,9 +686,9 @@ Status test_stmt_resolve_shadow_no_redef(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
-  struct stmt* inner_decl = stmt_create(STMT_DECL, decl_create(strdup("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* inner_decl = stmt_create(STMT_DECL, decl_create(("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* inner_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, inner_decl, NULL, NULL);
-  struct stmt* body = stmt_create(STMT_DECL, decl_create(strdup("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, inner_body);
+  struct stmt* body = stmt_create(STMT_DECL, decl_create(("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, inner_body);
   struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, body, NULL, NULL);
 
   Symbol_table* st = symbol_table_verbose_create();
@@ -707,10 +706,10 @@ Status test_decl_resolve_function_param_mismatch(void) {
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), NULL, NULL);
-  struct type* tfuncv2 = type_create(TYPE_FUNCTION, type_copy(tvoid), param_list_create(strdup("x"), type_copy(tvoid), NULL), NULL);
+  struct type* tfuncv2 = type_create(TYPE_FUNCTION, type_copy(tvoid), param_list_create(("x"), type_copy(tvoid), NULL), NULL);
   struct stmt* function_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-  struct decl* dend = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv2), NULL, NULL, dend);
+  struct decl* dend = decl_create(("foo"), type_copy(tfuncv), NULL, function_body, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tfuncv2), NULL, NULL, dend);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   error_status = decl_resolve(st, d);
@@ -726,11 +725,11 @@ Status test_decl_resolve_which_scope_enter(void) {
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct param_list* p = param_list_create(strdup("x"), type_copy(integer), param_list_create(strdup("y"), type_copy(integer), NULL));
+  struct param_list* p = param_list_create(("x"), type_copy(integer), param_list_create(("y"), type_copy(integer), NULL));
   struct type* tfuncv = type_create(TYPE_FUNCTION, type_copy(tvoid), p, NULL);
-  struct stmt* s = stmt_create(STMT_DECL, decl_create(strdup("z"), type_copy(integer), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* s = stmt_create(STMT_DECL, decl_create(("z"), type_copy(integer), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* function_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, s, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tfuncv), NULL, function_body, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tfuncv), NULL, function_body, NULL);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   error_status = decl_resolve(st, d);
@@ -753,10 +752,10 @@ Status test_stmt_resolve_which_scope_exit(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
-  struct stmt* stend = stmt_create(STMT_DECL, decl_create(strdup("goose"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
-  struct stmt* inner_decl = stmt_create(STMT_DECL, decl_create(strdup("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* stend = stmt_create(STMT_DECL, decl_create(("goose"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
+  struct stmt* inner_decl = stmt_create(STMT_DECL, decl_create(("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, NULL);
   struct stmt* inner_body = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, inner_decl, NULL, stend);
-  struct stmt* body = stmt_create(STMT_DECL, decl_create(strdup("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, inner_body);
+  struct stmt* body = stmt_create(STMT_DECL, decl_create(("duck"), type_copy(tvoid), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, inner_body);
   struct stmt* s = stmt_create(STMT_BLOCK, NULL, NULL, NULL, NULL, body, NULL, NULL);
 
   Symbol_table* st = symbol_table_verbose_create();
@@ -784,8 +783,8 @@ Status test_decl_resolve_var_sym_redef_def_undef(void) {
   Status status = SUCCESS;
   struct type* tinteger = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct expr* e1 = expr_create_integer_literal(493);
-  struct decl* dend = decl_create(strdup("foo"), type_copy(tinteger), NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tinteger), e1, NULL, dend);
+  struct decl* dend = decl_create(("foo"), type_copy(tinteger), NULL, NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tinteger), e1, NULL, dend);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   error_status = decl_resolve(st, d);
@@ -801,8 +800,8 @@ Status test_decl_resolve_var_sym_redef_def_def(void) {
   struct type* tinteger = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct expr* e1 = expr_create_integer_literal(493);
   struct expr* e2 = expr_create_integer_literal(12);
-  struct decl* dend = decl_create(strdup("foo"), type_copy(tinteger), e2, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tinteger), e1, NULL, dend);
+  struct decl* dend = decl_create(("foo"), type_copy(tinteger), e2, NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tinteger), e1, NULL, dend);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   error_status = decl_resolve(st, d);
@@ -816,8 +815,8 @@ Status test_decl_resolve_var_sym_redef_undef_undef(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* tinteger = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct decl* dend = decl_create(strdup("foo"), type_copy(tinteger), NULL, NULL, NULL);
-  struct decl* d = decl_create(strdup("foo"), type_copy(tinteger), NULL, NULL, dend);
+  struct decl* dend = decl_create(("foo"), type_copy(tinteger), NULL, NULL, NULL);
+  struct decl* d = decl_create(("foo"), type_copy(tinteger), NULL, NULL, dend);
 
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   error_status = decl_resolve(st, d);
@@ -831,8 +830,8 @@ Status test_decl_resolve_nonconst_array_size(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* tinteger = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct decl* arrdecl = decl_create(strdup("foo"), type_create(TYPE_ARRAY, tinteger, NULL, expr_create_name(strdup("x"))), NULL, NULL, NULL);
-  struct decl* vardecl = decl_create(strdup("x"), type_copy(tinteger), expr_create_integer_literal(1), NULL, arrdecl);
+  struct decl* arrdecl = decl_create(("foo"), type_create(TYPE_ARRAY, tinteger, NULL, expr_create_name(("x"))), NULL, NULL, NULL);
+  struct decl* vardecl = decl_create(("x"), type_copy(tinteger), expr_create_integer_literal(1), NULL, arrdecl);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st); symbol_table_scope_enter(st);
   global_error_count = 0;
   error_status = decl_resolve(st, vardecl);
@@ -846,8 +845,8 @@ Status test_decl_resolve_nonconst_global(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct type* tinteger = type_create(TYPE_INTEGER, NULL, NULL, NULL);
-  struct decl* dend = decl_create(strdup("foo"), type_copy(tinteger), expr_create_name(strdup("duck")), NULL, NULL);
-  struct decl* d = decl_create(strdup("duck"), tinteger, expr_create_integer_literal(-493), NULL, dend);
+  struct decl* dend = decl_create(("foo"), type_copy(tinteger), expr_create_name(("duck")), NULL, NULL);
+  struct decl* d = decl_create(("duck"), tinteger, expr_create_integer_literal(-493), NULL, dend);
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
 
   global_error_count = 0;
@@ -861,15 +860,15 @@ Status test_decl_resolve_nonconst_global(void) {
 Status test_decl_resolve_nonconst_global_array(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct expr* x = expr_create_name(strdup("x"));
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, strdup("x"));
+  struct expr* x = expr_create_name(("x"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, "x");
   struct expr* e = expr_create(EXPR_INIT, x, NULL);
   struct type* tinteger = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct type* tarray = type_create(TYPE_ARRAY, tinteger, NULL, expr_copy(x));
-  struct decl* arrdecl = decl_create(strdup("foo"), tarray, e, NULL, NULL);
+  struct decl* arrdecl = decl_create(("foo"), tarray, e, NULL, NULL);
 
   // was causing a segfault, tho manually binding fixed the issue???
-  //struct decl* vardecl = decl_create(strdup("x"), type_copy(tinteger), expr_create_integer_literal(1), NULL, arrdecl);
+  //struct decl* vardecl = decl_create(("x"), type_copy(tinteger), expr_create_integer_literal(1), NULL, arrdecl);
   struct symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st); 
   // pretend the symbol exists.

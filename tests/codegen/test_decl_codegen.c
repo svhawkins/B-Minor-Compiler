@@ -114,7 +114,7 @@ foo:\n\t.quad 1\n\
       break;
       default: break;
     }
-    d = decl_create(strdup("foo"), t, e, NULL, NULL);
+    d = decl_create(("foo"), t, e, NULL, NULL);
     error_status = decl_resolve(st, d);
     error_status = decl_typecheck(st, d);
     error_status = decl_codegen(st, d);
@@ -163,7 +163,7 @@ foo:\n\t.zero 8\n";
       break;
       default: break;
     }
-    d = decl_create(strdup("foo"), t, NULL, NULL, NULL);
+    d = decl_create(("foo"), t, NULL, NULL, NULL);
     error_status = decl_resolve(st, d);
     error_status = decl_typecheck(st, d);
     error_status = decl_codegen(st, d);
@@ -212,7 +212,7 @@ MOVQ $1, %rbx\nMOVQ %rbx, -8(%rbp)\n\
       break;
       default: break;
     }
-    d = decl_create(strdup("foo"), t, e, NULL, NULL);
+    d = decl_create(("foo"), t, e, NULL, NULL);
     error_status = decl_resolve(st, d);
     error_status = decl_typecheck(st, d);
     error_status = decl_codegen(st, d);
@@ -263,7 +263,7 @@ MOVQ $0, -8(%rbp)\n";
       break;
       default: break;
     }
-    d = decl_create(strdup("foo"), t, NULL, NULL, NULL);
+    d = decl_create(("foo"), t, NULL, NULL, NULL);
     error_status = decl_resolve(st, d);
     error_status = decl_typecheck(st, d);
     error_status = decl_codegen(st, d);

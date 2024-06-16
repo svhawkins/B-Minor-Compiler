@@ -6,7 +6,7 @@ struct param_list* param_list_create(char* name, struct type* type, struct param
 {
   struct param_list* p = malloc(sizeof(struct param_list));
   if (p) {
-    p->name = name;
+    p->name = (name != NULL) ? strdup(name) : NULL;
     p->type = type;
     p->next = next;
     p->symbol = NULL;
@@ -34,9 +34,8 @@ void param_list_destroy(struct param_list** p) {
 
 struct param_list* param_list_copy(struct param_list* p) {
   if (!p) { return NULL; }
-  struct param_list* copy = malloc(sizeof(struct param_list));
+  struct param_list* copy = param_list_create(p->name, NULL, NULL);
   if (copy) {
-    copy->name = strdup(p->name);
     copy->type = type_copy(p->type);
     copy->symbol = symbol_copy(p->symbol);
     copy->next = param_list_copy(p->next);
@@ -53,7 +52,7 @@ bool param_list_equals(struct param_list* a, struct param_list* b) {
 
 int param_list_resolve(struct symbol_table* st, struct param_list* p) {
   if (!st || !p) { return error_status; }
-  struct symbol* s = symbol_create(SYMBOL_PARAM, type_copy(p->type), strdup(p->name));
+  struct symbol* s = symbol_create(SYMBOL_PARAM, type_copy(p->type), p->name);
   type_resolve(st, p->type); // parameters can be functions with their own parameters, put 'em in the table
 
   struct symbol* already_used_sym = symbol_table_scope_lookup_current(st, p->name);

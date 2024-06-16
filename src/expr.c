@@ -267,7 +267,7 @@ struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right )
 struct expr* expr_create_name(const char* n)
 {
   struct expr* e = expr_create(EXPR_NAME, NULL, NULL);
-  if (e) { e->name = n; }
+  if (e) { e->name = (n != NULL) ? strdup(n) : NULL; }
   return e;
 }
 
@@ -295,7 +295,7 @@ struct expr* expr_create_char_literal(char c)
 struct expr* expr_create_string_literal(const char* str)
 {
   struct expr* e = expr_create(EXPR_STR, NULL, NULL);
-  if (e) { e->string_literal = str; }
+  if (e) { e->string_literal = (str != NULL) ? strdup(str) : NULL; }
   return e;
 }
 
@@ -356,7 +356,7 @@ void expr_destroy(struct expr** e) {
   if ((*e)->kind == EXPR_NAME) { free((*e)->name); }
 
   // since string literals are part of the symbol table
-  //if ((*e)->string_literal) { free((void*)(*e)->string_literal); }
+  if ((*e)->string_literal) { free((void*)(*e)->string_literal); }
   if ((*e)->symbol) { (*e)->symbol = NULL; }
 
   // free the register
@@ -365,22 +365,29 @@ void expr_destroy(struct expr** e) {
 }
 
 struct expr* expr_copy(struct expr* e) {
-  if (!e) return NULL;
-  struct expr* copy = malloc(sizeof(struct expr));
-  if (copy) {
-    copy->kind = e->kind;
-    switch(e->kind) {
+  if (!e) { return NULL; } 
+  struct expr* copy = NULL;
+  switch(e->kind) {
     case EXPR_NAME:
-      copy->name = strdup(e->name);
+      copy = expr_create_name(e->name);
       copy->symbol = symbol_copy(e->symbol);
-      break;
-    case EXPR_INT: case EXPR_BOOL: case EXPR_CH: copy->literal_value = e->literal_value; break;
-    case EXPR_STR: copy->string_literal = strdup(e->string_literal); break;
+    break;
+    case EXPR_INT:
+      copy = expr_create_integer_literal(e->literal_value);
+    break;
+    case EXPR_BOOL:
+      copy = expr_create_boolean_literal(e->literal_value);
+    break;
+    case EXPR_CH:
+      copy = expr_create_char_literal(e->literal_value);
+    break;
+    case EXPR_STR:
+      copy = expr_create_string_literal(e->string_literal);
+    break;
     default:
       copy->left = expr_copy(e->left);
       copy->right = expr_copy(e->right);
     break;
-    }
   }
   return copy;
 }
@@ -405,7 +412,7 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
     found_label = symbol_table_hidden_lookup(st->hidden_table, e->string_literal);
     if (!found_label) {
       found_label = label_name(label_create());
-      symbol_table_hidden_bind(st->hidden_table, (const char*)e->string_literal, (const char*)strdup(found_label));
+      symbol_table_hidden_bind(st->hidden_table, (const char*)e->string_literal, (const char*)(found_label));
     }
     break;
   default:
@@ -599,10 +606,16 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
     */
       e->reg = register_scratch_alloc();
       if (generate_expr) {
-        fprintf(CODEGEN_OUT, "%s %s, %s\n",
-                           (e->symbol->type->kind == TYPE_STRING || e->symbol->type->kind == TYPE_ARRAY)
-                           ? "LEAQ" : "MOVQ",
-                            symbol_codegen(e->symbol), register_scratch_name(e->reg));
+        switch(e->symbol->type->kind)
+        {
+          case TYPE_STRING:
+          case TYPE_ARRAY:
+            fprintf(CODEGEN_OUT, "%s %s, %s\n", "LEAQ", symbol_codegen(e->symbol), register_scratch_name(e->reg));
+          break;
+          default:
+            fprintf(CODEGEN_OUT, "%s %s, %s\n", "MOVQ", symbol_codegen(e->symbol), register_scratch_name(e->reg));
+          break;
+        }
       }
       break;
 
@@ -789,16 +802,16 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
       bool old_generate_expr = generate_expr;
       generate_expr= false;
       struct expr* subexpr = e;
-      struct type* t = e->symbol->type;
+      struct type* t = e->left->symbol->type;
       int64_t offset = QUAD * get_offset(subexpr, t);
       e->reg = register_scratch_alloc(); // using 'dummy' register
 
-      switch (e->symbol->kind) {
+      switch (e->left->symbol->kind) {
         case SYMBOL_GLOBAL:
-          fprintf(CODEGEN_OUT, "%d+%s(%rip)", offset, symbol_codegen(e->symbol));
+          fprintf(CODEGEN_OUT, "%d+%s(%rip)", offset, symbol_codegen(e->left->symbol));
         break;
         case SYMBOL_LOCAL:
-          fprintf(CODEGEN_OUT, "%s", symbol_codegen(e->symbol));
+          fprintf(CODEGEN_OUT, "%s", symbol_codegen(e->left->symbol));
         break;
       }
       // TODO: value tracking by 'getting' the expression's literal value corresponding to the indices/total offset

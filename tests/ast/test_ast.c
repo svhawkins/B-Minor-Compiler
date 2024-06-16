@@ -11,7 +11,6 @@
 #define MAX_BUFFER 8192
 
 extern FILE* yyin; FILE* ifp;
-extern void yyrestart();
 extern int yyparse();
 extern char error_text[MAX_BUFFER]; // print_error sprintf error messages
 extern unsigned char eof;
@@ -150,7 +149,6 @@ Status test_expr_associativity(void) {
   strcpy(test_type, "test_expr_associativity");
   char* filename = "./tests/ast/expr_associativity.bminor";
   Status status = SUCCESS;
-  yyrestart(yyin);
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); }
   char* expect = "(f++)++;\n(f--)--;\nf(f(0));\nf[f[0]];\nf;\n-(-f);\n!(!true);\n0 ^ (1 ^ 2);\n(0 * 1) * 2;\n(0 / 1) / 2;\n(0 % 1) % 2;\n(0 + 1) + 2;\n(0 - 1) - 2;\n(0 < 1) < 2;\n(0 <= 1) <= 2;\n(0 > 1) > 2;\n(0 >= 1) >= 2;\n(0 == 1) == 2;\n(0 != 1) != 2;\n(true && false) && true;\n(true || false) || true;\nf = foo = 0;\n0, 1, 2;\n";
@@ -167,7 +165,6 @@ Status test_expr_precedence(void) {
   strcpy(test_type, "test_expr_precedence");
   char* filename = "./tests/ast/expr_precedence.bminor";
   Status status = SUCCESS;
-  yyrestart(yyin);
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "foo = (((((((a--) ^ b) % c) + d) < e) == f) && g) || h, bar = (((-(a++)) ^ b) * c) + d, baz = ((((!(a[b])) <= c) != d) && e) || f, qux = ((((((-((a(b))--)) ^ c) / d) + e) == f) && g) || h;\n";
@@ -182,7 +179,6 @@ Status test_expr_postfix_binary(void) {
   strcpy(test_type, "test_expr_postfix_binary");
   char* filename = "./tests/ast/expr_postfix.bminor";
   Status status = SUCCESS;
-  yyrestart(yyin);
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "x[i][j];\nx[i][j][k];\nf(x)(y);\nf(duck)(duck)(goose);\nf(a, b, c)(x, y, z)[i][j][k];\n";
@@ -199,7 +195,6 @@ Status test_type_param_list(void) {
   strcpy(test_type, "test_type_param_list");
   char* filename = "./tests/ast/type_param_list.bminor";
   Status status = SUCCESS;
-  yyrestart(yyin);
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "nothing: function void (void);\nnothing2: function void (void);\nsomething: function integer (a: integer);\nsomething2: function integer (a: integer, b: integer, c: integer);\nmain: function integer (argc: integer, argv: array [] string);\nlinear_algebra: function void (tensor: array [] array [] array [] integer, matrix: array [] array [] integer, vector: array [] integer, scalar: integer);\ntensor: function array [] array [] array [] integer (void);\nmatrix: function array [] array [] integer (void);\nvector: function array [] integer (void);\nscalar: function integer (void);";
@@ -216,7 +211,6 @@ Status test_decl_uninit(void) {
   strcpy(test_type, "test_decl_uninit");
   char* filename = "./tests/ast/decl_uninit.bminor";
   Status status = SUCCESS;
-  yyrestart(yyin);
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "i: integer;\nb: boolean;\nc: char;\ns: string;\nvector: array [3] integer;\nmatrix: array [3] array [3] integer;\ntensor: array [3] array [3] array [3] integer;";
@@ -233,7 +227,6 @@ Status test_decl_init(void) {
   strcpy(test_type, "test_decl_init");
   char* filename = "./tests/ast/decl_init.bminor";
   Status status = SUCCESS;
-  yyrestart(yyin);
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "i: integer = 493;\nb: boolean = false;\nc: char = 'a';\ns: string = \"a\";\nfoo: array [1] integer = {493};\nbar: array [1] array [1] integer = {{493}};\nbaz: array [2] boolean = {false, true};\nqux: array [3] array [3] integer = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};\nf: function void (void) = {}\n\ng: function void (void) = {\n  duck;\n}\n\nh: function void (void) = {\n  duck;\n  duck;\n  goose;\n}\n";
@@ -250,7 +243,6 @@ Status test_stmt_body(void) {
   strcpy(test_type, "test_stmt_body");
   char* filename = "./tests/ast/stmt_body.bminor";
   Status status = SUCCESS;
-  yyrestart(yyin);
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "print duck;\nprint duck, goose;\nreturn;\nreturn duck;\nwhile (e) {\n  duck;\n}\nwhile (e) {}\nfor ( ; ; ) {\n  duck;\n}\nfor ( ; ; ) {}\nif (e) {} else {}\nif (e) {\n  duck;\n} else {\n  goose;\n}\nif (e) {} else {\n  goose;\n}\nif (e) {\n  duck;\n} else {}\n";
@@ -265,7 +257,6 @@ Status test_stmt_for(void) {
   strcpy(test_type, "test_stmt_for");
   char* filename = "./tests/ast/stmt_for.bminor";
   Status status = SUCCESS;
-  yyrestart(yyin);
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("temp.txt", "w"); if (!ifp) { return file_error(test_type, "temp.txt"); } eof = 0;
   char* expect = "for ( ; ; i++) {}\nfor ( ; i < n; ) {}\nfor ( ; i < n; i++) {}\nfor (i = 0; ; ) {}\nfor (i = 0; ; i++) {}\nfor (i = 0; i < n; ) {}\nfor (i = 0; i < n; i++) {}\nfor (i: integer; ; ) {}\nfor (i: integer = 0; ; ) {}\n";
@@ -280,7 +271,6 @@ Status test_code_pretty(void) {
   strcpy(test_type, "test_code_pretty");
   char* filename = "./tests/ast/code.bminor";
   Status status = SUCCESS;
-  yyrestart(yyin);
   yyin = fopen(filename, "r"); if (!yyin) { return file_error(test_type, filename); }
   ifp = fopen("./tests/ast/code_pretty.bminor", "r"); if (!ifp) { return file_error(test_type, "./tests/ast/code_pretty.bminor"); }
   fileread(ifp, program, MAX_BUFFER);

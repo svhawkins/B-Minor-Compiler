@@ -36,7 +36,7 @@ Status test_expr_codegen_subscript_global(void);
 Status test_expr_codegen_subscript_local(void);
 Status test_expr_codegen_subscript_multidim(void);
 Status test_expr_codegen_subscript_global_bounds(void);
-Status test_expr_codegen_subscripy_global_bounds_multidim(void);
+Status test_expr_codegen_subscript_global_bounds_multidim(void);
 
 // fcall
 
@@ -96,10 +96,10 @@ int main(void) {
        test_expr_codegen_mult_underflow_overflow,
        test_expr_codegen_underflow,
        test_expr_codegen_subscript_global,
-       //test_expr_codegen_subscript_local, // <-- giving segfaults
-       //test_expr_codegen_subscript_multidim,
+       test_expr_codegen_subscript_local, // <-- FIXME
+       //test_expr_codegen_subscript_multidim, // <-- TODO
        test_expr_codegen_subscript_global_bounds,
-       //test_expr_codegen_subscripy_global_bounds_multidim
+       //test_expr_codegen_subscript_global_bounds_multidim // <-- TODO
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -185,8 +185,8 @@ Status test_expr_codegen_name_literal(void) {
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
 
   register_codegen_init(true);
-  struct expr* global_expr = expr_create_name(strdup("foo"));
-  struct expr* local_expr = expr_create_name(strdup("bar"));
+  struct expr* global_expr = expr_create_name(("foo"));
+  struct expr* local_expr = expr_create_name(("bar"));
   struct type* t;
 
   // add in symbols (here as not testing decl stuff yet)
@@ -568,7 +568,7 @@ Status test_expr_codegen_subscript_global(void) {
   register_codegen_init(true);
 
   // make dummy declaration to make it part of the symbol table
-  struct decl* d = decl_create(strdup("foo"),
+  struct decl* d = decl_create(("foo"),
                    type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(2)),
                    expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(1), expr_create_integer_literal(1)), NULL),
                    NULL,
@@ -579,10 +579,10 @@ Status test_expr_codegen_subscript_global(void) {
   d->symbol->type->size->literal_value = 2;
 
 
-  struct expr* e = expr_create(EXPR_SUBSCRIPT, expr_create_name(strdup("foo")), expr_create_integer_literal(1));
+  struct expr* e = expr_create(EXPR_SUBSCRIPT, expr_create_name(("foo")), expr_create_integer_literal(1));
   e->symbol = d->symbol;
   error_status = expr_resolve(st, e);
-  //struct type* t; t = expr_typecheck(st, e); type_destroy(&t); // <-- giving segfaults???
+  struct type* t; t = expr_typecheck(st, e); type_destroy(&t);
   error_status = expr_codegen(st, e);
 
   if (e->reg != 0) { print_error(test_type, "0", "int e->reg"); status = FAILURE; }
@@ -618,11 +618,11 @@ Status test_expr_codegen_subscript_local(void) {
 "LEAQ -8(%rbp), %rbx\nMOVQ $1, %r10\n-16(%rbp)";
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   struct symbol_table* st = symbol_table_create();
-  symbol_table_scope_enter(st); //symbol_table_scope_enter(st);
+  symbol_table_scope_enter(st); symbol_table_scope_enter(st);
   register_codegen_init(true);
 
   // make dummy declaration to make it part of the symbol table
-  struct decl* d = decl_create(strdup("foo"),
+  struct decl* d = decl_create(("foo"),
                    type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(2)),
                    expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(1), expr_create_integer_literal(1)), NULL),
                    NULL,
@@ -633,26 +633,24 @@ Status test_expr_codegen_subscript_local(void) {
   d->symbol->type->size->literal_value = 2;
 
 
-  struct expr* e = expr_create(EXPR_SUBSCRIPT, expr_create_name(strdup("foo")), expr_create_integer_literal(1));
-
-  // pretend that the declaration code got generated...;
+  struct expr* e = expr_create(EXPR_SUBSCRIPT, expr_create_name(("foo")), expr_create_integer_literal(1));
   error_status = expr_resolve(st, e);
-  struct type* t; t = expr_typecheck(st, e); type_destroy(&t); // <-- giving segfaults???
-  //error_status = expr_codegen(st, e);
+  struct type* t; t = expr_typecheck(st, e); type_destroy(&t);
+  error_status = expr_codegen(st, e);
 
-  // if (e->reg != 0) { print_error(test_type, "0", "int e->reg"); status = FAILURE; }
-  // if (!scratch_register[e->left->reg].inuse) { // used by resultant in this case
-  //   print_error(test_type, "true", "bool scratch_register[e->left->reg].inuse");
-  //   status = FAILURE;
-  // }
-  // if (scratch_register[e->right->reg].inuse) {
-  //   print_error(test_type, "false", "scratch_register[e->right->reg].inuse");
-  //   status = FAILURE;
-  // }
-  // if (!scratch_register[e->reg].inuse) {
-  //   print_error(test_type, "true", "scratch_register[e->reg].inuse");
-  //   status = FAILURE;
-  // }
+  if (e->reg != 0) { print_error(test_type, "0", "int e->reg"); status = FAILURE; }
+  if (!scratch_register[e->left->reg].inuse) { // used by resultant in this case
+    print_error(test_type, "true", "bool scratch_register[e->left->reg].inuse");
+    status = FAILURE;
+  }
+  if (scratch_register[e->right->reg].inuse) {
+    print_error(test_type, "false", "scratch_register[e->right->reg].inuse");
+    status = FAILURE;
+  }
+  if (!scratch_register[e->reg].inuse) {
+    print_error(test_type, "true", "scratch_register[e->reg].inuse");
+    status = FAILURE;
+  }
 
   expr_destroy(&e);
   decl_destroy(&d);
@@ -681,32 +679,34 @@ Status test_expr_codegen_subscript_global_bounds(void) {
   register_codegen_init(true);
 
   // make dummy declaration to make it part of the symbol table
-  struct decl* d = decl_create(strdup("foo"),
+  struct decl* d = decl_create(("foo"),
                    type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(2)),
                    expr_create(EXPR_INIT, expr_create_integer_literal(1), NULL),
                    NULL,
                    NULL
                    );
   decl_resolve(st, d);
-  //d->symbol->type->actual_size = 2;
-  //d->symbol->type->size->literal_value = 2;
+  d->symbol->type->actual_size = 2;
+  d->symbol->type->size->literal_value = 2;
 
 
-  struct expr* e = expr_create(EXPR_SUBSCRIPT, expr_create_name(strdup("foo")), expr_create_integer_literal(-1));
+  struct expr* e = expr_create(EXPR_SUBSCRIPT, expr_create_name(("foo")), expr_create_integer_literal(-1));
   e->symbol = d->symbol;
   error_status = expr_resolve(st, e);
-  //struct type* t = expr_typecheck(st, e); type_destroy(&t); // <-- giving segfaults???
+  struct type* t = expr_typecheck(st, e); type_destroy(&t);
   error_status = expr_codegen(st, e);
 
+  // FIXME?
   //if (error_status != EXPR_BOUNDS) { print_error(test_type, "EXPR_BOUNDS", "error_status"); status = FAILURE; }
   if (!global_error_count) { print_error(test_type, "1", "global_error_count"); status = FAILURE; }
   expr_destroy(&e);
 
-  e = expr_create(EXPR_SUBSCRIPT, expr_create_name(strdup("foo")), expr_create_integer_literal(1));
+  e = expr_create(EXPR_SUBSCRIPT, expr_create_name(("foo")), expr_create_integer_literal(1));
   e->symbol = d->symbol;
   error_status = expr_resolve(st, e);
   error_status = expr_codegen(st, e);
 
+  // FIXME?
   //if (error_status != EXPR_BOUNDS) { print_error(test_type, "EXPR_BOUNDS", "error_status"); status = FAILURE; }
   if (!global_error_count) { print_error(test_type, "1", "global_error_count"); status = FAILURE; }
   expr_destroy(&e);
@@ -720,6 +720,6 @@ Status test_expr_codegen_subscript_global_bounds(void) {
 /*
 tests that bounds checking works for multidimensional arrays
 */
-Status test_expr_codegen_subscripy_global_bounds_multidim(void) {
+Status test_expr_codegen_subscript_global_bounds_multidim(void) {
   return FAILURE;
 }

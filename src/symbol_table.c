@@ -23,7 +23,7 @@ int symbol_table_error_handle(symbol_error_t kind, void* ctx1, void* ctx2) {
     case SYM_UNDEF: /* undefined symbol used. recover by adding it to table with default type integer */
       fprintf(ERR_OUT, "Undefined symbol by name %s.\n Adding symbol as INTEGER.", ((struct expr*)ctx2)->name);
       int scope = (symbol_table_scope_level((struct symbol_table*)ctx1) == 1) ? SYMBOL_GLOBAL : SYMBOL_LOCAL;
-      struct symbol* s = symbol_create(scope, type_create(TYPE_INTEGER, NULL, NULL, NULL), strdup(((struct expr*)ctx2)->name));
+      struct symbol* s = symbol_create(scope, type_create(TYPE_INTEGER, NULL, NULL, NULL), ((struct expr*)ctx2)->name);
       symbol_table_scope_bind((struct symbol_table*)ctx1, ((struct expr*)ctx2)->name, s);
       ((struct expr*)ctx2)->symbol = s;
       fprintf(ERR_OUT, "\n");
@@ -300,7 +300,8 @@ Failure if:
         - NULL hash table
 */
 int symbol_table_hidden_bind(Hidden_table* hst, const char* literal, const char* label) {
-  return (hst) ? hash_table_insert(hst, literal, (void*)label) : 0;
+  const char* label_entry = strdup(label); // not malloc-ed hash-table side like the key
+  return (hst) ? hash_table_insert(hst, literal, (void*)label_entry) : 0;
 }
 
 /*

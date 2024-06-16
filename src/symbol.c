@@ -7,7 +7,7 @@ struct symbol* symbol_create(symbol_t kind, struct type* type, char* name) {
   struct symbol* sym = malloc(sizeof(struct symbol));
   if (sym) {
     sym->kind = kind;
-    sym->name = name;
+    sym->name = (name != NULL) ? strdup(name) : NULL;
     sym->type = type;
     sym->defined = false;
     sym->which = -1;
@@ -26,14 +26,12 @@ void symbol_destroy(struct symbol** s) {
 }
 
 void symbol_fprint(FILE* fp, struct symbol* s) {
-  if (!s) { return; }
-  char str[10];
+  if (!s || !s->name) { return; }
     switch(s->kind) {
-    case SYMBOL_GLOBAL: strcpy(str, "global"); break;
-    case SYMBOL_LOCAL: strcpy(str, "local"); break;
-    case SYMBOL_PARAM: strcpy(str, "parameter"); break;
+    case SYMBOL_GLOBAL: fprintf(fp, "(kind: %s, name: %s, type: ", "global", s->name); break;
+    case SYMBOL_LOCAL:  fprintf(fp, "(kind: %s, name: %s, type: ", "local", s->name);
+    case SYMBOL_PARAM: fprintf(fp, "(kind: %s, name: %s, type: ", "parameter", s->name);
   }
-  fprintf(fp, "(kind: %s, name: %s, type: ", str, s->name);
   type_fprint(fp, s->type);
   if (s->which >= 0) { fprintf(fp, ", which: %d", s->which); }
   fprintf(fp, ")\n");
@@ -41,13 +39,9 @@ void symbol_fprint(FILE* fp, struct symbol* s) {
 
 struct symbol* symbol_copy(struct symbol* s) {
   if (!s) { return NULL; }
-  struct symbol* copy = malloc(sizeof(struct symbol));
-  if (copy) {
-    copy->kind = s->kind;
-    copy->which = s->which;
-    copy->name = strdup(s->name);
-    copy->type = type_copy(s->type);
-  }
+  struct symbol* copy = NULL;
+  copy = symbol_create(s->kind, type_copy(s->type), s->name);
+  if (copy) { copy->which = s->which; }
   return copy;
 }
 

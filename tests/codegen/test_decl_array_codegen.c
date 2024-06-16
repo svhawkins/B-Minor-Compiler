@@ -88,14 +88,14 @@ int main(void) {
       test_decl_codegen_array_size_mismatch_small,
       test_decl_codegen_array_size_uninit_size,
 
-      // not running since multidim feature still buggy AF
-      //test_decl_codegen_array_multidim,
-      //test_decl_codegen_array_multidim_uninit,
-      //test_decl_codegen_array_multidim_uninit_size,
-      // test_decl_codegen_array_matrix, // <-- still causing issues!
-      // test_decl_codegen_array_multidim_mismatch_small,
-      //  //test_decl_codegen_array_mulitidim_mismatch_big,
-      // test_decl_codegen_array_multidim_mismatch_elements, // <-- causing issues!
+      // FIXME: not all of these are passing
+      test_decl_codegen_array_multidim, // <-- FIXME
+      test_decl_codegen_array_multidim_uninit,
+      test_decl_codegen_array_multidim_uninit_size, // <-- FIXME
+      test_decl_codegen_array_matrix,  // <-- FIXME
+      // test_decl_codegen_array_multidim_mismatch_small, // <-- TODO
+      // test_decl_codegen_array_mulitidim_mismatch_big, // <-- TODO
+      test_decl_codegen_array_multidim_mismatch_elements // <-- FIXME
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -131,7 +131,7 @@ Status test_decl_codegen_array_literal_global(void) {
   struct expr* erightright = expr_create(EXPR_COMMA, expr_create_integer_literal(12), expr_create_integer_literal(-1));
   struct expr* eright = expr_create(EXPR_COMMA, expr_create_integer_literal(493), erightright);
   struct expr* e = expr_create(EXPR_INIT, eright, NULL);
-  struct decl* d = decl_create(strdup("foo"), t, e, NULL, NULL);
+  struct decl* d = decl_create(("foo"), t, e, NULL, NULL);
   error_status = decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
   error_status = decl_codegen(st, d);
@@ -160,7 +160,7 @@ MOVQ %r10, -16(%rbp)\n";
   symbol_table_scope_enter(st); symbol_table_scope_enter(st);
   register_codegen_init(true);
   struct type* t = type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(2));
-  struct decl* d = decl_create(strdup("foo"), t,
+  struct decl* d = decl_create(("foo"), t,
                   expr_create(EXPR_INIT,
                   expr_create(EXPR_COMMA, expr_create_integer_literal(1), expr_create_integer_literal(2)), NULL),
                   NULL, NULL);
@@ -193,7 +193,7 @@ MOVQ %r10, -16(%rbp)\n";
   symbol_table_scope_enter(st); symbol_table_scope_enter(st);
   register_codegen_init(true);
   struct type* t = type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, expr_create_integer_literal(2));
-  struct decl* d = decl_create(strdup("foo"), t,
+  struct decl* d = decl_create(("foo"), t,
                   expr_create(EXPR_INIT,
                   expr_create(EXPR_COMMA, expr_create_string_literal("duck"), expr_create_string_literal("goose")), NULL),
                   NULL, NULL);
@@ -222,7 +222,7 @@ Status test_decl_codegen_array_string_literal_global(void) {
   symbol_table_scope_enter(st);
   register_codegen_init(true);
   struct type* t = type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, expr_create_integer_literal(1));
-  struct decl* d = decl_create(strdup("foo"), t, expr_create(EXPR_INIT, expr_create_string_literal("duck"), NULL), NULL, NULL);
+  struct decl* d = decl_create(("foo"), t, expr_create(EXPR_INIT, expr_create_string_literal("duck"), NULL), NULL, NULL);
   error_status = decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
   error_status = decl_codegen(st, d);
@@ -251,7 +251,7 @@ Status test_decl_codegen_array_global_uninit(void) {
   symbol_table_scope_enter(st);
   register_codegen_init(true);
   struct type* t = type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(3));
-  struct decl* d = decl_create(strdup("foo"), t, NULL, NULL, NULL);
+  struct decl* d = decl_create(("foo"), t, NULL, NULL, NULL);
   error_status = decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
   error_status = decl_codegen(st, d);
@@ -278,7 +278,7 @@ MOVQ $0, -16(%rbp)\n";
   symbol_table_scope_enter(st); symbol_table_scope_enter(st);
   register_codegen_init(true);
   struct type* t = type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(2));
-  struct decl* d = decl_create(strdup("foo"), t, NULL, NULL, NULL);
+  struct decl* d = decl_create(("foo"), t, NULL, NULL, NULL);
   error_status = decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
   error_status = decl_codegen(st, d);
@@ -306,12 +306,13 @@ Status test_decl_codegen_array_size_mismatch_negative(void) {
                                      type_create(TYPE_INTEGER, NULL, NULL, NULL),
                                      NULL,
                                      expr_create_integer_literal(-1));
-  struct decl* d = decl_create(strdup("foo"), bad_type, NULL, NULL, NULL);
+  struct decl* d = decl_create(("foo"), bad_type, NULL, NULL, NULL);
   error_status = decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
   error_status = decl_codegen(st, d);
 
   if (!global_error_count) { print_error(test_type, "int global_error_count = 1", "0"); status = FAILURE; }
+  // FIXME?
   //if (error_status != DECL_NEGSIZE) { print_error(test_type, "DECL_NEGSIZE", "int error_status"); status = FAILURE; }
 
   decl_destroy(&d);
@@ -341,7 +342,7 @@ struct type* tlist = type_create(TYPE_ARRAY,
                                 type_create(TYPE_INTEGER, NULL, NULL, NULL),
                                 NULL,
                                 expr_create_integer_literal(1));
-struct decl* dlist = decl_create(strdup("bar"), tlist, elist, NULL, NULL);
+struct decl* dlist = decl_create(("bar"), tlist, elist, NULL, NULL);
 
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   struct symbol_table* st = symbol_table_create();
@@ -354,6 +355,7 @@ struct decl* dlist = decl_create(strdup("bar"), tlist, elist, NULL, NULL);
 
   
   if (!global_error_count) { print_error(test_type, "int global_error_count = 1", "0"); status = FAILURE; }
+  // FIXME?
   //if (error_status != DECL_SIZE) { print_error(test_type, "DECL_SIZE", "int error_status"); status = FAILURE; }
 
   decl_destroy(&dlist);
@@ -385,7 +387,7 @@ struct type* tlist = type_create(TYPE_ARRAY,
                                 type_create(TYPE_INTEGER, NULL, NULL, NULL),
                                 NULL,
                                 expr_create_integer_literal(42));
-struct decl* dlist = decl_create(strdup("bar"), tlist, elist, NULL, NULL);
+struct decl* dlist = decl_create(("bar"), tlist, elist, NULL, NULL);
 
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   struct symbol_table* st = symbol_table_create();
@@ -398,6 +400,7 @@ struct decl* dlist = decl_create(strdup("bar"), tlist, elist, NULL, NULL);
 
   
   if (!global_error_count) { print_error(test_type, "int global_error_count = 1", "0"); status = FAILURE; }
+  // FIXME?
   //if (error_status != DECL_SIZE) { print_error(test_type, "DECL_SIZE", "int error_status"); status = FAILURE; }
 
   decl_destroy(&dlist);
@@ -428,7 +431,7 @@ Status test_decl_codegen_array_size_uninit_size(void) {
   struct expr* erightright = expr_create(EXPR_COMMA, expr_create_integer_literal(12), expr_create_integer_literal(-1));
   struct expr* eright = expr_create(EXPR_COMMA, expr_create_integer_literal(493), erightright);
   struct expr* e = expr_create(EXPR_INIT, eright, NULL);
-  struct decl* d = decl_create(strdup("foo"), t, e, NULL, NULL);
+  struct decl* d = decl_create(("foo"), t, e, NULL, NULL);
 
   error_status = decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
@@ -465,7 +468,7 @@ Status test_decl_codegen_array_multidim(void) {
                                            expr_create_integer_literal(1));
 
   struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_INIT, expr_create_integer_literal(493), NULL), NULL);
-  struct decl* d = decl_create(strdup("foo"), t, e, NULL, NULL);
+  struct decl* d = decl_create(("foo"), t, e, NULL, NULL);
 
   error_status = decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
@@ -497,7 +500,7 @@ Status test_decl_codegen_array_multidim_uninit(void) {
                                            NULL, expr_create_integer_literal(1)),
                                            NULL,
                                            expr_create_integer_literal(1));
-  struct decl* d = decl_create(strdup("foo"), t, NULL, NULL, NULL);
+  struct decl* d = decl_create(("foo"), t, NULL, NULL, NULL);
 
   error_status = decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
@@ -530,7 +533,7 @@ Status test_decl_codegen_array_multidim_uninit_size(void) {
                                            NULL);
 
   struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_INIT, expr_create_integer_literal(493), NULL), NULL);
-  struct decl* d = decl_create(strdup("foo"), t, e, NULL, NULL);
+  struct decl* d = decl_create(("foo"), t, e, NULL, NULL);
 
   error_status = decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
@@ -561,20 +564,20 @@ Status test_decl_codegen_array_matrix(void) {
                                            NULL,
                                            expr_create_integer_literal(2));
 
-  // struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
-  //                                                     expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
-  //                                                                            expr_create_integer_literal(1),
-  //                                                                            expr_create_integer_literal(0)), NULL),
-  //                                                     expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
-  //                                                                            expr_create_integer_literal(0),
-  //                                                                            expr_create_integer_literal(1)), NULL)), NULL);
+  struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
+                                                      expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
+                                                                             expr_create_integer_literal(1),
+                                                                             expr_create_integer_literal(0)), NULL),
+                                                      expr_create(EXPR_INIT, expr_create(EXPR_COMMA,
+                                                                             expr_create_integer_literal(0),
+                                                                             expr_create_integer_literal(1)), NULL)), NULL);
 
-  struct expr* e = expr_create(EXPR_INIT,  expr_create(EXPR_COMMA, expr_create_integer_literal(1), expr_create_integer_literal(0)), NULL);
-  struct decl* d = decl_create(strdup("foo"), t, e, NULL, NULL);
+  //struct expr* e = expr_create(EXPR_INIT,  expr_create(EXPR_COMMA, expr_create_integer_literal(1), expr_create_integer_literal(0)), NULL);
+  struct decl* d = decl_create(("foo"), t, e, NULL, NULL);
 
   error_status = decl_resolve(st, d);
-  // error_status = decl_typecheck(st, d);
-  // error_status = decl_codegen(st, d);
+  error_status = decl_typecheck(st, d);
+  error_status = decl_codegen(st, d);
 
   decl_destroy(&d);
   symbol_table_destroy(&st);
@@ -609,18 +612,13 @@ Status test_decl_codegen_array_multidim_mismatch_elements(void) {
                                                                              expr_create_integer_literal(1),
                                                                              expr_create_integer_literal(0)), NULL),
                                                       expr_create(EXPR_INIT, expr_create_integer_literal(1), NULL)), NULL);
-  struct decl* d = decl_create(strdup("foo"), t, e, NULL, NULL);
-
-  // manually create the symbol due to (alleged) symbol table/resolve bug
-  //d->symbol = symbol_create(SYMBOL_GLOBAL, type_copy(t), strdup("foo"));
-  // symbol_fprint(stdout, d->symbol);
-  //symbol_table_scope_bind(st, d->name, d->symbol);
+  struct decl* d = decl_create(("foo"), t, e, NULL, NULL);
 
   error_status = decl_resolve(st, d);
   error_status = decl_typecheck(st, d);
   error_status = decl_codegen(st, d);
 
-  //if (!global_error_count) { print_error(test_type, "int global_error_count = 1", "0"); status = FAILURE; }
+  if (!global_error_count) { print_error(test_type, "int global_error_count = 1", "0"); status = FAILURE; }
 
   decl_destroy(&d);
   symbol_table_destroy(&st);

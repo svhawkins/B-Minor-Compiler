@@ -111,15 +111,15 @@ test_program : stmt { $$ = $1; }
 	     | ext_decl { $$ = stmt_create(STMT_DECL, $1, NULL, NULL, NULL, NULL, NULL, NULL); }
 	     ;
 
-decl : name TOKEN_COLON type TOKEN_SEMI { $$ = decl_create($1, $3, NULL, NULL, NULL); }
-     | name TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI { $$ = decl_create($1, $3, $5, NULL,  NULL); }
+decl : name TOKEN_COLON type TOKEN_SEMI { $$ = decl_create($1, $3, NULL, NULL, NULL); free($1); /* strdupped */ }
+     | name TOKEN_COLON type TOKEN_ASSIGN init TOKEN_SEMI { $$ = decl_create($1, $3, $5, NULL,  NULL); free($1); /* strdupped */ }
      ;
 
 init : TOKEN_LCURL init_expr TOKEN_RCURL { $$ = expr_create(EXPR_INIT, $2, NULL); }
      | expr { $$ = $1; }
      ;
  
-name : TOKEN_IDENT { $$ = strdup(yytext); } // TO DO: MEMORY MANAGEMENT THIS NEEDS TO BE FREED!!!!!!
+name : TOKEN_IDENT { $$ = strdup(yytext); } /* freed at creation of some structures, since create() strdups its own */
      | TOKEN_LPAR name TOKEN_RPAR { $$ = $2; }
      ;
 
@@ -169,13 +169,13 @@ postfix_expr : primary_expr { $$ = $1; }
 
 primary_expr : primitive { $$ = $1; }
 	     | TOKEN_LPAR expr TOKEN_RPAR { $$ = $2; }
-	     | name { $$ = expr_create_name($1); }
+	     | name { $$ = expr_create_name($1); free($1); /* strdupped */ }
 	     ;
 
 primitive : TOKEN_BOOL { $$ = expr_create_boolean_literal(bool_convert(yytext)); }
 	  | TOKEN_CH { $$ = expr_create_char_literal(yytext[0]); }
           | TOKEN_NUMBER { $$ = expr_create_integer_literal(atoi(yytext)); }
-	  | TOKEN_STR { $$ = expr_create_string_literal(strdup(yytext)); }
+	  | TOKEN_STR { $$ = expr_create_string_literal(yytext); }
 	  ;
 
 lor_expr : land_expr { $$ = $1; }
@@ -259,12 +259,14 @@ function_decl : name TOKEN_COLON ret_type TOKEN_LPAR param_list TOKEN_RPAR TOKEN
 	        {
 		/* assign the params for a function here */
 		 $3->params = $5;
-		 $$ = decl_create($1, $3, NULL, NULL, NULL); 
+		 $$ = decl_create($1, $3, NULL, NULL, NULL);
+		 free($1); /* strdupped */ 
 		}
 	      | name TOKEN_COLON ret_type TOKEN_LPAR param_list TOKEN_RPAR TOKEN_ASSIGN block_stmt
 	        { /* assign the params here in type */
 		  $3->params = $5;
 		  $$ = decl_create($1, $3, NULL, $8, NULL);
+		  free($1); /* strdupped */
 		}
 	      ;
 
@@ -281,7 +283,7 @@ params : param TOKEN_COMMA params
        | param { $$ = $1; }
        ;
 
-param : name TOKEN_COLON param_type { $$ = param_list_create($1, $3, NULL); }
+param : name TOKEN_COLON param_type { $$ = param_list_create($1, $3, NULL);  free($1); /* strdupped */ }
       ;
 
 param_type : type { $$ = $1; }

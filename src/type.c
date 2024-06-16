@@ -59,9 +59,8 @@ void type_destroy(struct type** t) {
 
 struct type* type_copy(struct type* t) {
   if (!t) { return NULL; }
-  struct type* copy = malloc(sizeof(struct type));
+  struct type* copy = type_create(t->kind, NULL, NULL, NULL);
   if (copy) {
-    copy->kind = t->kind;
     copy->params = param_list_copy(t->params);
     copy->subtype = type_copy(t->subtype);
     copy->size = expr_copy(t->size);

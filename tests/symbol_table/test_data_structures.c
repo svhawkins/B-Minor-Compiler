@@ -361,7 +361,7 @@ Status test_hash_symbol_remove(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct hash_table* ht = hash_table_create(0, 0);
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, strdup("bar"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, "bar");
   if (!ht) { print_error(test_type, "NOT NULL", "struct hash_table* ht"); status = FAILURE; }
   if (!s) { print_error(test_type, "NOT NULL", "struct symbol* s"); status = FAILURE; }
 
@@ -380,7 +380,7 @@ Status test_hash_symbol_lookup_null(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct hash_table* ht = hash_table_create(0, 0);
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, strdup("duck"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, "duck");
   if (!ht) { print_error(test_type, "NOT NULL", "struct hash_table* ht"); status = FAILURE; }
   if (!s) { print_error(test_type, "NOT NULL", "struct symbol* s"); status = FAILURE; }
 
@@ -395,7 +395,7 @@ Status test_hash_symbol_lookup(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   struct hash_table* ht = hash_table_create(0, 0);
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, strdup("duck"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, "duck");
   if (!ht) { print_error(test_type, "NOT NULL", "struct hash_table* ht"); status = FAILURE; }
   if (!s) { print_error(test_type, "NOT NULL", "struct symbol* s"); status = FAILURE; }
 
@@ -413,7 +413,7 @@ Status test_symbol_table_destroy(void) {
   Status status = SUCCESS;
   Symbol_table* st = symbol_table_create();
   struct hash_table* ht = hash_table_create(0, 0);
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, strdup("bar"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, "bar");
   if (!st) { print_error(test_type, "NOT NULL", "Symbol_table* st"); status = FAILURE; }
   if (!ht) { print_error(test_type, "NOT NULL", "struct hash_table* ht"); status = FAILURE; }
   if (!s) { print_error(test_type, "NOT NULL", "struct symbol* s"); status = FAILURE; }
@@ -483,7 +483,7 @@ Status test_symbol_table_scope_bind(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
   Symbol_table* st = symbol_table_create();
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, strdup("bar"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, "bar");
   if (!st) { print_error(test_type, "NOT NULL", "Symbol_table* st"); status = FAILURE; }
   if (!s) { print_error(test_type, "NOT NULL", "struct symbol* s"); status = FAILURE; }
 
@@ -503,7 +503,7 @@ Status test_symbol_table_scope_bind_null(void)  {
   Status status = SUCCESS;
   Symbol_table* st = symbol_table_create();
   struct hash_table* ht = NULL;
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, strdup("bar"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, "bar");
   if (!st) { print_error(test_type, "NOT NULL", "Symbol_table* st"); status = FAILURE; }
   if (ht) { print_error(test_type, "NULL", "struct hash_table* ht"); status = FAILURE; }
   if (!s) { print_error(test_type, "NOT NULL", "struct symbol* s"); status = FAILURE; }
@@ -584,7 +584,7 @@ Status test_symbol_table_scope_lookup_empty_table(void) {
 Status test_symbol_table_scope_lookup_bad_key(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, strdup("bar"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, "bar");
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
   symbol_table_scope_bind(st, "bar", s);
@@ -599,7 +599,7 @@ Status test_symbol_table_scope_lookup_bad_key(void) {
 Status test_symbol_table_scope_lookup_good_key(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, strdup("bar"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, "bar");
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
   symbol_table_scope_bind(st, "foo", s);
@@ -616,9 +616,9 @@ Status test_symbol_table_scope_lookup_multi_table(void) {
   Status status = SUCCESS;
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
-  symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, NULL, strdup("bar")));
+  symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, NULL, "bar"));
   symbol_table_scope_enter(st);
-  symbol_table_scope_bind(st, "duck", symbol_create(SYMBOL_GLOBAL, NULL, strdup("goose")));
+  symbol_table_scope_bind(st, "duck", symbol_create(SYMBOL_GLOBAL, NULL, "goose"));
 
   struct symbol* ret = symbol_table_scope_lookup(st, "foo");
   if (!ret) {
@@ -699,7 +699,7 @@ Status test_symbol_table_scope_lookup_current_empty_table(void) {
 Status test_symbol_table_scope_lookup_current_bad_key(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, strdup("bar"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, "bar");
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
   symbol_table_scope_bind(st, "bar", s);
@@ -713,7 +713,7 @@ Status test_symbol_table_scope_lookup_current_bad_key(void) {
 Status test_symbol_table_scope_lookup_current_good_key(void) {
   strcpy(test_type, __FUNCTION__);
   Status status = SUCCESS;
-  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, strdup("bar"));
+  struct symbol* s = symbol_create(SYMBOL_GLOBAL, NULL, "bar");
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
   symbol_table_scope_bind(st, "foo", s);
@@ -729,8 +729,8 @@ Status test_symbol_table_scope_lookup_current_multi_key(void) {
   Status status = SUCCESS;
   Symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st);
-  symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, NULL, strdup("bar")));
-  symbol_table_scope_bind(st, "duck", symbol_create(SYMBOL_GLOBAL, NULL, strdup("goose")));
+  symbol_table_scope_bind(st, "foo", symbol_create(SYMBOL_GLOBAL, NULL, "bar"));
+  symbol_table_scope_bind(st, "duck", symbol_create(SYMBOL_GLOBAL, NULL, "goose"));
 
   struct symbol* ret = symbol_table_scope_lookup_current(st, "foo");
   if (!ret) {
@@ -774,7 +774,7 @@ Status test_symbol_table_hidden_bind() {
   Hidden_table* hst = symbol_table_hidden_create();
   const char* label = ".L0";
   if (!hst) { print_error(test_type, "NOT NULL", "Hidden_table* st"); status = FAILURE; }
-  symbol_table_hidden_bind(hst, "foo", strdup(label));
+  symbol_table_hidden_bind(hst, "foo", label);
   if (hash_table_size(hst) != 1) {
     print_error(test_type, "1", "int hash_table_size(struct hash_table* ht)"); status = FAILURE;
   }
@@ -803,7 +803,7 @@ Status test_symbol_table_hidden_lookup_bad_key() {
   Status status = SUCCESS;
   const char* label = ".L0";
   Hidden_table* hst = symbol_table_hidden_create();
-  symbol_table_hidden_bind(hst, "foo", strdup(label));
+  symbol_table_hidden_bind(hst, "foo", label);
   if (symbol_table_hidden_lookup(hst, "bar")) {
     print_error(test_type, "NULL", "const char* symbol_table_hidden_lookup(Hidden_table* st, const char* literal)");
     status = FAILURE;
@@ -817,7 +817,7 @@ Status test_symbol_table_hidden_lookup_good_key() {
   Status status = SUCCESS;
   const char* label = ".L0";
   Hidden_table* hst = symbol_table_hidden_create();
-  symbol_table_hidden_bind(hst, "foo", strdup(label));
+  symbol_table_hidden_bind(hst, "foo", label);
   const char* found_label = symbol_table_hidden_lookup(hst, "foo");
   if (!found_label) {
     print_error(test_type, "NOT NULL", "const char* symbol_table_hidden_lookup(Hidden_table* st, const char* literal)");

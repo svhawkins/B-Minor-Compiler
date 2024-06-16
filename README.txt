@@ -32,12 +32,14 @@ Changes since assignment 4:
 4. Misc:
    - Various code cleanups for better readability, code-style consistency, and better cohesion.
    - executables now have help command line options (-h, --help)
+   - Fixed various memory errors + bugs (most of them)
+   - all dynamic allocation of member values in structures are now done in the <struct>_create() function 
 
 ****************************
 FILES:
 Other than the addition of the code generation functions for the structures, new files have been added for register 
 handling: register.h and register.c. They handle register and label allocation. Also contains helper functions
-for initialization and clearing for easier setup/cleanup. Also has its own set of error messages with its own
+for initialization and clearing for easier setup/cleanup. Has its own set of error messages with its own
 handler (which in occurence of an error simply exits if not explicitly stated for a test).
 
 Tree:
@@ -92,14 +94,16 @@ The code generator has seperate code files for each generation component*:
 - [test_codegen] --> TODO
    * Tests the code generator at a 'program' level, using test programs
 
-*they were originally all together, but I kept running into memory issues, the issue went away once splitting them apart.
-(stack overflow perhaps?)
+These are seperate rather than together for debugging purposes.
 
 ****************************
 HIDDEN SYMBOLS
 
-symbol_table.h/.c now has an additional structure to hold these hidden symbols: Hidden_table.
-Pretty much a typedef hash table.
+symbol_table.h/.c now has an additional structure to hold 'hidden symbols': Hidden_table.
+Hidden symbols are used for string labels. Pretty much a typedef hash table.
+
+The hidden table is an additional field of the Symbol_table structure. 
+The hidden symbols are generated seperately from the rest of the declarations. 
 
 Additional functions have been added for Hidden_table:
 
@@ -117,18 +121,14 @@ For symbol table printing:
 For code generation:
 - void symbol_table_hidden_codegen(Hidden_table* hst)
 
-The hidden table is an additional field of the Symbol_table structure. 
-The hidden symbols are generated seperately from the rest of the declarations (attempts were made to make it part
-of the same declaration list, but did not work, so it has its own special function).
-
 *****************
  CAVEATS
 
  - some functions (namely the codegen functions) have had their signatures modified.
    Some return an error status and expr_codegen takes an additonal boolean option.
 
- - expr_codegen only does 'intermediate value tracking' (evaluates the expression during generation) with literals (so far).
-   if an expression contains an identifier and has underflow, overflow, divsion-by-zero, etc.,
+ - expr_codegen only does 'intermediate value tracking' (evaluates the expression during generation) with literals (so far?).
+   so if an expression contains an identifier AND has underflow, overflow, divsion-by-zero, etc.,
    the code generator will fail to express that.
 
 - some features of B-Minor code generation do NOT correlate with C code generation:
@@ -140,16 +140,10 @@ of the same declaration list, but did not work, so it has its own special functi
 
 
 BUGS:
-- Multidimensional array code-generation results in segmentation faults. I am not sure of the exact cause, but
-  it may be call-stack related. The AST structures involved in a non-zero-initialized 2+ dimensional array use a lot
-  of recursion, local variables, and dynamic memory allocation.
-  The parser was not updated for this limitation.
 
-- The sybmbol table 'reuses' former scopes for local variables. In multiple global function defintions, the local variables
-from all of them would be part of the same scope.
+- The symbol table 'reuses' former scopes for local variables. In multiple global function defintions, the local variables
+from all prior scopes at the same 'level' would be part of the same hash table.
 
-- Array subscriptions may sometimes result in a segmentation fault. I do not know why, though I suspect it may be related
-to the other array-related problems I've been facing.
 *****************
 
 
@@ -182,7 +176,7 @@ use assembly emulator to help you.
    DONE- global non-function/array declarations
    DONE- local non-function/array declarations
    DONE- array declarations (global, local) (requires EXPR_INIT)
-   BUGGY->POSTPONED- multidimensional array declarations
+   - multidimensional array declarations
 
 6. implement + test stmt codegen
    - expression statements

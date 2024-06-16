@@ -173,7 +173,7 @@ struct decl* decl_create(char* name, struct type* type, struct expr* value, stru
 {
   struct decl* d = malloc(sizeof(struct decl));
   if (d) {
-    d->name = name;
+    d->name = (name != NULL) ? strdup(name) : NULL;
     d->type = type;
     d->value = value;
     d->code = code;
@@ -234,7 +234,7 @@ int decl_resolve(struct symbol_table* st, struct decl* d) {
   // does this declaration require constant expressions?
   is_const_expr = ((d->value && kind == SYMBOL_GLOBAL) || d->type->size);
 
-  d->symbol = symbol_create(kind, type_copy(d->type), strdup(d->name));
+  d->symbol = symbol_create(kind, type_copy(d->type), d->name);
   // look up symbol in table
   struct symbol* sym = symbol_table_scope_lookup_current(st, d->name);
   if (!sym) {
