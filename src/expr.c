@@ -203,7 +203,7 @@ int64_t get_offset(struct expr* e, struct type* t) {
 
   // offset = (INDEX_OUT * SIZE_IN) + INDEX_IN...
   if (e && t) {
-    size = (t->subtype == TYPE_ARRAY) ? t->subtype->actual_size : 1; // actual size list size in declaration
+    size = ((t->subtype == TYPE_ARRAY) ? t->subtype->actual_size : 1); // actual size list size in declaration
     index = e->right->literal_value;
     if (index < 0 || index > size) { error_status = expr_codegen_error_handle(EXPR_BOUNDS, e); return 0;}
     // continue down the rest of the tree to outer dimensions
@@ -415,6 +415,9 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
       symbol_table_hidden_bind(st->hidden_table, (const char*)e->string_literal, (const char*)(found_label));
     }
     break;
+  case EXPR_COMMA: // update which counts for the elements
+    // TODO: have cleaner 'interface' to get which counts
+    if (e->right->kind == EXPR_COMMA) { st->which_count->items[symbol_table_scope_level(st) -1 ]++; }
   default:
     error_status = expr_resolve(st, e->left);
     error_status = expr_resolve(st, e->right);
@@ -571,7 +574,9 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
   if (!e) { return error_status; } // basis reached.
 
   // post order traversal, left child, right child, then parent
-  error_status = expr_codegen(st, e->left);
+
+  // subscriptions need not generate left if it is a name
+  if (!(e && e->kind == EXPR_SUBSCRIPT && e->left && e->left->kind == EXPR_NAME)) { error_status = expr_codegen(st, e->left); }
   error_status = expr_codegen(st, e->right);
 
   // parent
@@ -601,7 +606,8 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
     pass-by-value
     MOVQ <name>, %R / MOVQ %rsp(N), %R
     
-    pass-by-reference (string, array)
+    pass-by-reference (string)
+    technically arrays too
     LEAQ <name>, %R / LEAQ %rps(N), %R
     */
       e->reg = register_scratch_alloc();
@@ -803,15 +809,23 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
       generate_expr= false;
       struct expr* subexpr = e;
       struct type* t = e->left->symbol->type;
-      int64_t offset = QUAD * get_offset(subexpr, t);
+      int64_t offset = get_offset(subexpr, t); // FIXME: add one since rip0??
       e->reg = register_scratch_alloc(); // using 'dummy' register
 
       switch (e->left->symbol->kind) {
         case SYMBOL_GLOBAL:
-          fprintf(CODEGEN_OUT, "%d+%s(%rip)", offset, symbol_codegen(e->left->symbol));
+          fprintf(CODEGEN_OUT, "%d+%s(%rip)", QUAD * offset, symbol_codegen(e->left->symbol));
         break;
-        case SYMBOL_LOCAL:
-          fprintf(CODEGEN_OUT, "%s", symbol_codegen(e->left->symbol));
+        case SYMBOL_LOCAL: case SYMBOL_PARAM:
+          if (e->left->symbol) {
+          fprintf(CODEGEN_OUT, "%s", symbol_codegen_offset(e->left->symbol, offset));
+          } else { // for returned arrays and whatnot, lacking symbol in table ,since not declared! (rather returned....)
+            /*
+              TODO:
+              1. 
+            */
+
+          }
         break;
       }
       // TODO: value tracking by 'getting' the expression's literal value corresponding to the indices/total offset
@@ -910,16 +924,21 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
    case EXPR_INIT: /* this expression only occurs in declarations */ break;
    case EXPR_COMMA:
     /* this expression is dealt with in helper functions -> singly linked list */
+    /*
+    1. array declarations
+    2. print statements (runtime library)
+    3. parameter lists in function declarations and/or calls
+    */
     break;
    case EXPR_FCALL:
     /*
     TO DO:
     1. generate allocation of registers prior to call (test with stub function body)
     2. generate deallocation of registers after call (test with stub function body)
-    3. generate function prologue
-    4. generate function epilogue
-    5. generate function body
+    3. generate function prologue --? statement codegen
+    4. generate function epilogue --> statement codegen
+    5. generate function body --> statement codegen
     */
-   default: break; // shouldnt come here but throw error?????
+   default: break; // TODO: shouldnt come here but throw error?????
   }
 }

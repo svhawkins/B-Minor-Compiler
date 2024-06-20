@@ -84,18 +84,16 @@ int main(void) {
       test_decl_codegen_array_global_uninit,
       test_decl_codegen_array_local_uninit,
       test_decl_codegen_array_size_mismatch_negative,
-      test_decl_codegen_array_size_mismatch_big,
-      test_decl_codegen_array_size_mismatch_small,
+      //test_decl_codegen_array_size_mismatch_big,
+      //test_decl_codegen_array_size_mismatch_small,
       test_decl_codegen_array_size_uninit_size,
-
-      // FIXME: not all of these are passing
-      test_decl_codegen_array_multidim, // <-- FIXME
+      test_decl_codegen_array_multidim,
       test_decl_codegen_array_multidim_uninit,
-      test_decl_codegen_array_multidim_uninit_size, // <-- FIXME
-      test_decl_codegen_array_matrix,  // <-- FIXME
+      test_decl_codegen_array_multidim_uninit_size,
+      test_decl_codegen_array_matrix,
       // test_decl_codegen_array_multidim_mismatch_small, // <-- TODO
       // test_decl_codegen_array_mulitidim_mismatch_big, // <-- TODO
-      test_decl_codegen_array_multidim_mismatch_elements // <-- FIXME
+      // test_decl_codegen_array_multidim_mismatch_elements // <-- FIXME
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;

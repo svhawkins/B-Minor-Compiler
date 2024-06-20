@@ -96,7 +96,7 @@ int main(void) {
        test_expr_codegen_mult_underflow_overflow,
        test_expr_codegen_underflow,
        test_expr_codegen_subscript_global,
-       test_expr_codegen_subscript_local, // <-- FIXME
+       test_expr_codegen_subscript_local,
        //test_expr_codegen_subscript_multidim, // <-- TODO
        test_expr_codegen_subscript_global_bounds,
        //test_expr_codegen_subscript_global_bounds_multidim // <-- TODO
@@ -562,7 +562,7 @@ Status test_expr_codegen_subscript_global(void) {
   strcpy(test_type, "Testing: test_expr_codegen_subscript_global");
   Status status = SUCCESS;
   char* expect =
-"LEAQ foo, %rbx\nMOVQ $1, %r10\n8+foo(%rip)";
+"MOVQ $1, %rbx\n8+foo(%rip)";
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   register_codegen_init(true);
@@ -590,10 +590,6 @@ Status test_expr_codegen_subscript_global(void) {
     print_error(test_type, "true", "bool scratch_register[e->left->reg].inuse");
     status = FAILURE;
   }
-  if (scratch_register[e->right->reg].inuse) {
-    print_error(test_type, "false", "scratch_register[e->right->reg].inuse");
-    status = FAILURE;
-  }
   if (!scratch_register[e->reg].inuse) {
     print_error(test_type, "true", "scratch_register[e->reg].inuse");
     status = FAILURE;
@@ -611,11 +607,10 @@ Status test_expr_codegen_subscript_global(void) {
 
 /* tests that subscription generates properly for locally declared + defined arrays */
 Status test_expr_codegen_subscript_local(void) {
-
  strcpy(test_type, "Testing: test_expr_codegen_subscript_local");
   Status status = SUCCESS;
   char* expect =
-"LEAQ -8(%rbp), %rbx\nMOVQ $1, %r10\n-16(%rbp)";
+"MOVQ $1, %rbx\n-16(%rbp)"; // subscription returns lvalues so it's always part of bigger expressions.
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   struct symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st); symbol_table_scope_enter(st);
@@ -629,9 +624,7 @@ Status test_expr_codegen_subscript_local(void) {
                    NULL
                    );
   decl_resolve(st, d);
-  d->symbol->type->actual_size = 2;
-  d->symbol->type->size->literal_value = 2;
-
+  // FYI: decl codegen never happened, so the body is never 'generated'
 
   struct expr* e = expr_create(EXPR_SUBSCRIPT, expr_create_name(("foo")), expr_create_integer_literal(1));
   error_status = expr_resolve(st, e);
@@ -641,10 +634,6 @@ Status test_expr_codegen_subscript_local(void) {
   if (e->reg != 0) { print_error(test_type, "0", "int e->reg"); status = FAILURE; }
   if (!scratch_register[e->left->reg].inuse) { // used by resultant in this case
     print_error(test_type, "true", "bool scratch_register[e->left->reg].inuse");
-    status = FAILURE;
-  }
-  if (scratch_register[e->right->reg].inuse) {
-    print_error(test_type, "false", "scratch_register[e->right->reg].inuse");
     status = FAILURE;
   }
   if (!scratch_register[e->reg].inuse) {

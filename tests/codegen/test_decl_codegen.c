@@ -222,7 +222,9 @@ MOVQ $1, %rbx\nMOVQ %rbx, -8(%rbp)\n\
       print_error(test_type, "false", "bool scratch_register[d->value->reg].inuse");
       status = FAILURE;
     }
-    if (d->symbol->which != 0) { print_error(test_type, "0", "int d->symbol->which"); return FAILURE; }
+
+    // checking which at 1 and not 0 since %rbp no offset is the very top and no items are at that address.
+    if (d->symbol->which != 1) { print_error(test_type, "1", "int d->symbol->which"); return FAILURE; }
     decl_destroy(&d);
     symbol_table_destroy(&st);
     register_codegen_clear();
@@ -268,7 +270,8 @@ MOVQ $0, -8(%rbp)\n";
     error_status = decl_typecheck(st, d);
     error_status = decl_codegen(st, d);
 
-    if (d->symbol->which != 0) { print_error(test_type, "0", "int d->symbol->which"); return FAILURE; }
+    // %rbp no offset is the end of the stack. there are no items there.
+    if (d->symbol->which != 1) { print_error(test_type, "1", "int d->symbol->which"); return FAILURE; }
 
     decl_destroy(&d);
     symbol_table_destroy(&st);

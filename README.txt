@@ -22,6 +22,7 @@ Changes since assignment 4:
    - Now includes 'hidden' symbols: originally nameless array and string literals stored as symbols
      under a new name: the label name generated from label_name() and label_create().
      This makes sure that pass-by-reference string values are being stored and loaded correctly.
+   - 'which' generation occurs during resolve and the corresponding count vector is parallel to the symbol table stack size.
 
 3. Structures
    - struct symbol now has an address field to have during code generation
@@ -75,7 +76,7 @@ Codegen Error Messages:
       Errors:
          DECL_NEGSIZE --> Array's declared size evaluated to negative
       Warnings:
-         DECL_SIZE --> Array's evaluated declared size does not match initializer list size, true size is list size
+         DECL_SIZE --> Array's evaluated declared size does not match initializer list size (true size is list size)
 ****************************
 TESTS
 

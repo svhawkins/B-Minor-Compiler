@@ -46,14 +46,15 @@ struct symbol* symbol_copy(struct symbol* s) {
 }
 
 /* generates the proper address/label for a symbol */
-const char* symbol_codegen(struct symbol* s) {
+const char* symbol_codegen_offset(struct symbol* s, int offset) {
   if (!s) { /* TODO: error message, null, failed to generate address */ return NULL; }
   if (s->address) { free(s->address); }
   switch (s->kind) {
     case SYMBOL_GLOBAL: strcpy(symbol_address, s->name); break;
-    default: strcpy(symbol_address, "\0"); sprintf(symbol_address, "-%d(%%rbp)", (s->which + 1) * QUAD); break;
+    default: strcpy(symbol_address, "\0"); sprintf(symbol_address, "-%d(%%rbp)", (s->which + offset + 1) * QUAD); break;
   }
   s->address = strdup(symbol_address);
   return s->address;
 }
+const char* symbol_codegen(struct symbol* s) { return symbol_codegen_offset(s, 0); }
 

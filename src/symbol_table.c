@@ -151,7 +151,7 @@ struct symbol_table* symbol_table_create() {
     st->top = -1;
     st->show_hidden = false; // true iff from command line option
     st->hidden_generated = false;
-    st->which_count = vector_create();
+    st->which_count = intVector_create();
   }
   global_error_count = 0;
   error_status = 0;
@@ -217,7 +217,7 @@ void symbol_table_destroy(struct symbol_table** st) {
   vector_destroy(&((*st)->vector));
   symbol_table_hidden_destroy(&((*st)->hidden_table));
   table_destroy(&((*st)->table));
-  vector_destroy(&((*st)->which_count));
+  intVector_destroy(&((*st)->which_count));
 
   free(*st); *st = NULL;
   global_error_count = 0;
@@ -243,12 +243,16 @@ Does nothing if:
         - hash table fails to be created
 */
 void symbol_table_scope_enter(struct symbol_table* st) {
+  struct hash_table* ht = hash_table_create(0, 0); // alloc errors are dealloced inside.
+  if (!st || !st->vector || !st->vector->items || !ht) { return; }
   st->top++;
   if ((st->top) >= vector_size(st->vector)) {
-    vector_push(st->vector, (void*)hash_table_create(0, 0));
+    vector_push(st->vector, (void*)ht);
+
+    // continue which count at this scope
+    int size = intVector_size(st->which_count);
+    intVector_push(st->which_count, (size > 1) ? intVector_item(st->which_count, st->top - 1) : 0);
   }
-  // start which count
-  if (st->top == 1) { which_count = -1; }
 }
 
 
@@ -259,9 +263,10 @@ Does nothing if:
         - NULL symbol table items array
 */
 void symbol_table_scope_exit(struct symbol_table* st) {
+  if (!st || !st->vector || ! st->vector->items) { return; }
   st->top--;
-  // reset which count to previous count (or set to 0 if global scope)
-  which_count = (st->top > 0) ? hash_table_size((struct hash_table*)st->vector->items[st->top]) - 1: 0;
+  // // reset which count to previous count (or set to 0 if global scope)
+  // which_count = (st->top > 0) ? hash_table_size((struct hash_table*)st->vector->items[st->top]) - 1: 0;
 }
 
 /*
@@ -284,11 +289,13 @@ Failure if:
         - empty symbol table
 */
 int symbol_table_scope_bind(struct symbol_table* st, const char* name, struct symbol* sym) {
-  if (!st || !st->vector->items || !(st->top + 1) || !(st->vector->items[st->top])) { return 0; }
+  if (!st || !st->vector->items || (st->top < 0) || !(st->vector->items[st->top])) { return 0; }
   int status = (hash_table_insert((struct hash_table*)st->vector->items[st->top], name, (void*)sym) == 1);
-  // update which count for successful binding of non-globals
-  if (status && (vector_size(st->vector) > 1) && sym && !(sym->kind == SYMBOL_GLOBAL)) {
-    which_count++; sym->which = which_count;
+
+  // update which_count at current scope
+  if (status && sym) {
+    sym->which = intVector_item(st->which_count, st->top);
+    st->which_count->items[st->top]++;
   }
   return status;
 }

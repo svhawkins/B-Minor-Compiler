@@ -30,6 +30,7 @@ struct symbol* symbol_copy(struct symbol* s);
 
 /* generates the proper address/label for a symbol */
 const char* symbol_codegen(struct symbol* s);
+const char* symbol_codegen_offset(struct symbol* s, int offset);
 
 
 #endif /* SYMBOL_H */

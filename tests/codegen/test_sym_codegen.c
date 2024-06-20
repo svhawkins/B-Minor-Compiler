@@ -261,6 +261,11 @@ Status test_label_name(void) {
 Status test_symbol_codegen(void) {
   strcpy(test_type, "Testing: test_symbol_codegen");
   Status status = SUCCESS;
+
+  /*
+  foo: function void(x: integer) = { y: integer; }
+  */
+
   struct type* tvoid = type_create(TYPE_VOID, NULL, NULL, NULL);
   struct type* integer = type_create(TYPE_INTEGER, NULL, NULL, NULL);
   struct param_list* p = param_list_create(("x"), type_copy(integer), NULL);
@@ -274,6 +279,7 @@ Status test_symbol_codegen(void) {
   struct symbol* sym_foo = symbol_table_scope_lookup_all(st, "foo");
   struct symbol* sym_x = symbol_table_scope_lookup_all(st, "x");
   struct symbol* sym_y = symbol_table_scope_lookup_all(st, "y");
+
   if (!sym_foo) { print_error(test_type, "NOT NULL", "struct symbol* sym_foo"); return FAILURE; }
   if (!sym_x) { print_error(test_type, "NOT NULL", "struct symbol* sym_x"); return FAILURE; }
   if (!sym_y) { print_error(test_type, "NOT NULL", "struct symbol* sym_y"); return FAILURE; }

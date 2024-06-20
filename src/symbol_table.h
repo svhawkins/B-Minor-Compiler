@@ -64,7 +64,7 @@ struct symbol_table {
   bool show_hidden;
   bool hidden_generated;
   Hidden_table* hidden_table; /* keeps track of hidden symbols */
-  Vector* which_count; /* keeps track of number of local variables/elements per scope */
+  intVector* which_count; /* keeps track of number of local variables/elements per scope */
 }; typedef struct symbol_table Symbol_table;
 
 
