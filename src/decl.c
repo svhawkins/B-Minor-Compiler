@@ -239,6 +239,7 @@ int decl_resolve(struct symbol_table* st, struct decl* d) {
   struct symbol* sym = symbol_table_scope_lookup_current(st, d->name);
   if (!sym) {
     // add symbol to the table
+    symbol_table_scope_bind(st, d->name, d->symbol);
     if (d->type->size) { 
       error_status = expr_resolve(st, d->type->size);
       if (decl_error) { error_status = decl_error_handle(DECL_CONST, (void*)d, NULL); }
@@ -248,7 +249,6 @@ int decl_resolve(struct symbol_table* st, struct decl* d) {
       if (decl_error) { error_status = decl_error_handle(DECL_CONST, (void*)d, NULL); }
     }
     if (d->code || d->value) { d->symbol->defined = true; }
-    symbol_table_scope_bind(st, d->name, d->symbol);
   } else {
     // symbol is already being used
     if (d->type->kind == TYPE_FUNCTION && !sym->defined && d->code) {

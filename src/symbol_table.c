@@ -243,10 +243,11 @@ Does nothing if:
         - hash table fails to be created
 */
 void symbol_table_scope_enter(struct symbol_table* st) {
-  struct hash_table* ht = hash_table_create(0, 0); // alloc errors are dealloced inside.
-  if (!st || !st->vector || !st->vector->items || !ht) { return; }
+  if (!st || !st->vector || !st->vector->items) { return; }
   st->top++;
   if ((st->top) >= vector_size(st->vector)) {
+    struct hash_table* ht = hash_table_create(0, 0);
+    if (!ht) { return; }
     vector_push(st->vector, (void*)ht);
 
     // continue which count at this scope
