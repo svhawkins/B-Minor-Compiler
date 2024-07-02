@@ -13,6 +13,9 @@ struct type* type_create(type_t kind, struct type* subtype, struct param_list* p
 
     // only function declarations have parameter lists
     if (t->kind == TYPE_FUNCTION) t->params = params;
+
+    // default -1 (invalid)
+    t->actual_size = -1;
   }
   return t;
 }

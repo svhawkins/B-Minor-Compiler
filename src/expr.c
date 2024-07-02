@@ -415,9 +415,6 @@ int expr_resolve(struct symbol_table* st, struct expr* e) {
       symbol_table_hidden_bind(st->hidden_table, (const char*)e->string_literal, (const char*)(found_label));
     }
     break;
-  case EXPR_COMMA: // update which counts for the elements
-    // TODO: have cleaner 'interface' to get which counts
-    if (e->right->kind == EXPR_COMMA) { st->which_count->items[symbol_table_scope_level(st) -1 ]++; }
   default:
     error_status = expr_resolve(st, e->left);
     error_status = expr_resolve(st, e->right);
@@ -571,7 +568,7 @@ If any error occurs that is NOT due to register allocation such as but not limit
 An error/warning code is emitted and send to the error message handler.
 */
 int expr_codegen(struct symbol_table* st, struct expr* e) {
-  if (!e) { return error_status; } // basis reached.
+  if (!st || !e) { return 0; } // basis reached.
 
   // post order traversal, left child, right child, then parent
 
@@ -941,4 +938,5 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
     */
    default: break; // TODO: shouldnt come here but throw error?????
   }
+  return error_status;
 }

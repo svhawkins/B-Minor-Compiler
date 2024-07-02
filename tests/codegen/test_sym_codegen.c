@@ -280,6 +280,10 @@ Status test_symbol_codegen(void) {
   struct symbol* sym_x = symbol_table_scope_lookup_all(st, "x");
   struct symbol* sym_y = symbol_table_scope_lookup_all(st, "y");
 
+  // hardcoding which here since no decl_codegen() has been called to generate them.
+  sym_x->which = 0;
+  sym_y->which = 1;
+
   if (!sym_foo) { print_error(test_type, "NOT NULL", "struct symbol* sym_foo"); return FAILURE; }
   if (!sym_x) { print_error(test_type, "NOT NULL", "struct symbol* sym_x"); return FAILURE; }
   if (!sym_y) { print_error(test_type, "NOT NULL", "struct symbol* sym_y"); return FAILURE; }

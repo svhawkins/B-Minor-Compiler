@@ -772,7 +772,6 @@ Status test_stmt_resolve_which_scope_exit(void) {
   if (sym_duck_out->which != 0) { print_error(test_type, "0", "int sym_duck_out->which"); status = FAILURE; }
   if (sym_duck_in->which != 1) { print_error(test_type, "1", "int sym_duck_in->which"); status = FAILURE; }
   if (sym_goose->which != 1) { print_error(test_type, "1", "int sym_goose->which"); status = FAILURE; }
-  if (which_count) { print_error(test_type, "0", "int which_count (global reset)"); status = FAILURE; }
   symbol_table_destroy(&st); stmt_destroy(&s); type_destroy(&tvoid);
   return status;
 }

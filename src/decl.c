@@ -10,6 +10,7 @@ char* decl_strerror(decl_error_t kind) {
     case DECL_NULL: strcpy(buffer, "ENULL"); break;
     case DECL_NINT: strcpy(buffer, "ENINT"); break;
     case DECL_CONST: strcpy(buffer, "ECONST"); break;
+    default: break;
   }
   return buffer;
 }
@@ -17,7 +18,7 @@ char* decl_strerror(decl_error_t kind) {
 char* decl_codegen_strerror(decl_codegen_error_t kind) {
   switch(kind) {
     case DECL_NEGSIZE: strcpy(buffer, "ENEGSIZE"); break;
-    case DECL_SIZE: strcpy(buffer, "WSIZE"); break;
+    case DECL_PADSIZE: strcpy(buffer, "WSIZE"); break;
   }
   return buffer;
 }
@@ -40,6 +41,8 @@ int decl_error_handle(decl_error_t kind, void* ctx1, void* ctx2) {
     fprintf(ERR_OUT, "Array size expressions or global variable expressions cannot contain variables.\n");
     fprintf(ERR_OUT, "in declaration: "); decl_fprint(ERR_OUT, (struct decl*)ctx1, 0);
     break;
+    default:
+    break;
   }
   fprintf(ERR_OUT, "\n\n");
   global_error_count++;
@@ -54,14 +57,14 @@ int decl_codegen_error_handle(decl_codegen_error_t kind, void* ctx1, void* ctx2)
     fprintf(ERR_OUT, "ERROR %s (%d): ", decl_codegen_strerror(kind), kind);
     fprintf(ERR_OUT, "Negative size field detected in declaration. In declaration:\n");
     decl_fprint(ERR_OUT, ((struct decl*)ctx1), 0);
-    fprintf(ERR_OUT, " with given size: %ld", ((struct decl*)ctx1)->type->actual_size);
+    fprintf(ERR_OUT, " with evaluated size: %ld", ((struct decl*)ctx1)->type->actual_size);
     break;
-    case DECL_SIZE: /* size mismatch, using size determined from value field.*/
+    case DECL_PADSIZE: /* size mismatch, using size determined from value field.*/
     fprintf(ERR_OUT, "WARNING %s (%d): ", decl_codegen_strerror(kind), kind);
     fprintf(ERR_OUT, "Declared size and list size mismatch. Declared size: ");
     expr_fprint(ERR_OUT, ((struct decl*)ctx1)->type->size);
     fprintf(ERR_OUT, " (%ld)", ((struct decl*)ctx1)->type->actual_size); 
-    fprintf(ERR_OUT, "True array size is list size: %ld.", *((int*)ctx2));
+    fprintf(ERR_OUT, "True array size is list size: %d.", *((int*)ctx2));
     break;
   }
   fprintf(ERR_OUT, "\n\n");
@@ -107,60 +110,98 @@ int decl_codegen_expr(Symbol_table* st, struct decl* d, struct expr* e)
         } else {
           fprintf(CODEGEN_OUT, "MOVQ %s, %s\n", "$0", d->symbol->address);
         }
+      break;
+      case SYMBOL_PARAM:
+        // ?????
+      break;
     }
     d->symbol->which++;
+    st->which_count->items[symbol_table_scope_level(st)]++;
     return error_status;
 }
 
 /* 
    generates array declarations
-   return value is either size of array or -1, indicating error.
+   return value is either -1 (error), 0 (no generation), 1 (successfully generated)
+   returns a sum only in the 'intermediate' calls
  */
-enum { DECL_ERROR = -1, DECL_SUCCESS = 1};
+enum { DECL_ERROR = -1, DECL_NO_GEN = 0, DECL_SUCCESS = 1};
 
-// TODO: UPDATE actual_size fields for multidim array subtypes!
-int decl_codegen_array(Symbol_table* st, struct decl* d, struct expr* e, struct type* t, bool init_parent)
+
+int decl_codegen_array(Symbol_table* st,
+		       struct decl* d,
+		       struct expr* e,
+		       struct type* t,
+		       int* count,
+		       int* limit)
 {
-  if (e && e->kind != EXPR_INIT && e->kind != EXPR_COMMA) {
-    // base case
+  // 'base' case, generating primitive expressions
+  if (e && (e->kind != EXPR_INIT) && (e->kind != EXPR_COMMA)) {
+   // generating w/o threshold or only within threshold
+   if ((*limit < 0) || (*count < *limit)) { /* this short circuits, no need for limit >= 0 */
     error_status = decl_codegen_expr(st, d, e);
+    *count += ((!error_status) ? 1 : 0);
     return (!error_status) ? DECL_SUCCESS : DECL_ERROR;
+    } else { return DECL_NO_GEN; }
   }
-  else if (e && e->kind == EXPR_COMMA) {
-   unsigned int size_left = decl_codegen_array(st, d, e->left, t, init_parent);
-   unsigned int size_right = decl_codegen_array(st, d, e->right, t, init_parent);
-   if (size_left == DECL_ERROR || size_right == DECL_ERROR) { return DECL_ERROR; }
-   if (init_parent && size_left != size_right) {
-    // TODO: ERROR, mismatch sizes of nested array sizes
-   }
-   return size_left + size_right;
-   //return (e->left != NULL) + (e->right != NULL);
-  }
-  else if ((e && e->kind == EXPR_INIT) || (!e && t->kind == TYPE_ARRAY)) {
 
-    // generate size (if applicable)
+  // 'traversal' case, gotta reach the children somehow
+  if (e && (e->kind == EXPR_COMMA)) {
+    int left_size = decl_codegen_array(st, d, e->left, t, count, limit);
+    int right_size = decl_codegen_array(st, d, e->right, t, count, limit);
+    return ((left_size != DECL_ERROR) && right_size != DECL_ERROR) ? left_size + right_size : DECL_ERROR;
+    // FIXME: return count instead?
+  }
+
+  // 'entry' case: current expression (or type, or both) is an array
+  if ((e && e->kind == EXPR_INIT) || (t->kind == TYPE_ARRAY))
+  {
+    bool passed_in = (*count >= 0 && *limit >= 0); // use parameters from previous calls, 'parent' arrays
+    bool generated_array = false;
+    
+    // generate declared size. no expression actually generated. just need the consteval result.
     generate_expr = false;
     error_status = expr_codegen(st, t->size);
-    int array_size = (t->size) ? (t->actual_size = t->size->literal_value) : 0;
-    if (t->size && array_size < 0) { /* fatal error, negative size */
-        error_status = decl_codegen_error_handle(DECL_NEGSIZE, d, NULL);
-        return DECL_ERROR;
+    if (t->size && (t->size->literal_value < 0)) {
+      /* fatal error, negative size declared */
+      error_status = decl_codegen_error_handle(DECL_NEGSIZE, d, NULL);
+      return DECL_ERROR;
     }
-    
-    if (e) { /* go to leaves, compare resulting size */
-      array_size = decl_codegen_array(st, d, e->left, t->subtype, true);
-      if (array_size == DECL_ERROR) { return DECL_ERROR; }
-      else if (t->size && array_size != d->type->actual_size) {
-        /* warning, declared size does not match list size, using list size */
-        error_status = decl_codegen_error_handle(DECL_SIZE, d, (int*)&array_size);
-        return DECL_ERROR;
+
+    /* only generate the next array if fits within the current threshold */
+    if ((!passed_in) || (passed_in && (*count < *limit))) {
+      int child_limit = (t->size) ? t->size->literal_value : t->actual_size; // default -1
+      int child_size = 0;
+      int return_size = 0;
+
+      // generate from the list itself iff there is an expression
+      if (e) {
+        return_size = decl_codegen_array(st, d, e->left, t->subtype, &child_size, &child_limit);
       }
+      if (return_size == DECL_ERROR) { return DECL_ERROR; }
+
+      // verify the value
+
+      // apply any padding if less than threshold
+      // over threshold handled in different recursion cases.
+      uint64_t delta = (child_limit >= 0) ? (child_limit - return_size) : 0;
+      if (delta > 0) {
+        /* warning, doing additional padding . <-- quiet error? suppressable? */
+        // FIXME: update error message to do valid memory access
+        //error_status = decl_codegen_error_handle(DECL_PADSIZE, d, NULL);
+      }
+      for (uint64_t i = 0; i < delta; i++) { decl_codegen_expr(st, d, NULL); return_size += 1; }
+
+      // FIXME: is this ever triggered?
+      if ((child_limit >= 0) && (return_size != child_limit)) { return DECL_ERROR; }
+      t->actual_size = return_size; // this is used for further arrays at the same depth level.
+      *count += (passed_in) ? 1 : 0;
+      generated_array = true;
+    } else {
+      /* emit warning about truncating current array in decl d? */
+      generated_array = false;
     }
-    else {
-      // generate default (zero) values
-      for (int i = 0; i < array_size; i++) { decl_codegen_expr(st, d, NULL);  }
-    }
-    return array_size;
+    return (generated_array) ? DECL_SUCCESS : DECL_NO_GEN;
   }
 }
 
@@ -326,10 +367,9 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
   /* per declaration */
   switch (d->symbol->kind) {
     case SYMBOL_LOCAL:
-    case SYMBOL_PARAM:
-    /*
-    TODO
-    */
+      /* case SYMBOL_PARAM: ??? <-- TO DO */
+      // assign the which count the count from previous scope
+      d->symbol->which = (st->which_count->items[symbol_table_scope_level(st) - 1]);
     break;
     case SYMBOL_GLOBAL:
       // generate the declaration label
@@ -339,57 +379,19 @@ int decl_codegen(struct symbol_table* st, struct decl* d) {
   }
 
  // generate the expression(s)/statement(s)
- int old_which;
+ int count = -1, limit = -1, old_which = -1;
  switch (d->type->kind)
  {
   case TYPE_FUNCTION: /* TODO */
   break;
-
-  /* TODO: refactor */
   case TYPE_ARRAY: /* multiple decl_codegen_expr, size checking */
-
-    // FIXME: multidim is BUGGY 
-    old_which = d->symbol->which;
-    error_status = decl_codegen_array(st, d, d->value, d->type, true);
-    d->symbol->which = old_which;
-
-    // generate_expr = false;
-    // error_status = expr_codegen(st, d->type->size);
-    // d->type->actual_size = (d->type->size) ? d->type->size->literal_value : 0;
-    // generate_expr = !(d->symbol->kind == SYMBOL_GLOBAL);
-
-    // // compare true size and actual size
-    // // TO DO: make recursive for nested init expressions by looking at SUBTYPE.
-    // int array_size = 0;
-    // if (d->value) {  for (struct expr* e = d->value->left; e != NULL; e=e->right, array_size++) {} }
-
-    // // check for size errors
-    // if (array_size < 0 || d->type->actual_size < 0) { /* fatal --> error */
-    //   return error_status = decl_codegen_error_handle(DECL_NEGSIZE, d, NULL);
-    // }
-
-
-    // // true size is list size unless null, otherwise use declared size
-    // int size = (array_size != 0) ? array_size : d->type->actual_size;
-
-    // if (d->type->size && d->value) {
-    //   /* non-fatal warnings */
-    //   if (array_size != d->type->actual_size) {
-    //     /* warning, declared size does not match list size, using list size */
-    //     error_status = decl_codegen_error_handle(DECL_SIZE, d, (int*)&array_size);
-    //   }
-    // }
-
-    // // generate the expression
-    // int old_which = (d->symbol->kind == SYMBOL_LOCAL) ? d->symbol->which : 0;
-    // struct expr* e = (d->value) ? d->value->left : NULL; // get inner init expression
-    // for (int i = 0; i < size; i++) {
-    //   if (e && e->right) { decl_codegen_expr(st, d, e->left); e = e->right; }
-    //   else if (e) { decl_codegen_expr(st, d, e);  e = e->right; }
-    //   else { decl_codegen_expr(st, d, NULL); }
-    //   d->symbol->which++;
-    // }
-    // d->symbol->which = old_which;
+    old_which = (d->symbol->kind == SYMBOL_LOCAL) ? d->symbol->which : 0;
+    error_status = decl_codegen_array(st, d, d->value, d->type, &count, &limit);
+    if (error_status == DECL_ERROR) {
+      // somehow handle here?? generic fatal error???
+      return DECL_ERROR;
+    }
+    d->symbol->which = old_which; // TODO: should i get rid of this??
   break;
   default: /* primitive type */
     decl_codegen_expr(st, d, d->value);

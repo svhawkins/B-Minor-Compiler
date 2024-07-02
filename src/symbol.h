@@ -7,9 +7,9 @@
 char symbol_address[MAX_LENGTH];
 
 typedef enum {
-	SYMBOL_LOCAL,
-	SYMBOL_PARAM,
 	SYMBOL_GLOBAL,
+	SYMBOL_PARAM,
+	SYMBOL_LOCAL,
 } symbol_t;
 
 struct symbol {
@@ -19,7 +19,6 @@ struct symbol {
 	int which;
 	bool defined; // for function definitions (and i guess declarations without values)
 	char* address; // for symbol code generation
-
 };
 
 struct symbol* symbol_create(symbol_t kind, struct type *type, char *name);

@@ -202,6 +202,9 @@ Status test_expr_codegen_name_literal(void) {
   symbol_table_scope_enter(st);
   error_status = expr_resolve(st, local_expr);
   t = expr_typecheck(st, local_expr); type_destroy(&t);
+
+  // hardcoding which here since no decl_codegen() has been called to generate them.
+  local_expr->symbol->which = 0;
   error_status = expr_codegen(st, local_expr);
 
   if (global_expr->reg != 0) { print_error(test_type, "0", "int global_expr->reg" ); return FAILURE; }
@@ -624,7 +627,8 @@ Status test_expr_codegen_subscript_local(void) {
                    NULL
                    );
   decl_resolve(st, d);
-  // FYI: decl codegen never happened, so the body is never 'generated'
+  // FYI: decl codegen never happened, so the body is never 'generated', nor are the which statements
+  d->symbol->which = 0;
 
   struct expr* e = expr_create(EXPR_SUBSCRIPT, expr_create_name(("foo")), expr_create_integer_literal(1));
   error_status = expr_resolve(st, e);
