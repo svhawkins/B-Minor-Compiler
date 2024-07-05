@@ -181,7 +181,8 @@ int expr_codegen_error_handle(codegen_error_t kind, struct expr* e) {
      fprintf(ERR_OUT, "ERROR: %s (%d):\n", expr_codegen_strerror(kind), kind);
      fprintf(ERR_OUT, "Out-of-bounds indexing detected in expression: ");
      expr_fprint(ERR_OUT, e);
-     //fprintf(ERR_OUT, "\n%d is not within indexing range of %d and %d\n", *(int*)index, 0, *(int*)size);
+    fprintf(ERR_OUT, "\n%d is not within indexing range of %d and %d\n",
+                        e->right->literal_value, 0, e->left->symbol->type->actual_size);
   }
   error_status = kind;
   expr_fprint(ERR_OUT, e);
@@ -809,6 +810,15 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
       int64_t offset = get_offset(subexpr, t); // FIXME: add one since rip0??
       e->reg = register_scratch_alloc(); // using 'dummy' register
 
+      // TODO: make work for multidim too
+
+      // bounds checking
+      if (e->right->literal_value >= e->left->symbol->type->actual_size ||
+          e->right->literal_value < 0) {
+          error_status = expr_codegen_error_handle(EXPR_BOUNDS, e);
+          return error_status;
+      }
+
       switch (e->left->symbol->kind) {
         case SYMBOL_GLOBAL:
           fprintf(CODEGEN_OUT, "%d+%s(%rip)", QUAD * offset, symbol_codegen(e->left->symbol));
@@ -819,7 +829,8 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
           } else { // for returned arrays and whatnot, lacking symbol in table ,since not declared! (rather returned....)
             /*
               TODO:
-              1. 
+              1.  store it in the table!, as a 'hidden' value. uses a different set of labels: .R0...
+              2. put this outside of the switch statement
             */
 
           }
