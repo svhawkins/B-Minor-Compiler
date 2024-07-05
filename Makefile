@@ -1,7 +1,7 @@
 CFLAGS = -pedantic -Og -Wall -Wextra -g3 -fcommon
 AST = tests/test_factory tests/test_print tests/test_ast
 SYM = tests/test_data_structures tests/test_resolve tests/test_typecheck
-CODEGEN = tests/test_sym_codegen  tests/test_expr_codegen tests/test_decl_codegen tests/test_decl_array_codegen tests/test_codegen
+CODEGEN = tests/test_sym_codegen  tests/test_expr_codegen tests/test_decl_codegen tests/test_codegen
 TESTS = tests/test_scan tests/test_parse $(AST) $(SYM) $(CODEGEN) test
 COMPILER = scan parse print typecheck codegen
 EXEC = $(COMPILER) $(TESTS)
@@ -45,8 +45,6 @@ tests/test_expr_codegen: tests/codegen/test_expr_codegen.o src/scanner.o src/par
 	gcc -o $@ $^
 tests/test_decl_codegen: tests/codegen/test_decl_codegen.o src/scanner.o src/parser.o $(INCLUDES)
 	gcc -o $@ $^
-tests/test_decl_array_codegen: tests/codegen/test_decl_array_codegen.o src/scanner.o src/parser.o $(INCLUDES)
-	gcc -o $@ $^
 
 ## root targets
 scan: src/scan.o src/scanner.o src/parser.o $(INCLUDES)
@@ -79,7 +77,7 @@ src/parser.c: src/grammar.bison
 	gcc $(CFLAGS) -c -g $< $@
 
 ## directory src code
-%src/.o: %src/.c
+%src/.o: %src/.c src/parser.g src/symbol_table.h
 	gcc $(CFLAGS) -c -g $^ $@
 
 ## removal

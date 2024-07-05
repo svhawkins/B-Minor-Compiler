@@ -19,7 +19,6 @@ tests/test_typecheck
 tests/test_sym_codegen
 tests/test_expr_codegen
 tests/test_decl_codegen
-tests/test_decl_array_codegen
 tests/test_codegen
 
 codegen

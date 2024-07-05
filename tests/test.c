@@ -26,7 +26,6 @@ int main(void) {
     "tests/test_sym_codegen",
     "tests/test_expr_codegen",
     "tests/test_decl_codegen",
-    "tests/test_decl_array_codegen",
   };
   int n_exec = sizeof(path)/sizeof(path[0]);
 
@@ -42,7 +41,6 @@ int main(void) {
 		   "test_sym_codegen",
        "test_expr_codegen",
        "test_decl_codegen",
-       "test_decl_array_codegen",
 		  };
 
   // what to print per pre-execution
@@ -58,8 +56,7 @@ int main(void) {
 		    "TYPECHECKING",
 		    "CODE GENERATION UTILITIES",
         "CODE GENERATION EXPRESSIONS",
-        "CODE GENERATION DECLARATIONS",
-        "CODE GENERATION ARRAY DECLARATIONS"
+        "CODE GENERATION DECLARATIONS"
 		   };
 
   // executions, output is written to pipe

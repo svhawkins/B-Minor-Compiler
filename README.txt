@@ -22,7 +22,6 @@ Changes since assignment 4:
    - Now includes 'hidden' symbols: originally nameless array and string literals stored as symbols
      under a new name: the label name generated from label_name() and label_create().
      This makes sure that pass-by-reference string values are being stored and loaded correctly.
-   - 'which' generation occurs during resolve and the corresponding count vector is parallel to the symbol table stack size.
 
 3. Structures
    - struct symbol now has an address field to have during code generation
@@ -88,9 +87,7 @@ The code generator has seperate code files for each generation component*:
 - [test_expr_codegen.c]
    * Tests expr_codegen
 - [test_decl_codegen.c]
-   * Tests decl_codegen for primitive function declarations
-- [test_decl_array_codegen.c]
-   * Tests decl_codegen for array declarations
+   * Tests decl_codegen for declarations (general, array, function <<TODO>>)
 - [test_stmt_codegen.c] --> TODO
    * Tests stmt_codegen 
 - [test_codegen] --> TODO
