@@ -326,8 +326,7 @@ MOVQ $0, -16(%rbp)\n";
   error_status = decl_typecheck(st, d);
   error_status = decl_codegen(st, d);
 
-  // FIXME
-  // if (d->type->actual_size != 3) { print_error(test_type, "3", "d->type->actual_size"); status = FAILURE; }
+  if (d->type->actual_size != 2) { print_error(test_type, "2", "d->type->actual_size"); status = FAILURE; }
   if (d->symbol->which != 0) { print_error(test_type, "0", "d->symbol->which"); status = FAILURE; }
 
   decl_destroy(&d);
@@ -410,7 +409,6 @@ struct decl* dlist = decl_create(("bar"), tlist, elist, NULL, NULL);
 
   // FIXME: invoke warnings/fix error messages  
   // if (!global_error_count) { print_error(test_type, "int global_error_count = 1", "0"); status = FAILURE; }
-  // FIXME?
   //if (error_status != DECL_SIZE) { print_error(test_type, "DECL_SIZE", "int error_status"); status = FAILURE; }
 
   decl_destroy(&dlist);
@@ -463,7 +461,6 @@ struct decl* dlist = decl_create(("bar"), tlist, elist, NULL, NULL);
   
   // FIXME: invoke errors/warnings
   // if (!global_error_count) { print_error(test_type, "int global_error_count = 1", "0"); status = FAILURE; }
-  // FIXME?
   //if (error_status != DECL_SIZE) { print_error(test_type, "DECL_SIZE", "int error_status"); status = FAILURE; }
 
   decl_destroy(&dlist);
@@ -583,8 +580,7 @@ Status test_decl_codegen_array_multidim_uninit(void) {
   error_status = decl_codegen(st, d);
 
   if (d->type->actual_size != 1) { print_error(test_type, "1", "d->type->actual_size"); status = FAILURE; }
-  // FIXME
-  // if (d->type->subtype->actual_size != 1) { print_error(test_type, "1", "d->type->subtype->actual_size"); status = FAILURE; }
+  if (d->type->subtype->actual_size != 1) { print_error(test_type, "1", "d->type->subtype->actual_size"); status = FAILURE; }
 
 
   decl_destroy(&d);
@@ -724,7 +720,6 @@ Status test_decl_codegen_array_multidim_mismatch_pad(void) {
   
   // FIXME: invoke errors/warnings
   // if (!global_error_count) { print_error(test_type, "int global_error_count = 1", "0"); status = FAILURE; }
-  // FIXME?
   //if (error_status != DECL_SIZE) { print_error(test_type, "DECL_SIZE", "int error_status"); status = FAILURE; }
 
   decl_destroy(&dlist);
@@ -782,7 +777,6 @@ Status test_decl_codegen_array_multidim_mismatch_truncate(void) {
   
   // FIXME: invoke errors/warnings
   // if (!global_error_count) { print_error(test_type, "int global_error_count = 1", "0"); status = FAILURE; }
-  // FIXME?
   //if (error_status != DECL_SIZE) { print_error(test_type, "DECL_SIZE", "int error_status"); status = FAILURE; }
 
   decl_destroy(&dlist);
@@ -840,7 +834,6 @@ Status test_decl_codegen_array_multidim_mismatch_pad_truncate(void) {
   
   // FIXME: invoke errors/warnings
   // if (!global_error_count) { print_error(test_type, "int global_error_count = 1", "0"); status = FAILURE; }
-  // FIXME?
   //if (error_status != DECL_SIZE) { print_error(test_type, "DECL_SIZE", "int error_status"); status = FAILURE; }
 
   decl_destroy(&dlist);
@@ -901,7 +894,6 @@ char* expect =
   
   // FIXME: invoke errors/warnings
   // if (!global_error_count) { print_error(test_type, "int global_error_count = 1", "0"); status = FAILURE; }
-  // FIXME?
   //if (error_status != DECL_SIZE) { print_error(test_type, "DECL_SIZE", "int error_status"); status = FAILURE; }
 
   decl_destroy(&dlist);

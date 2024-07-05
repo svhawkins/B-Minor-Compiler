@@ -170,13 +170,15 @@ int decl_codegen_array(Symbol_table* st,
 
     /* only generate the next array if fits within the current threshold */
     if ((!passed_in) || (passed_in && (*count < *limit))) {
-      int child_limit = (t->size) ? t->size->literal_value : t->actual_size; // default -1
+      int child_limit = (t->size || !e) ? t->size->literal_value : t->actual_size; // default -1
       int child_size = 0;
       int return_size = 0;
 
-      // generate from the list itself iff there is an expression
+      // generate from the list itself iff there is an expression, otherwise generate based on subtype alone.
       if (e) {
         return_size = decl_codegen_array(st, d, e->left, t->subtype, &child_size, &child_limit);
+      } else {
+        return_size = decl_codegen_array(st, d, NULL, t->subtype, &child_size, &child_limit);
       }
       if (return_size == DECL_ERROR) { return DECL_ERROR; }
 
@@ -190,7 +192,7 @@ int decl_codegen_array(Symbol_table* st,
         // FIXME: update error message to do valid memory access
         //error_status = decl_codegen_error_handle(DECL_PADSIZE, d, NULL);
       }
-      for (uint64_t i = 0; i < delta; i++) { decl_codegen_expr(st, d, NULL); return_size += 1; }
+      for (uint64_t i = 0; i < delta; i++) { decl_codegen_expr(st, d, NULL);  return_size++; }
 
       // FIXME: is this ever triggered?
       if ((child_limit >= 0) && (return_size != child_limit)) { return DECL_ERROR; }
