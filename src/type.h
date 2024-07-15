@@ -21,7 +21,8 @@ typedef enum {
 struct type {
 	type_t kind;
 	struct param_list* params;
-	struct type* subtype;
+	struct type* subtype; // for forward traversal
+	struct type* parent; // for backward traversal
 	struct expr* size; // used to properly print arrays
 	int64_t actual_size; // used for array size value tracking during codegen
 };

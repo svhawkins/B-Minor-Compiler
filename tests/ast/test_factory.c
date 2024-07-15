@@ -180,6 +180,7 @@ Status test_type_create_kind(void) {
       }
       if (t->subtype) { print_error(test_type, "NULL", "type* t->subtype"); overall_status = FAILURE; }
       if (t->params) { print_error(test_type, "NULL", "param_list* params"); overall_status = FAILURE; }
+      if (t->parent) { print_error(test_type, "NULL", "type* t->parent"); overall_status = FAILURE; }
     }
     type_destroy(&t);
   }
@@ -545,6 +546,7 @@ Status test_decl_create_atomic_uninit(void) {
     }
     if (d->type->subtype) { print_error(test_type, "NULL", "type* d->type->subtype"); overall_status = FAILURE; }
     if (d->type->params) { print_error(test_type, "NULL", "param_list* d->type->params"); overall_status = FAILURE; }
+    if (d->type->parent) { print_error(test_type, "NULL", "type* t->parent"); overall_status = FAILURE; }
   }
   decl_destroy(&d);
   return overall_status;
@@ -570,6 +572,7 @@ Status test_decl_create_atomic_init(void) {
     }
     if (d->type->subtype) { print_error(test_type, "NULL", "type* d->type->subtype"); overall_status = FAILURE; }
     if (d->type->params) { print_error(test_type, "NULL", "param_list* d->type->params"); overall_status = FAILURE; }
+    if (d->type->parent) { print_error(test_type, "NULL", "type* t->parent"); overall_status = FAILURE; }
 
     // check for expr subtree
     if (d->value->kind != EXPR_STR) {
@@ -606,6 +609,9 @@ Status test_decl_create_composite_array(void) {
     }
     if (!d->type->subtype) { print_error(test_type, "NOT NULL", "type* d->type->subtype"); overall_status = FAILURE; }
     if (d->type->params) { print_error(test_type, "NULL", "param_list* d->type->params"); overall_status = FAILURE; }
+    if (d->type->parent) { print_error(test_type, "NULL", "type* d->type->parent"); overall_status = FAILURE; }
+    if (!d->type->subtype->parent) { print_error(test_type, "NOT NULL", "type* t->parent"); overall_status = FAILURE; }
+    if (d->type != d->type->subtype->parent) { print_error(test_type, "EQUAL", "d->type == d->type->subtype->parent"); overall_status = FAILURE; }
 
     // check for subtype subtree
     if (d->type->subtype->kind != TYPE_INTEGER) {
@@ -643,6 +649,7 @@ Status test_decl_create_composite_function(void) {
     }
     if (!d->type->subtype) { print_error(test_type, "NOT NULL", "type* d->type->subtype"); overall_status = FAILURE; }
     if (!d->type->params) { print_error(test_type, "NOT NULL", "param_list* d->type->params"); overall_status = FAILURE; }
+    if (d->type->parent) { print_error(test_type, "NULL", "type* d->type->parent"); overall_status = FAILURE; }
 
     // check for subtype subtree
     if (d->type->subtype->kind != TYPE_VOID) {
@@ -651,6 +658,8 @@ Status test_decl_create_composite_function(void) {
     }
     if (d->type->subtype->subtype) { print_error(test_type, "NULL", "type* d->type->subtype->subtype"); overall_status = FAILURE; }
     if (d->type->subtype->params) { print_error(test_type, "NULL", "param_list* d->type->subtype->params"); overall_status = FAILURE; }
+    if (!d->type->subtype->parent) { print_error(test_type, "NOT NULL", "type* t->parent"); overall_status = FAILURE; }
+    if (d->type != d->type->subtype->parent) { print_error(test_type, "EQUAL", "d->type == d->type->subtype->parent"); overall_status = FAILURE; }
 
     // check for params subtree
     if (strcmp(d->type->params->name, "x")) { print_error(test_type, "x", "char* d->type->params->name"); overall_status = FAILURE; }
@@ -661,6 +670,7 @@ Status test_decl_create_composite_function(void) {
     if (d->type->params->type->subtype) { print_error(test_type, "NULL", "type* d->type->params->subtype->subtype"); overall_status = FAILURE; }
     if (d->type->params->type->params) { print_error(test_type, "NULL", "param_list* d->type->params->subtype->params"); overall_status = FAILURE; }
     if (d->type->params->next) { print_error(test_type, "NULL", "decl* d->type->params->next"); overall_status = FAILURE; }
+    if (d->type->params->type->parent) { print_error(test_type, "NULL", "type* d->type->params->type->parent"); overall_status = FAILURE; }
   }
   decl_destroy(&d);
   return overall_status;
@@ -720,6 +730,7 @@ Status test_decl_create_program(void) {
     }
     if (!d->type->subtype) { print_error(test_type, "NOT NULL", "type* d->type->subtype"); overall_status = FAILURE; }
     if (!d->type->params) { print_error(test_type, "NOT NULL", "param_list* d->type->params"); overall_status = FAILURE; }
+    if (d->type->parent) { print_error(test_type, "NULL", "type* d->type->parent"); overall_status = FAILURE; }
 
     // check for subtype subtree
     if (d->type->subtype->kind != TYPE_INTEGER) {
@@ -728,6 +739,10 @@ Status test_decl_create_program(void) {
     }
     if (d->type->subtype->subtype) { print_error(test_type, "NULL", "type* d->type->subtype->subtype"); overall_status = FAILURE; }
     if (d->type->subtype->params) { print_error(test_type, "NULL", "param_list* d->type->subtype->params"); overall_status = FAILURE; }
+    if (d->type->subtype->parent != d->type) {
+      print_error(test_type, "EQUAL", "d->type->subtype->parent == d->type");
+      overall_status = FAILURE;
+    }
 
     // check for params subtree
 
@@ -740,6 +755,7 @@ Status test_decl_create_program(void) {
     if (d->type->params->type->subtype) { print_error(test_type, "NULL", "type* d->type->params->type->subtype"); overall_status = FAILURE; }
     if (d->type->params->type->params) { print_error(test_type, "NULL", "param_list* d->type->params->type->params"); overall_status = FAILURE; }
     if (!d->type->params->next) { print_error(test_type, "NOT NULL", "decl* d->type->params->next"); overall_status = FAILURE; }
+    if (d->type->params->type->parent) { print_error(test_type, "NULL", "type* d->type->params->type->parent"); overall_status = FAILURE; }
 
     // argument 2 : argv: array [] string
     if (strcmp(d->type->params->next->name, "argv")) { print_error(test_type, "argv", "char* d->type->params->next->name"); overall_status = FAILURE; }
@@ -755,6 +771,10 @@ Status test_decl_create_program(void) {
     }
     if (d->type->params->next->type->params) { print_error(test_type, "NULL", "param_list* d->type->params->next->type->params"); overall_status = FAILURE; }
     if (d->type->params->next->next) { print_error(test_type, "NULL", "decl* d->type->params->next->next"); overall_status = FAILURE; }
+    if (d->type->params->next->type->subtype->parent != d->type->params->next->type) {
+        print_error(test_type, "EQUAL", "d->type->params->next->type->subtype->parent == d->type->params->next->type");
+        overall_status = FAILURE;
+    }
 
     // check for code subtree (this will consist of A LOT, this was a pain to write...
 
@@ -776,6 +796,7 @@ Status test_decl_create_program(void) {
     }
     if (d->code->decl->type->subtype) { print_error(test_type, "NULL", "type* d->code->decl->type->subtype"); overall_status = FAILURE; }
     if (d->code->decl->type->params) { print_error(test_type, "NULL", "param_list* d->code->decl->type->params"); overall_status = FAILURE; }
+    if (d->code->decl->type->parent) { print_error(test_type, "NULL", "type* d->code->decl_type->parent"); overall_status = FAILURE; }
 
     // n: integer = 10, d->code->next->decl...
     if (d->code->next->kind != STMT_DECL) {
@@ -795,6 +816,7 @@ Status test_decl_create_program(void) {
     }
     if (d->code->next->decl->type->subtype) { print_error(test_type, "NULL", "type* d->code->next->decl->type->subtype"); overall_status = FAILURE; }
     if (d->code->next->decl->type->params) { print_error(test_type, "NULL", "param_list* d->code->next->decl->type->params"); overall_status = FAILURE; }
+    if (d->code->next->decl->type->parent) { print_error(test_type, "NULL", "type* d->code->next->decl->type->parent"); overall_status = FAILURE; }
 
     // check for value (expr) subtree
     if (d->code->next->decl->value->kind != EXPR_INT) {

@@ -7,15 +7,19 @@ struct type* type_create(type_t kind, struct type* subtype, struct param_list* p
   struct type* t = malloc(sizeof(struct type));
   if (t) {
     t->kind = kind;
+
+    // update parent node of subtype node
     t->subtype = subtype;
-    t->params = NULL;
-    t->size = size;
+    t->parent = NULL;
+    if (t->subtype) { t->subtype->parent = t; }
 
     // only function declarations have parameter lists
-    if (t->kind == TYPE_FUNCTION) t->params = params;
+    t->params = NULL;
+    if (t->kind == TYPE_FUNCTION) { t->params = params; }
 
     // default -1 (invalid)
     t->actual_size = -1;
+    t->size = size;
   }
   return t;
 }
@@ -58,6 +62,8 @@ void type_destroy(struct type** t) {
   type_destroy(&((*t)->subtype));
   expr_destroy(&((*t)->size));
   free(*t); *t = NULL;
+
+  // nothing is allocated for ->parent. no need to free (also avoids doing some sorta circular recursion whatever)
 }
 
 struct type* type_copy(struct type* t) {

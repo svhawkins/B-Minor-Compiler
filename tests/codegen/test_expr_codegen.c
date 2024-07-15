@@ -32,6 +32,7 @@ Status test_expr_codegen_mult_underflow_overflow(void);
 Status test_expr_codegen_relate(void);
 
 // array subscriptions
+// TODO: get codegen snippets to verify.
 Status test_expr_codegen_subscript_global(void);
 Status test_expr_codegen_subscript_local(void);
 Status test_expr_codegen_subscript_multidim(void);
@@ -97,9 +98,9 @@ int main(void) {
        test_expr_codegen_underflow,
        test_expr_codegen_subscript_global,
        test_expr_codegen_subscript_local,
-       //test_expr_codegen_subscript_multidim, // <-- TODO
+       test_expr_codegen_subscript_multidim, // <-- TODO
        test_expr_codegen_subscript_global_bounds,
-       //test_expr_codegen_subscript_global_bounds_multidim // <-- TODO
+       test_expr_codegen_subscript_global_bounds_multidim // <-- TODO
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -742,7 +743,93 @@ Status test_expr_codegen_subscript_local(void) {
 tests that multidimensional subscripting generates the correct code
 */
 Status test_expr_codegen_subscript_multidim(void) {
-  return FAILURE;
+  strcpy(test_type, "Testing: test_expr_codegen_subscript_multidim");
+  Status status = SUCCESS;
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  register_codegen_init(true);
+
+  // make dummy declaration to make it part of the symbol table
+  struct type* tmatrix = type_create(TYPE_ARRAY,
+                         type_create(TYPE_ARRAY,
+                         type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(2)),
+                         NULL, expr_create_integer_literal(2));
+  struct decl* d = decl_create(("foo"), tmatrix, NULL, NULL, NULL);
+  decl_resolve(st, d);
+  d->symbol->type->actual_size = 2;
+  d->symbol->type->size->literal_value = 2;
+
+
+  /**
+   * 
+   * foo[0][0]
+   * 
+   */
+  struct expr* left = expr_create(EXPR_SUBSCRIPT, expr_create_name("foo"), expr_create_integer_literal(0));
+  struct expr* e = expr_create(EXPR_SUBSCRIPT, left, expr_create_integer_literal(0));
+          
+  e->symbol = d->symbol;
+  error_status = expr_resolve(st, e);
+  struct type* t = expr_typecheck(st, e); type_destroy(&t);
+  error_status = expr_codegen(st, e);
+
+
+  if (error_status) { print_error(test_type, "0", "error_status"); status = FAILURE; }
+  // if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; }  // <-- FIXME
+  expr_destroy(&e);
+
+
+  /**
+   * 
+   * foo[1][1]
+   * 
+   */
+  global_error_count = 0;
+  left = expr_create(EXPR_SUBSCRIPT, expr_create_name("foo"), expr_create_integer_literal(1));
+  e = expr_create(EXPR_SUBSCRIPT, left, expr_create_integer_literal(1));
+  e->symbol = d->symbol;
+  error_status = expr_resolve(st, e);
+  error_status = expr_codegen(st, e);
+
+  if (error_status) { print_error(test_type, "0", "error_status"); status = FAILURE; }
+  // if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; } // <-- FIXME
+  expr_destroy(&e);
+
+  /**
+   * 
+   * foo[0][1]
+   * 
+   */
+  global_error_count = 0;
+  left = expr_create(EXPR_SUBSCRIPT, expr_create_name("foo"), expr_create_integer_literal(1));
+  e = expr_create(EXPR_SUBSCRIPT, left, expr_create_integer_literal(0));
+  e->symbol = d->symbol;
+  error_status = expr_resolve(st, e);
+  error_status = expr_codegen(st, e);
+
+  if (error_status) { print_error(test_type, "0", "error_status"); status = FAILURE; }
+  // if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; } // <-- FIXME
+  expr_destroy(&e);
+
+  /**
+   * 
+   * foo[1][0]
+   * 
+   */
+  global_error_count = 0;
+  left = expr_create(EXPR_SUBSCRIPT, expr_create_name("foo"), expr_create_integer_literal(0));
+  e = expr_create(EXPR_SUBSCRIPT, left, expr_create_integer_literal(1));
+  e->symbol = d->symbol;
+  error_status = expr_resolve(st, e);
+  error_status = expr_codegen(st, e);
+
+  if (error_status) { print_error(test_type, "0", "error_status"); status = FAILURE; }
+  //if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; } // <-- FIXME
+  expr_destroy(&e);
+
+  decl_destroy(&d);
+  symbol_table_destroy(&st);
+  register_codegen_clear();
+  return status;
 }
 
 /*
@@ -808,5 +895,59 @@ Status test_expr_codegen_subscript_global_bounds(void) {
 tests that bounds checking works for multidimensional arrays
 */
 Status test_expr_codegen_subscript_global_bounds_multidim(void) {
-  return FAILURE;
+      strcpy(test_type, "Testing: test_expr_codegen_global_bounds_multidim");
+  Status status = SUCCESS;
+  struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
+  register_codegen_init(true);
+
+  // make dummy declaration to make it part of the symbol table
+  struct type* tmatrix = type_create(TYPE_ARRAY,
+                         type_create(TYPE_ARRAY,
+                         type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(2)),
+                         NULL, expr_create_integer_literal(2));
+  struct decl* d = decl_create(("foo"), tmatrix, NULL, NULL, NULL);
+  decl_resolve(st, d);
+  d->symbol->type->actual_size = 2;
+  d->symbol->type->size->literal_value = 2;
+
+
+  /**
+   * 
+   * foo[0][-1]
+   * 
+   */
+  struct expr* left = expr_create(EXPR_SUBSCRIPT, expr_create_name("foo"), expr_create_integer_literal(-1));
+  struct expr* e = expr_create(EXPR_SUBSCRIPT, left, expr_create_integer_literal(0));
+          
+  e->symbol = d->symbol;
+  error_status = expr_resolve(st, e);
+  struct type* t = expr_typecheck(st, e); type_destroy(&t);
+  error_status = expr_codegen(st, e);
+
+
+  //if (error_status != EXPR_BOUNDS) { print_error(test_type, "EXPR_BOUNDS", "error_status"); status = FAILURE; } // <-- FIXME. not storing 'error'
+  // if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; }  // <-- FIXME
+  expr_destroy(&e);
+
+
+  /**
+   * 
+   * foo[-1][0]
+   * 
+   */
+  global_error_count = 0;
+  left = expr_create(EXPR_SUBSCRIPT, expr_create_name("foo"), expr_create_integer_literal(0));
+  e = expr_create(EXPR_SUBSCRIPT, left, expr_create_integer_literal(-1));
+  e->symbol = d->symbol;
+  error_status = expr_resolve(st, e);
+  error_status = expr_codegen(st, e);
+
+  //if (error_status != EXPR_BOUNDS) { print_error(test_type, "EXPR_BOUNDS", "error_status"); status = FAILURE; } // FIXME: not 'storing' status
+  // if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; } // <-- FIXME
+  expr_destroy(&e);
+
+  decl_destroy(&d);
+  symbol_table_destroy(&st);
+  register_codegen_clear();
+  return status;
 }

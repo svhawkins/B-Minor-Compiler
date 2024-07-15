@@ -32,7 +32,7 @@ Status test_decl_codegen_array_size_mismatch_truncate(void);
 Status test_decl_codegen_array_size_mismatch_pad(void);
 Status test_decl_codegen_array_uninit_size(void);
 
-// 2-D array declarations
+// 2-D/3-D array declarations
 Status test_decl_codegen_array_multidim(void);
 Status test_decl_codegen_array_matrix(void);
 Status test_decl_codegen_array_multidim_uninit(void);
@@ -41,6 +41,7 @@ Status test_decl_codegen_array_multidim_mismatch_pad(void);
 Status test_decl_codegen_array_multidim_mismatch_truncate(void);
 Status test_decl_codegen_array_multidim_mismatch_pad_truncate(void);
 Status test_decl_codegen_array_multidim_mismatch_elements(void);
+Status test_decl_codegen_array_multidim_tensor(void);
 
 /*
   test function preamables:
@@ -108,6 +109,7 @@ int main(void) {
       test_decl_codegen_array_multidim_mismatch_truncate,
       test_decl_codegen_array_multidim_mismatch_pad_truncate,
       test_decl_codegen_array_multidim_mismatch_elements,
+      test_decl_codegen_array_multidim_tensor,
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -1116,6 +1118,74 @@ char* expect =
 
   CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
   fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
+  return status;
+}
+
+
+/* tests that multi-dimensional arrays are generated correctly (3D) */
+Status test_decl_codegen_array_multidim_tensor(void) {
+  strcpy(test_type, "Testing: test_decl_codegen_array_tensor");
+  Status status = SUCCESS;
+  char* expect =
+"qux:\n\
+\t.quad 1\n\
+\t.quad 1\n\
+\t.quad 2\n\
+\t.quad 2\n\
+\t.quad 3\n\
+\t.quad 3\n\
+\t.quad 4\n\
+\t.quad 4\n\
+\t.quad 5\n\
+\t.quad 5\n\
+\t.quad 6\n\
+\t.quad 6\n";
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+  struct symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st);
+  register_codegen_init(true);
+
+  /**
+   * qux: array [2] array [3] array [2] integer = {{{1, 1}, {2, 2}, {3, 3}}, {{4, 4}, {5, 5}, {6, 6}}};
+  */
+
+ struct type* t_dim3 = type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(2));
+ struct type* t_dim2 = type_create(TYPE_ARRAY, t_dim3, NULL, expr_create_integer_literal(3));
+ struct type* t = type_create(TYPE_ARRAY, t_dim2, NULL, expr_create_integer_literal(2));
+
+  // 3rd dimension sublists: {1, 1}  {2, 2} {3, 3} etc.
+  struct expr* oneone = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(1), expr_create_integer_literal(1)), NULL);
+  struct expr* twotwo = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(2), expr_create_integer_literal(2)), NULL);
+  struct expr* threethree = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(3), expr_create_integer_literal(3)), NULL);
+  struct expr* fourfour = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(4), expr_create_integer_literal(4)), NULL);
+  struct expr* fivefive = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(5), expr_create_integer_literal(5)), NULL);
+  struct expr* sixsix = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(6), expr_create_integer_literal(6)), NULL);
+
+  // 2nd dimension sublists
+  struct expr* one = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, oneone, expr_create(EXPR_COMMA, twotwo, threethree)), NULL);
+  struct expr* two = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, fourfour, expr_create(EXPR_COMMA, fivefive, sixsix)), NULL);
+
+  // 1st dimension sublist
+  struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, one, two), NULL);
+  struct decl* d = decl_create(("qux"), t, e, NULL, NULL);
+
+  error_status = decl_resolve(st, d);
+  error_status = decl_typecheck(st, d);
+  error_status = decl_codegen(st, d);
+
+  if (d->type->actual_size != 2) { print_error(test_type, "2", "d->type->actual_size"); status = FAILURE; }
+  if (d->type->subtype->actual_size != 3) { print_error(test_type, "3", "d->type->subtype->actual_size"); status = FAILURE; }
+  if (d->type->subtype->subtype->actual_size != 2) { print_error(test_type, "2", "d->type->subtype->subtype->actual_size"); status = FAILURE; }
+
+
+  decl_destroy(&d);
+  symbol_table_destroy(&st);
+  register_codegen_clear();
+
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER);
+  remove("foo.txt"); 
   if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
   return status;
 }

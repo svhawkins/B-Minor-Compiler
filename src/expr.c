@@ -199,17 +199,38 @@ inline bool expr_is_binary(expr_t kind) { return (kind >= EXPR_EXP && kind <= EX
 // excludes subscript [] and fcall () since those have right subtree within operator.
 inline bool expr_is_wrap(expr_t kind) { return (kind >= EXPR_SUBSCRIPT && kind <= EXPR_INIT); }
 
-int64_t get_offset(struct expr* e, struct type* t) {
-  int64_t size = 1, index = 0;
 
-  // offset = (INDEX_OUT * SIZE_IN) + INDEX_IN...
-  if (e && t) {
-    size = ((t->subtype == TYPE_ARRAY) ? t->subtype->actual_size : 1); // actual size list size in declaration
+const int SUBSCRIPT_FAILURE = -1;
+int64_t get_offset(struct expr* e, struct type* t) {
+  // reach last array type
+  struct type* t_it = NULL;
+  for (t_it = t; t_it && t_it->subtype && t_it->subtype->kind == TYPE_ARRAY; t_it = t_it->subtype) {}
+
+  // go from innermost to outermost dimension
+  int64_t sum_offset = 0;
+  int64_t product_offset = 1;
+  int64_t offset = -1;
+  int64_t index = -1;
+
+  // go through only the SUBSCRIPT children
+  for (struct expr* e_it = e;
+        e_it != NULL && e_it->kind == EXPR_SUBSCRIPT && t_it != NULL;
+        e_it = e_it->left, t_it = t_it->parent)
+  {
+    // get index, check if in-bounds
+    // FIXME: does the expression have to be generated or only evaulated?
     index = e->right->literal_value;
-    if (index < 0 || index > size) { error_status = expr_codegen_error_handle(EXPR_BOUNDS, e); return 0;}
-    // continue down the rest of the tree to outer dimensions
-    return (index * size);
-  } else { return 0; }
+    if (index < 0 || index >= t_it->actual_size) { return SUBSCRIPT_FAILURE; }
+
+    // update product/sums
+    product_offset *= (t_it->subtype->kind == TYPE_ARRAY) ? (t_it->subtype->actual_size) : 1;
+    offset = index * product_offset;
+    sum_offset += offset;
+
+    // because why not.
+    e->literal_value = offset;
+  }
+  return sum_offset; // SUBSCRIPT_SUCCESS
 }
 
 
@@ -788,6 +809,15 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
 
 
     /*
+
+    FIXME: combinations:
+
+    global + global
+    global + local
+    local + local
+    local + global? <-- is this even a thing?
+
+    parameters are treated as local (going onto the same stack!)
     offset + label(%RIP)
     which(%RBP)
 
@@ -806,18 +836,13 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
       bool old_generate_expr = generate_expr;
       generate_expr= false;
       struct expr* subexpr = e;
-      struct type* t = e->left->symbol->type;
-      int64_t offset = get_offset(subexpr, t); // FIXME: add one since rip0??
-      e->reg = register_scratch_alloc(); // using 'dummy' register
-
-      // TODO: make work for multidim too
-
-      // bounds checking
-      if (e->right->literal_value >= e->left->symbol->type->actual_size ||
-          e->right->literal_value < 0) {
-          error_status = expr_codegen_error_handle(EXPR_BOUNDS, e);
-          return error_status;
+      struct type* t = e->left->symbol->type; // TODO: make returned arrays/values have 'hidden' symbols too in symbol table proper.
+      int64_t offset = get_offset(subexpr, t); // FIXME: add one since rip0?? <-- honestly not sure.
+      if (offset < 0) { // overflow or error
+        error_status = expr_codegen_error_handle(EXPR_BOUNDS, e);
+        return error_status;
       }
+      e->reg = register_scratch_alloc(); // using 'dummy' register
 
       switch (e->left->symbol->kind) {
         case SYMBOL_GLOBAL:
