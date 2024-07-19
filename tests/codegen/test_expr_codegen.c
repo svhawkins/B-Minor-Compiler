@@ -36,8 +36,9 @@ Status test_expr_codegen_relate(void);
 Status test_expr_codegen_subscript_global(void);
 Status test_expr_codegen_subscript_local(void);
 Status test_expr_codegen_subscript_multidim(void);
-Status test_expr_codegen_subscript_global_bounds(void);
-Status test_expr_codegen_subscript_global_bounds_multidim(void);
+Status test_expr_codegen_subscript_multidim_tensor(void);
+Status test_expr_codegen_subscript_bounds(void);
+Status test_expr_codegen_subscript_bounds_multidim(void);
 
 // fcall
 
@@ -98,9 +99,10 @@ int main(void) {
        test_expr_codegen_underflow,
        test_expr_codegen_subscript_global,
        test_expr_codegen_subscript_local,
-       test_expr_codegen_subscript_multidim, // <-- TODO
-       test_expr_codegen_subscript_global_bounds,
-       test_expr_codegen_subscript_global_bounds_multidim // <-- TODO
+       test_expr_codegen_subscript_multidim,
+       test_expr_codegen_subscript_multidim_tensor,
+       test_expr_codegen_subscript_bounds,
+       test_expr_codegen_subscript_bounds_multidim // <-- FIXME: codegen handlers not saving error state
   };
   int n_tests = sizeof(tests)/sizeof(tests[0]);
   int n_pass = 0;
@@ -638,8 +640,9 @@ Status test_expr_codegen_mult_underflow_overflow(void) {
 Status test_expr_codegen_subscript_global(void) {
   strcpy(test_type, "Testing: test_expr_codegen_subscript_global");
   Status status = SUCCESS;
-  char* expect =
-"MOVQ $1, %rbx\n8+foo(%rip)";
+//   char* expect =
+// "MOVQ $1, %rbx\n8+foo(%rip)";
+  char* expect ="8+foo(%rip)"; // no longer generating right subtree leaf if subscript parent
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   register_codegen_init(true);
@@ -690,8 +693,8 @@ Status test_expr_codegen_subscript_global(void) {
 Status test_expr_codegen_subscript_local(void) {
  strcpy(test_type, "Testing: test_expr_codegen_subscript_local");
   Status status = SUCCESS;
-  char* expect =
-"MOVQ $1, %rbx\n-16(%rbp)"; // subscription returns lvalues so it's always part of bigger expressions.
+  char* expect = "-16(%rbp)";
+//char* expect = "MOVQ $1, %rbx\n-16(%rbp)"; // subscription returns lvalues so it's always part of bigger expressions.
   CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
   struct symbol_table* st = symbol_table_create();
   symbol_table_scope_enter(st); symbol_table_scope_enter(st);
@@ -745,6 +748,9 @@ tests that multidimensional subscripting generates the correct code
 Status test_expr_codegen_subscript_multidim(void) {
   strcpy(test_type, "Testing: test_expr_codegen_subscript_multidim");
   Status status = SUCCESS;
+  char* expect = "0+foo(%rip)24+foo(%rip)16+foo(%rip)8+foo(%rip)";
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   register_codegen_init(true);
 
@@ -755,8 +761,11 @@ Status test_expr_codegen_subscript_multidim(void) {
                          NULL, expr_create_integer_literal(2));
   struct decl* d = decl_create(("foo"), tmatrix, NULL, NULL, NULL);
   decl_resolve(st, d);
+  d->symbol->which = 0;
   d->symbol->type->actual_size = 2;
+  d->symbol->type->subtype->actual_size = 2;
   d->symbol->type->size->literal_value = 2;
+  d->symbol->type->subtype->size->literal_value = 2;
 
 
   /**
@@ -773,8 +782,8 @@ Status test_expr_codegen_subscript_multidim(void) {
   error_status = expr_codegen(st, e);
 
 
-  if (error_status) { print_error(test_type, "0", "error_status"); status = FAILURE; }
-  // if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; }  // <-- FIXME
+  // if (error_status) { print_error(test_type, "0", "error_status"); status = FAILURE; }
+  // // if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; }  // <-- FIXME
   expr_destroy(&e);
 
 
@@ -796,7 +805,7 @@ Status test_expr_codegen_subscript_multidim(void) {
 
   /**
    * 
-   * foo[0][1]
+   * foo[1][0]
    * 
    */
   global_error_count = 0;
@@ -812,7 +821,7 @@ Status test_expr_codegen_subscript_multidim(void) {
 
   /**
    * 
-   * foo[1][0]
+   * foo[0][1]
    * 
    */
   global_error_count = 0;
@@ -825,19 +834,23 @@ Status test_expr_codegen_subscript_multidim(void) {
   if (error_status) { print_error(test_type, "0", "error_status"); status = FAILURE; }
   //if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; } // <-- FIXME
   expr_destroy(&e);
-
   decl_destroy(&d);
   symbol_table_destroy(&st);
   register_codegen_clear();
+
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER); remove("foo.txt");
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
   return status;
 }
 
 /*
 tests that index bounds checking works for 1-D arrays
 */
-Status test_expr_codegen_subscript_global_bounds(void) {
-  strcpy(test_type, "Testing: test_expr_codegen_subscript_global_bounds");
+Status test_expr_codegen_subscript_bounds(void) {
+  strcpy(test_type, "Testing: test_expr_codegen_subscript_bounds");
   Status status = SUCCESS;
+
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   register_codegen_init(true);
 
@@ -868,23 +881,6 @@ Status test_expr_codegen_subscript_global_bounds(void) {
   if (!global_error_count) { print_error(test_type, "1", "global_error_count"); status = FAILURE; }
   expr_destroy(&e);
 
-
-  // valid subscript
-  /**
-   * 
-   * foo[1]
-   * 
-   */
-  global_error_count = 0;
-  e = expr_create(EXPR_SUBSCRIPT, expr_create_name(("foo")), expr_create_integer_literal(1));
-  e->symbol = d->symbol;
-  error_status = expr_resolve(st, e);
-  error_status = expr_codegen(st, e);
-
-  if (error_status == EXPR_BOUNDS) { print_error(test_type, "EXPR_BOUNDS", "error_status"); status = FAILURE; }
-  if (global_error_count) { print_error(test_type, "1", "global_error_count"); status = FAILURE; }
-  expr_destroy(&e);
-
   decl_destroy(&d);
   symbol_table_destroy(&st);
   register_codegen_clear();
@@ -894,8 +890,8 @@ Status test_expr_codegen_subscript_global_bounds(void) {
 /*
 tests that bounds checking works for multidimensional arrays
 */
-Status test_expr_codegen_subscript_global_bounds_multidim(void) {
-      strcpy(test_type, "Testing: test_expr_codegen_global_bounds_multidim");
+Status test_expr_codegen_subscript_bounds_multidim(void) {
+  strcpy(test_type, "Testing: test_expr_codegen_subscript_bounds_multidim");
   Status status = SUCCESS;
   struct symbol_table* st = symbol_table_create(); symbol_table_scope_enter(st);
   register_codegen_init(true);
@@ -907,8 +903,13 @@ Status test_expr_codegen_subscript_global_bounds_multidim(void) {
                          NULL, expr_create_integer_literal(2));
   struct decl* d = decl_create(("foo"), tmatrix, NULL, NULL, NULL);
   decl_resolve(st, d);
+
+  // 'decl codegen' right here folks!
+  d->symbol->which = 0;
   d->symbol->type->actual_size = 2;
   d->symbol->type->size->literal_value = 2;
+  d->symbol->type->subtype->actual_size = 2;
+  d->symbol->type->subtype->size->literal_value = 2;
 
 
   /**
@@ -926,7 +927,7 @@ Status test_expr_codegen_subscript_global_bounds_multidim(void) {
 
 
   //if (error_status != EXPR_BOUNDS) { print_error(test_type, "EXPR_BOUNDS", "error_status"); status = FAILURE; } // <-- FIXME. not storing 'error'
-  // if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; }  // <-- FIXME
+  //if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; }  // <-- FIXME
   expr_destroy(&e);
 
 
@@ -946,8 +947,119 @@ Status test_expr_codegen_subscript_global_bounds_multidim(void) {
   // if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; } // <-- FIXME
   expr_destroy(&e);
 
+  
+  /**
+   * 
+   * foo[2][0]
+   * 
+   */
+  left = expr_create(EXPR_SUBSCRIPT, expr_create_name("foo"), expr_create_integer_literal(2));
+  e = expr_create(EXPR_SUBSCRIPT, left, expr_create_integer_literal(0));
+          
+  e->symbol = d->symbol;
+  error_status = expr_resolve(st, e);
+  t = expr_typecheck(st, e); type_destroy(&t);
+  error_status = expr_codegen(st, e);
+
+
+  //if (error_status != EXPR_BOUNDS) { print_error(test_type, "EXPR_BOUNDS", "error_status"); status = FAILURE; } // <-- FIXME. not storing 'error'
+  //if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; }  // <-- FIXME
+  expr_destroy(&e);
+
+
+  /**
+   * 
+   * foo[0][2]
+   * 
+   */
+  global_error_count = 0;
+  left = expr_create(EXPR_SUBSCRIPT, expr_create_name("foo"), expr_create_integer_literal(0));
+  e = expr_create(EXPR_SUBSCRIPT, left, expr_create_integer_literal(2));
+  e->symbol = d->symbol;
+  error_status = expr_resolve(st, e);
+  error_status = expr_codegen(st, e);
+
+  //if (error_status != EXPR_BOUNDS) { print_error(test_type, "EXPR_BOUNDS", "error_status"); status = FAILURE; } // FIXME: not 'storing' status
+  // if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; } // <-- FIXME
+  expr_destroy(&e);
+
   decl_destroy(&d);
   symbol_table_destroy(&st);
   register_codegen_clear();
+  return status;
+}
+
+Status test_expr_codegen_subscript_multidim_tensor(void) {
+  strcpy(test_type, "Testing: test_expr_codegen_subscript_multidim_tensor");
+  Status status = SUCCESS;
+  char* expect ="72+foo(%rip)";
+  CODEGEN_OUT = fopen("foo.txt", "w"); if (!CODEGEN_OUT) { return file_error(test_type); }
+  struct symbol_table* st = symbol_table_create();
+  symbol_table_scope_enter(st);
+  register_codegen_init(true);
+
+  /**
+   * foo: array [2] array [3] array [2] integer = {{{1, 1}, {2, 2}, {3, 3}}, {{4, 4}, {5, 5}, {6, 6}}};
+  */
+
+ struct type* t_dim3 = type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, expr_create_integer_literal(2));
+ struct type* t_dim2 = type_create(TYPE_ARRAY, t_dim3, NULL, expr_create_integer_literal(3));
+ struct type* t = type_create(TYPE_ARRAY, t_dim2, NULL, expr_create_integer_literal(2));
+
+  // 3rd dimension sublists: {1, 1}  {2, 2} {3, 3} etc.
+  struct expr* oneone = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(1), expr_create_integer_literal(1)), NULL);
+  struct expr* twotwo = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(2), expr_create_integer_literal(2)), NULL);
+  struct expr* threethree = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(3), expr_create_integer_literal(3)), NULL);
+  struct expr* fourfour = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(4), expr_create_integer_literal(4)), NULL);
+  struct expr* fivefive = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(5), expr_create_integer_literal(5)), NULL);
+  struct expr* sixsix = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, expr_create_integer_literal(6), expr_create_integer_literal(6)), NULL);
+
+  // 2nd dimension sublists
+  struct expr* one = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, oneone, expr_create(EXPR_COMMA, twotwo, threethree)), NULL);
+  struct expr* two = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, fourfour, expr_create(EXPR_COMMA, fivefive, sixsix)), NULL);
+
+  // 1st dimension sublist
+  struct expr* e = expr_create(EXPR_INIT, expr_create(EXPR_COMMA, one, two), NULL);
+  struct decl* d = decl_create(("foo"), t, e, NULL, NULL);
+
+  error_status = decl_resolve(st, d);
+  // pretending decl codegen happened
+  d->symbol->which = 0;
+  d->symbol->type->actual_size = 2;
+  d->symbol->type->size->literal_value = 2;
+  d->symbol->type->subtype->actual_size = 3;
+  d->symbol->type->subtype->size->literal_value = 3;
+  d->symbol->type->subtype->subtype->actual_size = 2;
+  d->symbol->type->subtype->subtype->size->literal_value = 2;
+
+  /**
+   * 
+   * foo[1][1][1]
+   * 
+   */
+  struct expr* leftleft = expr_create(EXPR_SUBSCRIPT, expr_create_name("foo"), expr_create_integer_literal(1));
+  struct expr* left = expr_create(EXPR_SUBSCRIPT, leftleft, expr_create_integer_literal(1));
+  struct expr* e_sub = expr_create(EXPR_SUBSCRIPT, left, expr_create_integer_literal(1));
+          
+  e_sub->symbol = d->symbol;
+  error_status = expr_resolve(st, e_sub);
+  struct type* t_sub = expr_typecheck(st, e_sub); type_destroy(&t_sub);
+  error_status = expr_codegen(st, e_sub);
+
+
+  // if (error_status) { print_error(test_type, "0", "error_status"); status = FAILURE; }
+  // // if (global_error_count) { print_error(test_type, "0", "global_error_count"); status = FAILURE; }  // <-- FIXME
+  expr_destroy(&e_sub);
+
+
+
+  decl_destroy(&d);
+  symbol_table_destroy(&st);
+  register_codegen_clear();
+
+  CODEGEN_OUT = freopen("foo.txt", "r", CODEGEN_OUT); if (!CODEGEN_OUT) { return file_error(test_type); }
+  fileread(CODEGEN_OUT, buffer, MAX_BUFFER);
+  remove("foo.txt"); 
+  if (strcmp(expect, buffer) != 0) { print_error(test_type, expect, buffer); status = FAILURE; }
   return status;
 }

@@ -202,33 +202,40 @@ inline bool expr_is_wrap(expr_t kind) { return (kind >= EXPR_SUBSCRIPT && kind <
 
 const int SUBSCRIPT_FAILURE = -1;
 int64_t get_offset(struct expr* e, struct type* t) {
-  // reach last array type
-  struct type* t_it = NULL;
-  for (t_it = t; t_it && t_it->subtype && t_it->subtype->kind == TYPE_ARRAY; t_it = t_it->subtype) {}
+  // expr* e is at its leftmost [] expression, child is name or whatever
+  // type* t is at root node
+  // traversal: e backwards, t forwards (outermost to innermost dimension)
 
-  // go from innermost to outermost dimension
   int64_t sum_offset = 0;
-  int64_t product_offset = 1;
   int64_t offset = -1;
   int64_t index = -1;
+  int64_t product_offset = 1;
+
+  // get total array size all dimensions
+  struct type* t_size_it = NULL;
+  for (t_size_it = t; t_size_it->subtype != NULL; t_size_it = t_size_it->subtype) { product_offset *= t_size_it->actual_size; }
 
   // go through only the SUBSCRIPT children
-  for (struct expr* e_it = e;
-        e_it != NULL && e_it->kind == EXPR_SUBSCRIPT && t_it != NULL;
-        e_it = e_it->left, t_it = t_it->parent)
+  struct expr* e_it = NULL;
+  struct type* t_it = NULL;
+  for (e_it = e, t_it = t;
+       e_it != NULL && t_it != NULL;
+       e_it = e_it->parent, t_it = t_it->subtype)
   {
+    // reaching lower dimensions.
+    product_offset /= t_it->actual_size;
+
+
     // get index, check if in-bounds
-    // FIXME: does the expression have to be generated or only evaulated?
-    index = e->right->literal_value;
+    index = e_it->right->literal_value;
     if (index < 0 || index >= t_it->actual_size) { return SUBSCRIPT_FAILURE; }
 
-    // update product/sums
-    product_offset *= (t_it->subtype->kind == TYPE_ARRAY) ? (t_it->subtype->actual_size) : 1;
-    offset = index * product_offset;
+    // innermost dimension (leaf type, root expr) need not be multiplied
+    offset = (e_it->parent) ? (index * product_offset ) : index;
     sum_offset += offset;
 
     // because why not.
-    e->literal_value = offset;
+    e_it->literal_value = offset;
   }
   return sum_offset; // SUBSCRIPT_SUCCESS
 }
@@ -273,8 +280,13 @@ struct expr* expr_create(expr_t kind, struct expr* left, struct expr* right )
     e->kind = kind;
     e->left = left;
     e->right = right;
+    e->parent = NULL;
 
-    // non-leaf expressions recieve default values
+    // update parents of children
+    if (e->left) { e->left->parent = e; }
+    if (e->right) { e->right->parent = e; }
+
+    // non-leaf expressions receive default values
     e->name = NULL;
     e->literal_value = 0;
     e->string_literal = NULL;
@@ -586,7 +598,7 @@ If any error occurs that is NOT due to register allocation such as but not limit
         - modulus by 0 --> error (fatal)
         - integer underflow --> warning (nonfatal)
         - integer overflow --> warning (nonfatal)
-        - out-of-range array indexing --> error (fatal)
+        - out-of-range array subscription --> error (fatal)
 An error/warning code is emitted and send to the error message handler.
 */
 int expr_codegen(struct symbol_table* st, struct expr* e) {
@@ -595,8 +607,12 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
   // post order traversal, left child, right child, then parent
 
   // subscriptions need not generate left if it is a name
-  if (!(e && e->kind == EXPR_SUBSCRIPT && e->left && e->left->kind == EXPR_NAME)) { error_status = expr_codegen(st, e->left); }
+  //if (!(e && e->kind == EXPR_SUBSCRIPT && e->left && e->left->kind == EXPR_NAME)) { error_status = expr_codegen(st, e->left); }
+  error_status = expr_codegen(st, e->left);
   error_status = expr_codegen(st, e->right);
+
+  // to ensure that subscription doesn't do anything funny
+  if ((e->parent && e->parent->kind == EXPR_SUBSCRIPT) || e->kind == EXPR_SUBSCRIPT) { generate_expr = false;}
 
   // parent
   switch(e->kind) {
@@ -832,7 +848,8 @@ int expr_codegen(struct symbol_table* st, struct expr* e) {
     register_scratch_free(e->left->reg);
 
     // only generate code if reached 'base' subscript expression: name of the array + whatever
-   if (e->left->kind != EXPR_SUBSCRIPT) {
+    // e traversal is now backwards
+   if (e->left && e->left->kind != EXPR_SUBSCRIPT) {
       bool old_generate_expr = generate_expr;
       generate_expr= false;
       struct expr* subexpr = e;

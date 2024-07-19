@@ -54,6 +54,7 @@ struct expr {
 	expr_t kind;
 	struct expr* left;
 	struct expr* right;
+	struct expr* parent; // required for backward traversal
 
 	/* used by various leaf exprs */
 	const char* name;

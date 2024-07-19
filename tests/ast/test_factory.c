@@ -84,7 +84,7 @@ Status test_decl_create_null(void) {
   strcpy(test_type, "Testing: decl_create, all NULL");
   Status overall_status = SUCCESS;
   struct decl* d = decl_create(NULL, NULL, NULL, NULL, NULL);
-  if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
+  if (!d) { print_error(test_type, "NOT NULL", "decl d"); return FAILURE; }
   else {
     if (d->name) { print_error(test_type, "NULL", "char* d->name"); overall_status = FAILURE; }
     if (d->type) { print_error(test_type, "NULL", "type* d->type"); overall_status = FAILURE; }
@@ -100,7 +100,7 @@ Status test_decl_create_name(void) {
   strcpy(test_type, "Testing: decl_create, non-NULL name");
   Status overall_status = SUCCESS;
   struct decl* d = decl_create(("foo"), NULL, NULL, NULL, NULL);
-  if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
+  if (!d) { print_error(test_type, "NOT NULL", "decl d"); return FAILURE; }
   else {
     if (strcmp(d->name, "foo")) { print_error(test_type, "foo", "char* d->name"); overall_status = FAILURE; }
     if (d->type) { print_error(test_type, "NULL", "type* d->type"); overall_status = FAILURE; }
@@ -116,7 +116,7 @@ Status test_param_list_create_null(void) {
   strcpy(test_type, "Testing: param_list_create, all NULL");
   Status overall_status = SUCCESS;
   struct param_list* p = param_list_create(NULL, NULL, NULL);
-  if (!p) { print_error(test_type, "NOT NULL", "param_list p"); overall_status = FAILURE; }
+  if (!p) { print_error(test_type, "NOT NULL", "param_list p"); return FAILURE; }
   else {
     if (p->name) { print_error(test_type, "NULL", "char* p->name"); overall_status = FAILURE; }
     if (p->type) { print_error(test_type, "NULL", "type* p->type"); overall_status = FAILURE; }
@@ -130,7 +130,7 @@ Status test_param_list_create_name(void) {
   strcpy(test_type, "Testing: param_list_create_name, non-NULL name");
   Status overall_status = SUCCESS;
   struct param_list* p = param_list_create("foo", NULL, NULL);
-  if (!p) { print_error(test_type, "NOT NULL", "param_list p"); overall_status = FAILURE; }
+  if (!p) { print_error(test_type, "NOT NULL", "param_list p"); return FAILURE; }
   else {
     if (strcmp(p->name, "foo")) { print_error(test_type, "foo", "char* p->name"); overall_status = FAILURE; }
     if (p->type) { print_error(test_type, "NULL", "type* p->type"); overall_status = FAILURE; }
@@ -146,7 +146,7 @@ Status test_stmt_create_kind(void) {
   char kind_expect[3]; char kind_actual[3];
   for (stmt_t kind = STMT_DECL; kind <= STMT_BLOCK; kind++) {
     struct stmt* s = stmt_create(kind, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    if (!s) { print_error(test_type, "NOT NULL", "stmt s"); overall_status = FAILURE; }
+    if (!s) { print_error(test_type, "NOT NULL", "stmt s"); overall_status = FAILURE;  continue; }
     else {
       if (s->kind != kind) {
         sprintf(kind_expect, "%d", kind); sprintf(kind_actual, "%d", s->kind);
@@ -172,7 +172,7 @@ Status test_type_create_kind(void) {
   char kind_expect[3]; char kind_actual[3];
   for (type_t kind = TYPE_VOID; kind <= TYPE_FUNCTION; kind++) {
     struct type* t = type_create(kind, NULL, NULL, NULL);
-    if (!t) { print_error(test_type, "NOT NULL", "type t"); overall_status = FAILURE; }
+    if (!t) { print_error(test_type, "NOT NULL", "type t"); overall_status = FAILURE; continue; }
     else {
       if (t->kind != kind) {
         sprintf(kind_expect, "%d", kind); sprintf(kind_actual, "%d", t->kind);
@@ -194,7 +194,7 @@ Status test_expr_create_kind(void) {
   char kind_expect[3]; char kind_actual[3];
   for (expr_t kind = EXPR_INC; kind <= EXPR_FCALL; kind++) {
     struct expr* e = expr_create(kind, NULL, NULL);
-    if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; }
+    if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; continue; }
     else {
       if (e->kind != kind) {
         sprintf(kind_expect, "%d", kind); sprintf(kind_actual, "%d", e->kind);
@@ -208,6 +208,7 @@ Status test_expr_create_kind(void) {
         print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
       }
       if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
+      if (e->parent) { print_error(test_type, "NULL", "struct expr* e->parent"); overall_status = FAILURE; }
     }
     expr_destroy(&e);
   }
@@ -219,7 +220,7 @@ Status test_expr_create_name(void) {
   Status overall_status = SUCCESS;
   char expect[3], actual[3];
   struct expr* e = expr_create_name(("foo"));
-  if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; }
+  if (!e) { print_error(test_type, "NOT NULL", "expr e"); return FAILURE; }
   else {
     if (e->kind != EXPR_NAME) {
       sprintf(expect, "%d", EXPR_NAME); sprintf(actual, "%d", e->kind);
@@ -233,6 +234,7 @@ Status test_expr_create_name(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
+    if (e->parent) { print_error(test_type, "NULL", "struct expr* e->parent"); overall_status = FAILURE; }
   }
   expr_destroy(&e);
   return overall_status;
@@ -243,7 +245,7 @@ Status test_expr_create_int(void) {
   Status overall_status = SUCCESS;
   char expect[5], actual[5];
   struct expr* e = expr_create_integer_literal(-493);
-  if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; }
+  if (!e) { print_error(test_type, "NOT NULL", "expr e"); return FAILURE; }
   else {
     if (e->kind != EXPR_INT) {
       sprintf(expect, "%d", EXPR_INT); sprintf(actual, "%d", e->kind);
@@ -257,6 +259,7 @@ Status test_expr_create_int(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
+    if (e->parent) { print_error(test_type, "NULL", "struct expr* e->parent"); overall_status = FAILURE; }
   }
   expr_destroy(&e);
   return overall_status;
@@ -267,7 +270,7 @@ Status test_expr_create_bool(void) {
   Status overall_status = SUCCESS;
   char expect[3], actual[3];
   struct expr* e = expr_create_boolean_literal(1);
-  if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; }
+  if (!e) { print_error(test_type, "NOT NULL", "expr e"); return FAILURE; }
   else {
     if (e->kind != EXPR_BOOL) {
       sprintf(expect, "%d", EXPR_BOOL); sprintf(actual, "%d", e->kind);
@@ -281,6 +284,7 @@ Status test_expr_create_bool(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
+    if (e->parent) { print_error(test_type, "NULL", "struct expr* e->parent"); overall_status = FAILURE; }
   }
   expr_destroy(&e);
   return overall_status;
@@ -291,7 +295,7 @@ Status test_expr_create_char(void) {
   Status overall_status = SUCCESS;
   char expect[3], actual[3]; char val = 'A';
   struct expr* e = expr_create_char_literal(val);
-  if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; }
+  if (!e) { print_error(test_type, "NOT NULL", "expr e"); return FAILURE; }
   else {
     if (e->kind != EXPR_CH) {
       sprintf(expect, "%d", EXPR_CH); sprintf(actual, "%d", e->kind);
@@ -305,6 +309,7 @@ Status test_expr_create_char(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
+    if (e->parent) { print_error(test_type, "NULL", "struct expr* e->parent"); overall_status = FAILURE; }
   }
   expr_destroy(&e);
   return overall_status;
@@ -315,7 +320,7 @@ Status test_expr_create_str(void) {
   Status overall_status = SUCCESS;
   char expect[3], actual[3];
   struct expr* e = expr_create_string_literal("foo");
-  if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; }
+  if (!e) { print_error(test_type, "NOT NULL", "expr e"); return FAILURE; }
   else {
     if (e->kind != EXPR_STR) {
       sprintf(expect, "%d", EXPR_STR); sprintf(actual, "%d", e->kind);
@@ -329,6 +334,7 @@ Status test_expr_create_str(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (strcmp("foo", e->string_literal)) { print_error(test_type, "foo", "char* e->string_literal"); overall_status = FAILURE; }
+    if (e->parent) { print_error(test_type, "NULL", "struct expr* e->parent"); overall_status = FAILURE; }
   }
   expr_destroy(&e);
   return overall_status;
@@ -340,13 +346,13 @@ Status test_expr_create_unary(void) {
   Status overall_status = SUCCESS;
   char expect[3], actual[3];
   struct expr* e = expr_create(EXPR_NOT, expr_create_name(("x")), NULL);
-  if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; }
+  if (!e) { print_error(test_type, "NOT NULL", "expr e"); return FAILURE; }
   else {
     if (e->kind != EXPR_NOT) {
       sprintf(expect, "%d", EXPR_NOT); sprintf(actual, "%d", e->kind);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
-    if (!e->left) { print_error(test_type, "NOT NULL", "expr* e->left"); overall_status = FAILURE; }
+    if (!e->left) { print_error(test_type, "NOT NULL", "expr* e->left"); return FAILURE; }
     if (e->right) { print_error(test_type, "NULL", "expr* e->right"); overall_status = FAILURE; }
     if (e->left->kind != EXPR_NAME) { sprintf(expect, "%d", EXPR_NAME); sprintf(actual, "%d", e->left->kind);
       				      print_error(test_type, expect, actual); overall_status = FAILURE;
@@ -357,6 +363,9 @@ Status test_expr_create_unary(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
+    if (e->parent) { print_error(test_type, "NULL", "struct expr* e->parent"); overall_status = FAILURE; }
+
+    if (e->left->parent != e) { print_error(test_type, "EQUAL", "struct expr* e->left->parent == e"); overall_status = FAILURE; }
     if (e->left->left) { print_error(test_type, "NULL", "expr* e->left->left"); overall_status = FAILURE; }
     if (e->left->right) { print_error(test_type, "NULL", "expr* e->left->right"); overall_status = FAILURE; }
   }
@@ -369,7 +378,7 @@ Status test_expr_create_binary_2_op(void) {
   Status overall_status = SUCCESS;
   char expect[3], actual[3];
   struct expr* e = expr_create(EXPR_ADD, expr_create_integer_literal(1), expr_create_integer_literal(493));
-  if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; }
+  if (!e) { print_error(test_type, "NOT NULL", "expr e"); return FAILURE; }
   else {
     if (e->kind != EXPR_ADD) {
       sprintf(expect, "%d", EXPR_ADD); sprintf(actual, "%d", e->kind);
@@ -380,9 +389,10 @@ Status test_expr_create_binary_2_op(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
+    if (e->parent) { print_error(test_type, "NULL", "struct expr* e->parent"); overall_status = FAILURE; }
 
     // left subtree
-    if (!e->left) { print_error(test_type, "NOT NULL", "expr* e->left"); overall_status = FAILURE; }
+    if (!e->left) { print_error(test_type, "NOT NULL", "expr* e->left"); return FAILURE; }
     if (e->left->name) { print_error(test_type, "NULL", "char* e->left->name"); overall_status = FAILURE; }
     if (e->left->string_literal)  { print_error(test_type, "NULL", "char* e->left->string_literal"); overall_status = FAILURE; }
     if (e->left->literal_value != 1) {
@@ -393,11 +403,12 @@ Status test_expr_create_binary_2_op(void) {
       sprintf(expect, "%d", EXPR_INT); sprintf(actual, "%d", e->left->kind);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
+    if (e->left->parent != e) { print_error(test_type, "EQUAL", "struct expr* e->left->parent == e"); overall_status = FAILURE; }
     if (e->left->left) { print_error(test_type, "NULL", "expr* e->left->left"); overall_status = FAILURE; }
     if (e->left->right) { print_error(test_type, "NULL", "expr* e->left->right"); overall_status = FAILURE; }
 
     // right subtree
-    if (!e->right) { print_error(test_type, "NOT NULL", "expr* e->right"); overall_status = FAILURE; }
+    if (!e->right) { print_error(test_type, "NOT NULL", "expr* e->right"); return FAILURE; }
     if (e->right->name) { print_error(test_type, "NULL", "char* e->right->name"); overall_status = FAILURE; }
     if (e->right->string_literal)  { print_error(test_type, "NULL", "char* e->right->string_literal"); overall_status = FAILURE; }
     if (e->right->literal_value != 493) {
@@ -408,6 +419,7 @@ Status test_expr_create_binary_2_op(void) {
         sprintf(expect, "%d", EXPR_INT); sprintf(actual, "%d", e->right->kind);
         print_error(test_type, expect, actual); overall_status = FAILURE;
       }
+    if (e->left->parent != e) { print_error(test_type, "EQUAL", "struct expr* e->left->parent == e"); overall_status = FAILURE; }
     if (e->right->left) { print_error(test_type, "NULL", "expr* e->right->left"); overall_status = FAILURE; }
     if (e->right->right) { print_error(test_type, "NULL", "expr* e->right->right"); overall_status = FAILURE; }
   }
@@ -420,7 +432,7 @@ Status test_expr_create_binary_3_op(void) {
   Status overall_status = SUCCESS;
   char expect[3], actual[3];
   struct expr* e = expr_create(EXPR_MULT, expr_create(EXPR_ADD, expr_create_integer_literal(10), expr_create_integer_literal(20)), expr_create_integer_literal(30));
-  if (!e) { print_error(test_type, "NOT NULL", "expr e"); overall_status = FAILURE; }
+  if (!e) { print_error(test_type, "NOT NULL", "expr e"); return FAILURE; }
   else {
     if (e->kind != EXPR_MULT) {
       sprintf(expect, "%d", EXPR_MULT); sprintf(actual, "%d", e->kind);
@@ -431,9 +443,10 @@ Status test_expr_create_binary_3_op(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
     if (e->string_literal) { print_error(test_type, "NULL", "char* e->string_literal"); overall_status = FAILURE; }
+    if (e->parent) { print_error(test_type, "NULL", "struct expr* e->parent"); overall_status = FAILURE; }
 
     // left subtree
-    if (!e->left) { print_error(test_type, "NOT NULL", "expr* e->left"); overall_status = FAILURE; }
+    if (!e->left) { print_error(test_type, "NOT NULL", "expr* e->left"); return FAILURE; }
     if (e->left->name) { print_error(test_type, "NULL", "char* e->left->name"); overall_status = FAILURE; }
     if (e->left->string_literal)  { print_error(test_type, "NULL", "char* e->left->string_literal"); overall_status = FAILURE; }
     if (e->left->literal_value)  { print_error(test_type, "0", "int e->left->literal_value"); overall_status = FAILURE; }
@@ -441,9 +454,10 @@ Status test_expr_create_binary_3_op(void) {
       sprintf(expect, "%d", EXPR_ADD); sprintf(actual, "%d", e->left->kind);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
+    if (e->left->parent != e) { print_error(test_type, "EQUAL", "struct expr* e->left->parent == e"); overall_status = FAILURE; }
 
     // left left subtree
-    if (!e->left->left) { print_error(test_type, "NOT NULL", "expr* e->left->left"); overall_status = FAILURE; }
+    if (!e->left->left) { print_error(test_type, "NOT NULL", "expr* e->left->left"); return FAILURE; }
     if (e->left->left->name) { print_error(test_type, "NULL", "char* e->left->left->name"); overall_status = FAILURE; }
     if (e->left->left->string_literal)  { print_error(test_type, "NULL", "char* e->left->left->string_literal"); overall_status = FAILURE; }
     if (e->left->left->literal_value != 10) {
@@ -454,11 +468,15 @@ Status test_expr_create_binary_3_op(void) {
       sprintf(expect, "%d", EXPR_INT); sprintf(actual, "%d", e->left->left->kind);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
+    if (e->left->left->parent != e->left) {
+      print_error(test_type, "EQUAL", "struct expr* e->left->left->parent == e->left");
+      overall_status = FAILURE;
+    }
     if (e->left->left->left) { print_error(test_type, "NULL", "expr* e->left->left->left"); overall_status = FAILURE; }
     if (e->left->left->right) { print_error(test_type, "NULL", "expr* e->left->left->right"); overall_status = FAILURE; }
 
     // left right subtree
-    if (!e->left->right) { print_error(test_type, "NOT NULL", "expr* e->left->right"); overall_status = FAILURE; }
+    if (!e->left->right) { print_error(test_type, "NOT NULL", "expr* e->left->right"); return FAILURE; }
     if (e->left->right->name) { print_error(test_type, "NULL", "char* e->left->right->name"); overall_status = FAILURE; }
     if (e->left->right->string_literal)  { print_error(test_type, "NULL", "char* e->left->right->string_literal"); overall_status = FAILURE; }
     if (e->left->right->literal_value != 20) {
@@ -469,11 +487,15 @@ Status test_expr_create_binary_3_op(void) {
       sprintf(expect, "%d", EXPR_INT); sprintf(actual, "%d", e->left->right->kind);
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
+    if (e->left->right->parent != e->left) {
+      print_error(test_type, "EQUAL", "struct expr* e->left->right->parent == e->left");
+      overall_status = FAILURE;
+    }
     if (e->left->right->left) { print_error(test_type, "NULL", "expr* e->left->right->left"); overall_status = FAILURE; }
     if (e->left->right->right) { print_error(test_type, "NULL", "expr* e->left->right->right"); overall_status = FAILURE; }
 
     // right subtree
-    if (!e->right) { print_error(test_type, "NOT NULL", "expr* e->right"); overall_status = FAILURE; }
+    if (!e->right) { print_error(test_type, "NOT NULL", "expr* e->right"); return FAILURE; }
     if (e->right->name) { print_error(test_type, "NULL", "char* e->right->name"); overall_status = FAILURE; }
     if (e->right->string_literal)  { print_error(test_type, "NULL", "char* e->right->string_literal"); overall_status = FAILURE; }
     if (e->right->literal_value != 30) {
@@ -485,6 +507,7 @@ Status test_expr_create_binary_3_op(void) {
       print_error(test_type, expect, actual); overall_status = FAILURE;
     }
   }
+  if (e->right->parent != e) { print_error(test_type, "EQUAL", "struct expr* e->right->parent == e"); overall_status = FAILURE; }
   if (e->right->left) { print_error(test_type, "NULL", "expr* e->right->left"); overall_status = FAILURE; }
   if (e->right->right) { print_error(test_type, "NULL", "expr* e->right->right"); overall_status = FAILURE; }
   expr_destroy(&e);
@@ -497,7 +520,7 @@ Status test_stmt_create_print(void) {
   Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   struct stmt* s = stmt_create(STMT_PRINT, NULL, NULL, expr_create_string_literal("hello world!:)\n") , NULL, NULL, NULL, NULL);
-  if (!s) { print_error(test_type, "NOT NULL", "stmt s"); overall_status = FAILURE; }
+  if (!s) { print_error(test_type, "NOT NULL", "stmt s"); return FAILURE; }
   else {
     if (s->kind != STMT_PRINT) {
       sprintf(kind_expect, "%d", STMT_PRINT); sprintf(kind_actual, "%d", s->kind);
@@ -505,7 +528,7 @@ Status test_stmt_create_print(void) {
     }
     if (s->decl) { print_error(test_type, "NULL", "decl* s->decl"); overall_status = FAILURE; }
     if (s->init_expr) { print_error(test_type, "NULL", "expr* s->init_expr"); overall_status = FAILURE; }
-    if (!s->expr) { print_error(test_type, "NOT NULL", "expr* s->expr"); overall_status = FAILURE; }
+    if (!s->expr) { print_error(test_type, "NOT NULL", "expr* s->expr"); return FAILURE; }
     if (s->next_expr) { print_error(test_type, "NULL", "expr* s->next_expr"); overall_status = FAILURE; }
     if (s->body) { print_error(test_type, "NULL", "stmt* s->body"); overall_status = FAILURE; }
     if (s->else_body) { print_error(test_type, "NULL", "stmt* s->else_body"); overall_status = FAILURE; }
@@ -520,7 +543,11 @@ Status test_stmt_create_print(void) {
     if (s->expr->right) { print_error(test_type, "NULL", "expr* s->expr->right"); overall_status = FAILURE; }
     if (s->expr->name) { print_error(test_type, "NULL", "char* s->expr->name"); overall_status = FAILURE; }
     if (s->expr->literal_value) { print_error(test_type, "NULL", "int* s->expr->literal_value"); overall_status = FAILURE; }
-    if (strcmp("hello world!:)\n", s->expr->string_literal)) { print_error(test_type, "NULL", "char* s->expr->string_literal"); overall_status = FAILURE; }
+    if (strcmp("hello world!:)\n", s->expr->string_literal)) {
+      print_error(test_type, "NULL", "char* s->expr->string_literal");
+      overall_status = FAILURE;
+    }
+    if (s->expr->parent) { print_error(test_type, "NULL", "struct expr* s->expr->parent"); overall_status = FAILURE; }
   }
   stmt_destroy(&s);
   return overall_status;
@@ -531,10 +558,10 @@ Status test_decl_create_atomic_uninit(void) {
   Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
   struct decl* d = decl_create(("foo"), type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL, NULL);
-  if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
+  if (!d) { print_error(test_type, "NOT NULL", "decl d"); return FAILURE; }
   else {
     if (strcmp(d->name, "foo")) { print_error(test_type, "foo", "char* d->name"); overall_status = FAILURE; }
-    if (!d->type) { print_error(test_type, "NOT NULL", "type* d->type"); overall_status = FAILURE; }
+    if (!d->type) { print_error(test_type, "NOT NULL", "type* d->type"); return FAILURE; }
     if (d->value) { print_error(test_type, "NULL", "expr* d->value"); overall_status = FAILURE; }
     if (d->code) { print_error(test_type, "NULL", "stmt* d->code"); overall_status = FAILURE; }
     if (d->next) { print_error(test_type, "NULL", "decl* d->next"); overall_status = FAILURE; }
@@ -556,12 +583,13 @@ Status test_decl_create_atomic_init(void) {
   strcpy(test_type, "Testing: decl_create_atomic_init");
   Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
-  struct decl* d = decl_create(("bar"), type_create(TYPE_STRING, NULL, NULL, NULL), expr_create_string_literal("hello world!:)\n"), NULL, NULL);
+  struct decl* d = decl_create(("bar"), type_create(TYPE_STRING, NULL, NULL, NULL),
+                                expr_create_string_literal("hello world!:)\n"), NULL, NULL);
   if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
   else {
     if (strcmp(d->name, "bar")) { print_error(test_type, "bar", "char* d->name"); overall_status = FAILURE; }
-    if (!d->type) { print_error(test_type, "NOT NULL", "type* d->type"); overall_status = FAILURE; }
-    if (!d->value) { print_error(test_type, "NOT NULL", "expr* d->value"); overall_status = FAILURE; }
+    if (!d->type) { print_error(test_type, "NOT NULL", "type* d->type"); return FAILURE; }
+    if (!d->value) { print_error(test_type, "NOT NULL", "expr* d->value"); return FAILURE; }
     if (d->code) { print_error(test_type, "NULL", "stmt* d->code"); overall_status = FAILURE; }
     if (d->next) { print_error(test_type, "NULL", "decl* d->next"); overall_status = FAILURE; }
 
@@ -583,7 +611,11 @@ Status test_decl_create_atomic_init(void) {
     if (d->value->right) { print_error(test_type, "NULL", "expr* d->value->right"); overall_status = FAILURE; }
     if (d->value->name) { print_error(test_type, "NULL", "char* d->value->name"); overall_status = FAILURE; }
     if (d->value->literal_value) { print_error(test_type, "NULL", "int d->value->literal_value"); overall_status = FAILURE; }
-    if (strcmp("hello world!:)\n", d->value->string_literal)) { print_error(test_type, "NULL", "char* d->value->string_literal"); overall_status = FAILURE; }
+    if (strcmp("hello world!:)\n", d->value->string_literal)) {
+      print_error(test_type, "NULL", "char* d->value->string_literal");
+      overall_status = FAILURE;
+    }
+    if (d->value->parent) { print_error(test_type, "NULL", "struct expr* d->value->parent"); overall_status = FAILURE; }
   }
   decl_destroy(&d);
   return overall_status;
@@ -593,11 +625,13 @@ Status test_decl_create_composite_array(void) {
   strcpy(test_type, "Testing: decl_create_composite_array");
   Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
-  struct decl* d = decl_create(("foo"), type_create(TYPE_ARRAY, type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL), NULL, NULL, NULL);
-  if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
+  struct decl* d = decl_create(("foo"), type_create(TYPE_ARRAY,
+                                        type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL),
+                                        NULL, NULL, NULL);
+  if (!d) { print_error(test_type, "NOT NULL", "decl d"); return FAILURE; }
   else {
     if (strcmp(d->name, "foo")) { print_error(test_type, "foo", "char* d->name"); overall_status = FAILURE; }
-    if (!d->type) { print_error(test_type, "NOT NULL", "type* d->type"); overall_status = FAILURE; }
+    if (!d->type) { print_error(test_type, "NOT NULL", "type* d->type"); return FAILURE; }
     if (d->value) { print_error(test_type, "NULL", "expr* d->value"); overall_status = FAILURE; }
     if (d->code) { print_error(test_type, "NULL", "stmt* d->code"); overall_status = FAILURE; }
     if (d->next) { print_error(test_type, "NULL", "decl* d->next"); overall_status = FAILURE; }
@@ -607,19 +641,28 @@ Status test_decl_create_composite_array(void) {
       sprintf(kind_expect, "%d", TYPE_ARRAY); sprintf(kind_actual, "%d", d->type->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (!d->type->subtype) { print_error(test_type, "NOT NULL", "type* d->type->subtype"); overall_status = FAILURE; }
+    if (!d->type->subtype) { print_error(test_type, "NOT NULL", "type* d->type->subtype"); return FAILURE; }
     if (d->type->params) { print_error(test_type, "NULL", "param_list* d->type->params"); overall_status = FAILURE; }
     if (d->type->parent) { print_error(test_type, "NULL", "type* d->type->parent"); overall_status = FAILURE; }
     if (!d->type->subtype->parent) { print_error(test_type, "NOT NULL", "type* t->parent"); overall_status = FAILURE; }
-    if (d->type != d->type->subtype->parent) { print_error(test_type, "EQUAL", "d->type == d->type->subtype->parent"); overall_status = FAILURE; }
+    if (d->type != d->type->subtype->parent) {
+      print_error(test_type, "EQUAL", "d->type == d->type->subtype->parent");
+      overall_status = FAILURE;
+    }
 
     // check for subtype subtree
     if (d->type->subtype->kind != TYPE_INTEGER) {
       sprintf(kind_expect, "%d", TYPE_INTEGER); sprintf(kind_actual, "%d", d->type->subtype->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->type->subtype->subtype) { print_error(test_type, "NULL", "type* d->type->subtype->subtype"); overall_status = FAILURE; }
-    if (d->type->subtype->params) { print_error(test_type, "NULL", "param_list* d->type->subtype->params"); overall_status = FAILURE; }
+    if (d->type->subtype->subtype) {
+      print_error(test_type, "NULL", "type* d->type->subtype->subtype");
+      overall_status = FAILURE;
+    }
+    if (d->type->subtype->params) {
+      print_error(test_type, "NULL", "param_list* d->type->subtype->params");
+      overall_status = FAILURE;
+    }
   }
   decl_destroy(&d);
   return overall_status;
@@ -634,10 +677,10 @@ Status test_decl_create_composite_function(void) {
 				      type_create(TYPE_VOID, NULL, NULL, NULL),
 				      param_list_create("x", type_create(TYPE_INTEGER, NULL, NULL,NULL), NULL), NULL),
 				      NULL, NULL, NULL);
-  if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
+  if (!d) { print_error(test_type, "NOT NULL", "decl d"); return FAILURE; }
   else {
     if (strcmp(d->name, "foo")) { print_error(test_type, "foo", "char* d->name"); overall_status = FAILURE; }
-    if (!d->type) { print_error(test_type, "NOT NULL", "type* d->type"); overall_status = FAILURE; }
+    if (!d->type) { print_error(test_type, "NOT NULL", "type* d->type"); return FAILURE; }
     if (d->value) { print_error(test_type, "NULL", "expr* d->value"); overall_status = FAILURE; }
     if (d->code) { print_error(test_type, "NULL", "stmt* d->code"); overall_status = FAILURE; }
     if (d->next) { print_error(test_type, "NULL", "decl* d->next"); overall_status = FAILURE; }
@@ -647,8 +690,8 @@ Status test_decl_create_composite_function(void) {
       sprintf(kind_expect, "%d", TYPE_FUNCTION); sprintf(kind_actual, "%d", d->type->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (!d->type->subtype) { print_error(test_type, "NOT NULL", "type* d->type->subtype"); overall_status = FAILURE; }
-    if (!d->type->params) { print_error(test_type, "NOT NULL", "param_list* d->type->params"); overall_status = FAILURE; }
+    if (!d->type->subtype) { print_error(test_type, "NOT NULL", "type* d->type->subtype"); return FAILURE; }
+    if (!d->type->params) { print_error(test_type, "NOT NULL", "param_list* d->type->params"); return FAILURE; }
     if (d->type->parent) { print_error(test_type, "NULL", "type* d->type->parent"); overall_status = FAILURE; }
 
     // check for subtype subtree
@@ -656,21 +699,49 @@ Status test_decl_create_composite_function(void) {
       sprintf(kind_expect, "%d", TYPE_VOID); sprintf(kind_actual, "%d", d->type->subtype->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->type->subtype->subtype) { print_error(test_type, "NULL", "type* d->type->subtype->subtype"); overall_status = FAILURE; }
-    if (d->type->subtype->params) { print_error(test_type, "NULL", "param_list* d->type->subtype->params"); overall_status = FAILURE; }
-    if (!d->type->subtype->parent) { print_error(test_type, "NOT NULL", "type* t->parent"); overall_status = FAILURE; }
-    if (d->type != d->type->subtype->parent) { print_error(test_type, "EQUAL", "d->type == d->type->subtype->parent"); overall_status = FAILURE; }
+    if (d->type->subtype->subtype) {
+      print_error(test_type, "NULL", "type* d->type->subtype->subtype");
+      overall_status = FAILURE;
+    }
+    if (d->type->subtype->params) {
+      print_error(test_type, "NULL", "param_list* d->type->subtype->params");
+      overall_status = FAILURE;
+    }
+    if (!d->type->subtype->parent) {
+      print_error(test_type, "NOT NULL", "type* t->parent");
+      overall_status = FAILURE;
+    }
+    if (d->type != d->type->subtype->parent) {
+      print_error(test_type, "EQUAL", "d->type == d->type->subtype->parent");
+      overall_status = FAILURE;
+    }
 
     // check for params subtree
-    if (strcmp(d->type->params->name, "x")) { print_error(test_type, "x", "char* d->type->params->name"); overall_status = FAILURE; }
+    if (!d->type->params->type) { print_error(test_type,"NOT NULL", "struct type* d->type->params->type"); return FAILURE; }
+    if (strcmp(d->type->params->name, "x")) {
+      print_error(test_type, "x", "char* d->type->params->name");
+      overall_status = FAILURE;
+    }
     if (d->type->params->type->kind != TYPE_INTEGER) {
       sprintf(kind_expect, "%d", TYPE_INTEGER); sprintf(kind_actual, "%d", d->type->params->type->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->type->params->type->subtype) { print_error(test_type, "NULL", "type* d->type->params->subtype->subtype"); overall_status = FAILURE; }
-    if (d->type->params->type->params) { print_error(test_type, "NULL", "param_list* d->type->params->subtype->params"); overall_status = FAILURE; }
-    if (d->type->params->next) { print_error(test_type, "NULL", "decl* d->type->params->next"); overall_status = FAILURE; }
-    if (d->type->params->type->parent) { print_error(test_type, "NULL", "type* d->type->params->type->parent"); overall_status = FAILURE; }
+    if (d->type->params->type->subtype) {
+      print_error(test_type, "NULL", "type* d->type->params->subtype->subtype");
+      overall_status = FAILURE;
+    }
+    if (d->type->params->type->params) {
+      print_error(test_type, "NULL", "param_list* d->type->params->subtype->params");
+      overall_status = FAILURE;
+    }
+    if (d->type->params->next) {
+      print_error(test_type, "NULL", "decl* d->type->params->next");
+      overall_status = FAILURE;
+    }
+    if (d->type->params->type->parent) {
+      print_error(test_type, "NULL", "type* d->type->params->type->parent");
+      overall_status = FAILURE;
+    }
   }
   decl_destroy(&d);
   return overall_status;
@@ -692,35 +763,45 @@ Status test_decl_create_program(void) {
 
   Status overall_status = SUCCESS;
   char kind_expect[3]; char kind_actual[3];
+
   // structs that make up param list
   struct param_list* p = param_list_create("argc", type_create(TYPE_INTEGER, NULL, NULL,NULL),
-					   param_list_create("argv", type_create(TYPE_ARRAY, type_create(TYPE_STRING, NULL, NULL, NULL), NULL, NULL), NULL)
-					  );
+					               param_list_create("argv", type_create(TYPE_ARRAY,
+                                                   type_create(TYPE_STRING, NULL, NULL, NULL),
+                                                    NULL, NULL), NULL)
+					              );
+
   // structs that make up stmts in code
   struct stmt* return_stmt = stmt_create(STMT_RETURN, NULL, NULL, expr_create_integer_literal(0), NULL, NULL, NULL, NULL);
-  struct stmt* for_body = stmt_create(STMT_PRINT, NULL, NULL, expr_create_string_literal("hello world!:)\n"), NULL, NULL, NULL, NULL);
-  struct stmt* for_stmt = stmt_create(STMT_FOR, NULL, expr_create(EXPR_ASSIGN, expr_create_name(("i")), expr_create_integer_literal(0)),
-						      expr_create(EXPR_LESS, expr_create_name(("i")), expr_create_name(("n"))),
-						      expr_create(EXPR_INC, expr_create_name(("i")), NULL),
-						      for_body, NULL, return_stmt);
-  struct stmt* n_init = stmt_create(STMT_DECL, decl_create(("n"), type_create(TYPE_INTEGER, NULL, NULL, NULL), expr_create_integer_literal(10), NULL, NULL),
-					       NULL, NULL, NULL, NULL, NULL, for_stmt);
+  struct stmt* for_body = stmt_create(STMT_PRINT, NULL, NULL,
+                                      expr_create_string_literal("hello world!:)\n"), NULL, NULL, NULL, NULL);
+  struct stmt* for_stmt = stmt_create(STMT_FOR, NULL,
+                                      expr_create(EXPR_ASSIGN, expr_create_name(("i")), expr_create_integer_literal(0)),
+						                          expr_create(EXPR_LESS, expr_create_name(("i")), expr_create_name(("n"))),
+						                          expr_create(EXPR_INC, expr_create_name(("i")), NULL),
+						                          for_body, NULL, return_stmt);
+  struct stmt* n_init = stmt_create(STMT_DECL, decl_create(("n"), type_create(TYPE_INTEGER, NULL, NULL, NULL),
+                                    expr_create_integer_literal(10), NULL, NULL),
+					                          NULL, NULL, NULL, NULL, NULL, for_stmt);
 
-  struct stmt* i_init = stmt_create(STMT_DECL, decl_create(("i"), type_create(TYPE_INTEGER, NULL, NULL, NULL), NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, n_init);
+  struct stmt* i_init = stmt_create(STMT_DECL, decl_create(("i"), type_create(TYPE_INTEGER, NULL, NULL, NULL), 
+                                    NULL, NULL, NULL), NULL, NULL, NULL, NULL, NULL, n_init);
 
 
 
   // the actual declaration (oh dear lord...)
   struct decl* d = decl_create(("main"), type_create(TYPE_FUNCTION,
-                                      type_create(TYPE_INTEGER, NULL, NULL, NULL), p, NULL), NULL, i_init, NULL);
+                                         type_create(TYPE_INTEGER, NULL, NULL, NULL),
+                                         p, NULL),
+                                         NULL, i_init, NULL);
 
   // main: function integer(argc: integer, argv: array [] string)
-  if (!d) { print_error(test_type, "NOT NULL", "decl d"); overall_status = FAILURE; }
+  if (!d) { print_error(test_type, "NOT NULL", "decl d"); return FAILURE; }
   else {
     if (strcmp(d->name, "main")) { print_error(test_type, "main", "char* d->name"); overall_status = FAILURE; }
-    if (!d->type) { print_error(test_type, "NOT NULL", "type* d->type"); overall_status = FAILURE; }
+    if (!d->type) { print_error(test_type, "NOT NULL", "type* d->type"); return FAILURE; }
     if (d->value) { print_error(test_type, "NULL", "expr* d->value"); overall_status = FAILURE; }
-    if (!d->code) { print_error(test_type, "NOT NULL", "stmt* d->code"); overall_status = FAILURE; }
+    if (!d->code) { print_error(test_type, "NOT NULL", "stmt* d->code"); return FAILURE; }
     if (d->next) { print_error(test_type, "NULL", "decl* d->next"); overall_status = FAILURE; }
 
     // check for type subtree
@@ -728,8 +809,8 @@ Status test_decl_create_program(void) {
       sprintf(kind_expect, "%d", TYPE_FUNCTION); sprintf(kind_actual, "%d", d->type->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (!d->type->subtype) { print_error(test_type, "NOT NULL", "type* d->type->subtype"); overall_status = FAILURE; }
-    if (!d->type->params) { print_error(test_type, "NOT NULL", "param_list* d->type->params"); overall_status = FAILURE; }
+    if (!d->type->subtype) { print_error(test_type, "NOT NULL", "type* d->type->subtype"); return FAILURE; }
+    if (!d->type->params) { print_error(test_type, "NOT NULL", "param_list* d->type->params"); return FAILURE; }
     if (d->type->parent) { print_error(test_type, "NULL", "type* d->type->parent"); overall_status = FAILURE; }
 
     // check for subtype subtree
@@ -737,8 +818,14 @@ Status test_decl_create_program(void) {
       sprintf(kind_expect, "%d", TYPE_INTEGER); sprintf(kind_actual, "%d", d->type->subtype->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->type->subtype->subtype) { print_error(test_type, "NULL", "type* d->type->subtype->subtype"); overall_status = FAILURE; }
-    if (d->type->subtype->params) { print_error(test_type, "NULL", "param_list* d->type->subtype->params"); overall_status = FAILURE; }
+    if (d->type->subtype->subtype) {
+      print_error(test_type, "NULL", "type* d->type->subtype->subtype");
+      overall_status = FAILURE;
+    }
+    if (d->type->subtype->params) { 
+      print_error(test_type, "NULL", "param_list* d->type->subtype->params");
+      overall_status = FAILURE;
+    }
     if (d->type->subtype->parent != d->type) {
       print_error(test_type, "EQUAL", "d->type->subtype->parent == d->type");
       overall_status = FAILURE;
@@ -747,245 +834,597 @@ Status test_decl_create_program(void) {
     // check for params subtree
 
     // argument 1: argc: integer
-    if (strcmp(d->type->params->name, "argc")) { print_error(test_type, "argc", "char* d->type->params->name"); overall_status = FAILURE; }
+    if (strcmp(d->type->params->name, "argc")) {
+      print_error(test_type, "argc", "char* d->type->params->name");
+      overall_status = FAILURE;
+    }
+    if (!d->type->params->type) {
+      print_error(test_type, "NOT NULL", "struct type* d->type->params->type"); 
+      return FAILURE;
+    }
     if (d->type->params->type->kind != TYPE_INTEGER) {
       sprintf(kind_expect, "%d", TYPE_INTEGER); sprintf(kind_actual, "%d", d->type->params->type->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->type->params->type->subtype) { print_error(test_type, "NULL", "type* d->type->params->type->subtype"); overall_status = FAILURE; }
-    if (d->type->params->type->params) { print_error(test_type, "NULL", "param_list* d->type->params->type->params"); overall_status = FAILURE; }
-    if (!d->type->params->next) { print_error(test_type, "NOT NULL", "decl* d->type->params->next"); overall_status = FAILURE; }
-    if (d->type->params->type->parent) { print_error(test_type, "NULL", "type* d->type->params->type->parent"); overall_status = FAILURE; }
+    if (d->type->params->type->subtype) { 
+      print_error(test_type, "NULL", "type* d->type->params->type->subtype");
+      overall_status = FAILURE;
+    }
+    if (d->type->params->type->params) {
+      print_error(test_type, "NULL", "param_list* d->type->params->type->params");
+      overall_status = FAILURE;
+    }
+    if (!d->type->params->next) { print_error(test_type, "NOT NULL", "decl* d->type->params->next"); return FAILURE; }
+    if (d->type->params->type->parent) {
+      print_error(test_type, "NULL", "type* d->type->params->type->parent");
+      overall_status = FAILURE;
+    }
 
     // argument 2 : argv: array [] string
-    if (strcmp(d->type->params->next->name, "argv")) { print_error(test_type, "argv", "char* d->type->params->next->name"); overall_status = FAILURE; }
+    if (strcmp(d->type->params->next->name, "argv")) {
+      print_error(test_type, "argv", "char* d->type->params->next->name");
+      overall_status = FAILURE;
+    }
+    if (!d->type->params->next->type) {
+      print_error(test_type, "NOT NULL", "struct type* d->type->params->next->type");
+      return FAILURE;
+    }
     if (d->type->params->next->type->kind != TYPE_ARRAY) {
       sprintf(kind_expect, "%d", TYPE_ARRAY); sprintf(kind_actual, "%d", d->type->params->next->type->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
+
     // has subtype
-    if (!d->type->params->next->type->subtype) { print_error(test_type, "NOT NULL", "type* d->type->params->next->type->subtype"); overall_status = FAILURE; }
+    if (!d->type->params->next->type->subtype) {
+      print_error(test_type, "NOT NULL", "type* d->type->params->next->type->subtype");
+      return FAILURE;
+    }
     if (d->type->params->next->type->subtype->kind != TYPE_STRING) {
       sprintf(kind_expect, "%d", TYPE_STRING); sprintf(kind_actual, "%d", d->type->params->next->type->subtype->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->type->params->next->type->params) { print_error(test_type, "NULL", "param_list* d->type->params->next->type->params"); overall_status = FAILURE; }
-    if (d->type->params->next->next) { print_error(test_type, "NULL", "decl* d->type->params->next->next"); overall_status = FAILURE; }
+    if (d->type->params->next->type->params) {
+      print_error(test_type, "NULL", "param_list* d->type->params->next->type->params");
+      overall_status = FAILURE;
+    }
+    if (d->type->params->next->next) {
+      print_error(test_type, "NULL", "decl* d->type->params->next->next");
+      overall_status = FAILURE;
+    }
     if (d->type->params->next->type->subtype->parent != d->type->params->next->type) {
         print_error(test_type, "EQUAL", "d->type->params->next->type->subtype->parent == d->type->params->next->type");
         overall_status = FAILURE;
     }
 
-    // check for code subtree (this will consist of A LOT, this was a pain to write...
+    // check for code subtree (this will consist of A LOT, this was a pain to write...)
 
-    // i: integer, d->code->decl...
+    // i: integer;  d->code->decl...
     if (d->code->kind != STMT_DECL) {
       sprintf(kind_expect, "%d", STMT_DECL); sprintf(kind_actual, "%d", d->code->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (strcmp(d->code->decl->name, "i")) { print_error(test_type, "i", "char* d->code->decl->name"); overall_status = FAILURE; }
-    if (!d->code->decl->type) { print_error(test_type, "NOT NULL", "type* d->code->decl->type"); overall_status = FAILURE; }
-    if (d->code->decl->value) { print_error(test_type, "NULL", "expr* d->code->decl->value"); overall_status = FAILURE; }
-    if (d->code->decl->code) { print_error(test_type, "NULL", "stmt* d->code->decl->code"); overall_status = FAILURE; }
-    if (!d->code->next) { print_error(test_type, "NOT NULL", "decl* d->code->next"); overall_status = FAILURE; }
+    if (strcmp(d->code->decl->name, "i")) {
+      print_error(test_type, "i", "char* d->code->decl->name");
+      overall_status = FAILURE;
+    }
+    if (!d->code->decl->type) {
+      print_error(test_type, "NOT NULL", "type* d->code->decl->type");
+      return FAILURE;
+    }
+    if (d->code->decl->value) {
+      print_error(test_type, "NULL", "expr* d->code->decl->value");
+      overall_status = FAILURE;
+    }
+    if (d->code->decl->code) {
+      print_error(test_type, "NULL", "stmt* d->code->decl->code");
+      overall_status = FAILURE;
+    }
+    if (!d->code->next) {
+      print_error(test_type, "NOT NULL", "decl* d->code->next");
+      return FAILURE;
+    }
 
     // check for type subtree
     if (d->code->decl->type->kind != TYPE_INTEGER) {
       sprintf(kind_expect, "%d", TYPE_INTEGER); sprintf(kind_actual, "%d", d->code->decl->type->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->decl->type->subtype) { print_error(test_type, "NULL", "type* d->code->decl->type->subtype"); overall_status = FAILURE; }
-    if (d->code->decl->type->params) { print_error(test_type, "NULL", "param_list* d->code->decl->type->params"); overall_status = FAILURE; }
-    if (d->code->decl->type->parent) { print_error(test_type, "NULL", "type* d->code->decl_type->parent"); overall_status = FAILURE; }
+    if (d->code->decl->type->subtype) {
+      print_error(test_type, "NULL", "type* d->code->decl->type->subtype");
+      overall_status = FAILURE;
+    }
+    if (d->code->decl->type->params) {
+      print_error(test_type, "NULL", "param_list* d->code->decl->type->params");
+      overall_status = FAILURE;
+    }
+    if (d->code->decl->type->parent) {
+      print_error(test_type, "NULL", "type* d->code->decl_type->parent");
+      overall_status = FAILURE;
+    }
 
-    // n: integer = 10, d->code->next->decl...
+    // n: integer = 10; d->code->next->decl...
     if (d->code->next->kind != STMT_DECL) {
       sprintf(kind_expect, "%d", STMT_DECL); sprintf(kind_actual, "%d", d->code->next->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (strcmp(d->code->next->decl->name, "n")) { print_error(test_type, "n", "char* d->code->next->decl->name"); overall_status = FAILURE; }
-    if (!d->code->next->decl->type) { print_error(test_type, "NOT NULL", "type* d->code->next->decl->type"); overall_status = FAILURE; }
-    if (!d->code->next->decl->value) { print_error(test_type, "NOT NULL", "expr* d->code->next->decl->value"); overall_status = FAILURE; }
-    if (d->code->next->decl->code) { print_error(test_type, "NULL", "stmt* d->code->next->decl->code"); overall_status = FAILURE; }
-    if (!d->code->next->next) { print_error(test_type, "NOT NULL", "decl* d->code->next->next"); overall_status = FAILURE; }
+    if (strcmp(d->code->next->decl->name, "n")) {
+      print_error(test_type, "n", "char* d->code->next->decl->name");
+      overall_status = FAILURE;
+    }
+    if (!d->code->next->decl->type) {
+      print_error(test_type, "NOT NULL", "type* d->code->next->decl->type");
+      return FAILURE;
+    }
+    if (!d->code->next->decl->value) {
+      print_error(test_type, "NOT NULL", "expr* d->code->next->decl->value");
+      return FAILURE;
+    }
+    if (d->code->next->decl->code) {
+      print_error(test_type, "NULL", "stmt* d->code->next->decl->code");
+      overall_status = FAILURE;
+    }
+    if (!d->code->next->next) {
+      print_error(test_type, "NOT NULL", "decl* d->code->next->next");
+      return FAILURE;
+    }
 
     // check for type subtree
     if (d->code->next->decl->type->kind != TYPE_INTEGER) {
       sprintf(kind_expect, "%d", TYPE_INTEGER); sprintf(kind_actual, "%d", d->code->next->decl->type->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->decl->type->subtype) { print_error(test_type, "NULL", "type* d->code->next->decl->type->subtype"); overall_status = FAILURE; }
-    if (d->code->next->decl->type->params) { print_error(test_type, "NULL", "param_list* d->code->next->decl->type->params"); overall_status = FAILURE; }
-    if (d->code->next->decl->type->parent) { print_error(test_type, "NULL", "type* d->code->next->decl->type->parent"); overall_status = FAILURE; }
+    if (d->code->next->decl->type->subtype) {
+      print_error(test_type, "NULL", "type* d->code->next->decl->type->subtype");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->decl->type->params) {
+      print_error(test_type, "NULL", "param_list* d->code->next->decl->type->params");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->decl->type->parent) {
+      print_error(test_type, "NULL", "type* d->code->next->decl->type->parent");
+      overall_status = FAILURE;
+    }
 
     // check for value (expr) subtree
     if (d->code->next->decl->value->kind != EXPR_INT) {
       sprintf(kind_expect, "%d", EXPR_INT); sprintf(kind_actual, "%d", d->code->next->decl->value->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->decl->value->left) { print_error(test_type, "NULL", "expr* d->code->next->decl->value->left"); overall_status = FAILURE; }
-    if (d->code->next->decl->value->right) { print_error(test_type, "NULL", "expr* d->code->next->decl->value->right"); overall_status = FAILURE; }
-    if (d->code->next->decl->value->name) { print_error(test_type, "NULL", "char* d->code->next->decl->value->name"); overall_status = FAILURE; }
+    if (d->code->next->decl->value->left) {
+      print_error(test_type, "NULL", "expr* d->code->next->decl->value->left");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->decl->value->right) {
+      print_error(test_type, "NULL", "expr* d->code->next->decl->value->right");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->decl->value->name) {
+      print_error(test_type, "NULL", "char* d->code->next->decl->value->name");
+      overall_status = FAILURE;
+    }
     if (d->code->next->decl->value->literal_value != 10) {
       sprintf(kind_expect, "%d", 10); sprintf(kind_actual, "%ld", d->code->next->decl->value->literal_value);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->decl->value->string_literal) { print_error(test_type, "NULL", "char* d->code->next->decl->value->string_literal"); overall_status = FAILURE; }
+    if (d->code->next->decl->value->string_literal) {
+      print_error(test_type, "NULL", "char* d->code->next->decl->value->string_literal");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->decl->value->parent) {
+      print_error(test_type, "NULL", "struct expr* d->code->next->decl->value->parent");
+      overall_status = FAILURE;
+    }
 
     // for (i = 0; i < n; i++) print "hello world!:)\n"; d->code->next->next...
+    if (!d->code->next->next) {
+      print_error(test_type, "NOT NULL", "struct stmt* d->code->next->next");
+      return FAILURE;
+    }
     if (d->code->next->next->kind != STMT_FOR) {
       sprintf(kind_expect, "%d", STMT_FOR); sprintf(kind_actual, "%d", d->code->next->next->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->decl) { print_error(test_type, "NULL", "decl* d->code->next->next->decl"); overall_status = FAILURE; }
-    if (!d->code->next->next->init_expr) { print_error(test_type, "NOT NULL", "expr* d->code->next->next->init_expr"); overall_status = FAILURE; }
-    if (!d->code->next->next->expr) { print_error(test_type, "NOT NULL", "expr* d->code->next->next->expr"); overall_status = FAILURE; }
-    if (!d->code->next->next->next_expr) { print_error(test_type, "NOT NULL", "expr* d->code->next->next->next_expr"); overall_status = FAILURE; }
-    if (!d->code->next->next->body) { print_error(test_type, "NOT NULL", "stmt* d->code->next->next->body"); overall_status = FAILURE; }
-    if (d->code->next->next->else_body) { print_error(test_type, "NULL", "stmt* d->code->next->next->else_body"); overall_status = FAILURE; }
-    if (!d->code->next->next->next) { print_error(test_type, "NOT NULL", "stmt* d->code->next->next->next"); overall_status = FAILURE; }
+    if (d->code->next->next->decl) {
+      print_error(test_type, "NULL", "decl* d->code->next->next->decl");
+      overall_status = FAILURE;
+    }
+    if (!d->code->next->next->init_expr) {
+      print_error(test_type, "NOT NULL", "expr* d->code->next->next->init_expr");
+      return FAILURE;
+    }
+    if (!d->code->next->next->expr) {
+      print_error(test_type, "NOT NULL", "expr* d->code->next->next->expr");
+      return FAILURE;
+    }
+    if (!d->code->next->next->next_expr) {
+      print_error(test_type, "NOT NULL", "expr* d->code->next->next->next_expr");
+      return FAILURE;
+    }
+    if (!d->code->next->next->body) {
+      print_error(test_type, "NOT NULL", "stmt* d->code->next->next->body");
+      return FAILURE;
+    }
+    if (d->code->next->next->else_body) {
+      print_error(test_type, "NULL", "stmt* d->code->next->next->else_body");
+      overall_status = FAILURE;
+    }
+    if (!d->code->next->next->next) {
+      print_error(test_type, "NOT NULL", "stmt* d->code->next->next->next");
+      return FAILURE;
+    }
 
     // check for init_expr subtree
+    // i = 0
     if (d->code->next->next->init_expr->kind != EXPR_ASSIGN) {
       sprintf(kind_expect, "%d", EXPR_ASSIGN); sprintf(kind_actual, "%d", d->code->next->next->init_expr->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (!d->code->next->next->init_expr->left) { print_error(test_type, "NOT NULL", "expr* d->code->next->next->init_expr->left"); overall_status = FAILURE; }
-    if (!d->code->next->next->init_expr->right) { print_error(test_type, "NOT NULL", "expr* d->code->next->next->init_expr->right"); overall_status = FAILURE; }
-    if (d->code->next->next->init_expr->name) { print_error(test_type, "NULL", "char* d->code->next->next->init_expr->name"); overall_status = FAILURE; }
-    if (d->code->next->next->init_expr->literal_value) { print_error(test_type, "NULL", "int* d->code->next->next->init_expr->literal_value"); overall_status = FAILURE; }
-    if (d->code->next->next->init_expr->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->init_expr->string_literal"); overall_status = FAILURE; }
+    if (!d->code->next->next->init_expr->left) {
+      print_error(test_type, "NOT NULL", "expr* d->code->next->next->init_expr->left");
+      return FAILURE;
+    }
+    if (!d->code->next->next->init_expr->right) {
+      print_error(test_type, "NOT NULL", "expr* d->code->next->next->init_expr->right");
+      return FAILURE;
+    }
+    if (d->code->next->next->init_expr->name) {
+      print_error(test_type, "NULL", "char* d->code->next->next->init_expr->name");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->init_expr->literal_value) {
+      print_error(test_type, "0", "int* d->code->next->next->init_expr->literal_value");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->init_expr->string_literal) {
+      print_error(test_type, "NULL", "char* d->code->next->next->init_expr->string_literal");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->init_expr->parent) {
+      print_error(test_type, "NULL", "struct expr* d->code->next->next->init_expr->parent");
+      overall_status = FAILURE;
+    }
 
     // check for init_expr left subtree
     if (d->code->next->next->init_expr->left->kind != EXPR_NAME) {
       sprintf(kind_expect, "%d", EXPR_NAME); sprintf(kind_actual, "%d", d->code->next->next->init_expr->left->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->init_expr->left->left) { print_error(test_type, "NULL", "expr* d->code->next->next->init_expr->left->left"); overall_status = FAILURE; }
-    if (d->code->next->next->init_expr->left->right) { print_error(test_type, "NULL", "expr* d->code->next->next->init_expr->left->right"); overall_status = FAILURE; }
-    if (strcmp("i", d->code->next->next->init_expr->left->name)) { print_error(test_type, "i", "char* d->code->next->next->init_expr->left->name"); overall_status = FAILURE; }
-    if (d->code->next->next->init_expr->left->literal_value) { print_error(test_type, "NULL", "int d->code->next->next->init_expr->left->literal_value"); overall_status = FAILURE; }
-    if (d->code->next->next->init_expr->left->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->init_expr->left->string_literal"); overall_status = FAILURE; }
+    if (d->code->next->next->init_expr->left->parent != d->code->next->next->init_expr) {
+      print_error(test_type, "EQUAL", "expr* d->code->next->next->init_expr->left->parent == d->code->next->next->init_expr");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->init_expr->left->left) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->init_expr->left->left");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->init_expr->left->right) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->init_expr->left->right");
+      overall_status = FAILURE;
+    }
+    if (strcmp("i", d->code->next->next->init_expr->left->name)) {
+      print_error(test_type, "i", "char* d->code->next->next->init_expr->left->name");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->init_expr->left->literal_value) {
+      print_error(test_type, "0", "int d->code->next->next->init_expr->left->literal_value");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->init_expr->left->string_literal) {
+      print_error(test_type, "NULL", "char* d->code->next->next->init_expr->left->string_literal");
+      overall_status = FAILURE;
+    }
 
     // check for init_expr right subtree
     if (d->code->next->next->init_expr->right->kind != EXPR_INT) {
       sprintf(kind_expect, "%d", EXPR_INT); sprintf(kind_actual, "%d", d->code->next->next->init_expr->right->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->init_expr->right->left) { print_error(test_type, "NULL", "expr* d->code->next->next->init_expr->right->left"); overall_status = FAILURE; }
-    if (d->code->next->next->init_expr->right->right) { print_error(test_type, "NULL", "expr* d->code->next->next->init_expr->right->right"); overall_status = FAILURE; }
-    if (d->code->next->next->init_expr->right->name) { print_error(test_type, "NULL", "char* d->code->next->next->init_expr->right->name"); overall_status = FAILURE; }
+    if (d->code->next->next->init_expr->right->parent != d->code->next->next->init_expr) {
+      print_error(test_type, "EQUAL", "expr* d->code->next->next->init_expr->right->parent == d->code->next->next->init_expr");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->init_expr->right->left) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->init_expr->right->left");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->init_expr->right->right) { 
+      print_error(test_type, "NULL", "expr* d->code->next->next->init_expr->right->right");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->init_expr->right->name) {
+      print_error(test_type, "NULL", "char* d->code->next->next->init_expr->right->name");
+      overall_status = FAILURE;
+    }
     if (d->code->next->next->init_expr->literal_value != 0) {
       sprintf(kind_expect, "%d", EXPR_INT); sprintf(kind_actual, "%ld", d->code->next->next->init_expr->literal_value);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->init_expr->left->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->init_expr->right->string_literal"); overall_status = FAILURE; }
+    if (d->code->next->next->init_expr->left->string_literal) {
+      print_error(test_type, "NULL", "char* d->code->next->next->init_expr->right->string_literal");
+      overall_status = FAILURE;
+    }
 
     // check for expr subtree
+    // i < n
     if (d->code->next->next->expr->kind != EXPR_LESS) {
       sprintf(kind_expect, "%d", EXPR_LESS); sprintf(kind_actual, "%d", d->code->next->next->expr->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (!d->code->next->next->expr->left) { print_error(test_type, "NOT NULL", "expr* d->code->next->next->expr->left"); overall_status = FAILURE; }
-    if (!d->code->next->next->expr->right) { print_error(test_type, "NOTNULL", "expr* d->code->next->next->expr->right"); overall_status = FAILURE; }
-    if (d->code->next->next->expr->name) { print_error(test_type, "NULL", "char* d->code->next->next->expr->name"); overall_status = FAILURE; }
-    if (d->code->next->next->expr->literal_value) { print_error(test_type, "NULL", "int d->code->next->next->expr->literal_value"); overall_status = FAILURE; }
-    if (d->code->next->next->expr->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->expr->string_literal"); overall_status = FAILURE; }
+    if (d->code->next->next->expr->parent) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->expr");
+      overall_status = FAILURE;
+    }
+    if (!d->code->next->next->expr->left) {
+      print_error(test_type, "NOT NULL", "expr* d->code->next->next->expr->left");
+      return FAILURE;
+    }
+    if (!d->code->next->next->expr->right) {
+      print_error(test_type, "NOTNULL", "expr* d->code->next->next->expr->right");
+      return FAILURE;
+    }
+    if (d->code->next->next->expr->name) {
+      print_error(test_type, "NULL", "char* d->code->next->next->expr->name");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->expr->literal_value) {
+      print_error(test_type, "0", "int d->code->next->next->expr->literal_value");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->expr->string_literal) {
+      print_error(test_type, "NULL", "char* d->code->next->next->expr->string_literal");
+      overall_status = FAILURE;
+    }
 
     // check for expr left subtree
     if (d->code->next->next->expr->left->kind != EXPR_NAME) {
       sprintf(kind_expect, "%d", EXPR_NAME); sprintf(kind_actual, "%d", d->code->next->next->expr->left->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->expr->left->left) { print_error(test_type, "NULL", "expr* d->code->next->next->expr->left->left"); overall_status = FAILURE; }
-    if (d->code->next->next->expr->left->right) { print_error(test_type, "NULL", "expr* d->code->next->next->expr->left->right"); overall_status = FAILURE; }
-    if (strcmp("i", d->code->next->next->expr->left->name)) { print_error(test_type, "i", "char* d->code->next->next->expr->left->name"); overall_status = FAILURE; }
-    if (d->code->next->next->expr->left->literal_value) {  print_error(test_type, "NULL", "int d->code->next->next->expr->left->literal_value"); overall_status = FAILURE; }
-    if (d->code->next->next->expr->left->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->expr->right->string_literal"); overall_status = FAILURE; }
+    if (d->code->next->next->expr->left->parent != d->code->next->next->expr) {
+      print_error(test_type, "EQUAL", "expr* d->code->next->next->expr->left->parent == d->code->next->next->expr");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->expr->left->left) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->expr->left->left");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->expr->left->right) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->expr->left->right");
+      overall_status = FAILURE;
+    }
+    if (strcmp("i", d->code->next->next->expr->left->name)) {
+      print_error(test_type, "i", "char* d->code->next->next->expr->left->name");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->expr->left->literal_value) {
+      print_error(test_type, "0", "int d->code->next->next->expr->left->literal_value");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->expr->left->string_literal) {
+      print_error(test_type, "NULL", "char* d->code->next->next->expr->right->string_literal");
+      overall_status = FAILURE;
+    }
 
     // check for expr right subtree
     if (d->code->next->next->expr->right->kind != EXPR_NAME) {
       sprintf(kind_expect, "%d", EXPR_NAME); sprintf(kind_actual, "%d", d->code->next->next->expr->right->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->expr->right->left) { print_error(test_type, "NULL", "expr* d->code->next->next->expr->right->left"); overall_status = FAILURE; }
-    if (d->code->next->next->expr->right->right) { print_error(test_type, "NULL", "expr* d->code->next->next->expr->right->right"); overall_status = FAILURE; }
-    if (strcmp("n", d->code->next->next->expr->right->name)) { print_error(test_type, "i", "char* d->code->next->next->expr->right->name"); overall_status = FAILURE; }
-    if (d->code->next->next->expr->right->literal_value) {  print_error(test_type, "NULL", "int d->code->next->next->expr->right->literal_value"); overall_status = FAILURE; }
-    if (d->code->next->next->expr->right->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->expr->right->string_literal"); overall_status = FAILURE; }
+    if (d->code->next->next->expr->right->parent != d->code->next->next->expr) {
+      print_error(test_type, "EQUAL", "expr* d->code->next->next->expr->right->parent == d->code->next->next->expr");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->expr->right->left) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->expr->right->left");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->expr->right->right) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->expr->right->right");
+      overall_status = FAILURE;
+    }
+    if (strcmp("n", d->code->next->next->expr->right->name)) {
+      print_error(test_type, "i", "char* d->code->next->next->expr->right->name");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->expr->right->literal_value) { 
+      print_error(test_type, "0", "int d->code->next->next->expr->right->literal_value");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->expr->right->string_literal) {
+      print_error(test_type, "NULL", "char* d->code->next->next->expr->right->string_literal");
+      overall_status = FAILURE;
+    }
 
     // check for next_expr subtree
+    // i++
     if (d->code->next->next->next_expr->kind != EXPR_INC) {
       sprintf(kind_expect, "%d", EXPR_INC); sprintf(kind_actual, "%d", d->code->next->next->next_expr->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (!d->code->next->next->next_expr->left) { print_error(test_type, "NOT NULL", "expr* d->code->next->next->next_expr->left"); overall_status = FAILURE; }
-    if (d->code->next->next->next_expr->right) { print_error(test_type, "NULL", "expr* d->code->next->next->next_expr->right"); overall_status = FAILURE; }
-    if (d->code->next->next->next_expr->name) { print_error(test_type, "NULL", "char* d->code->next->next->next_expr->name"); overall_status = FAILURE; }
-    if (d->code->next->next->next_expr->literal_value) { print_error(test_type, "NULL", "int d->code->next->next->next_expr->literal_value"); overall_status = FAILURE; }
-    if (d->code->next->next->next_expr->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->next_expr->string_literal"); overall_status = FAILURE; }
+    if (d->code->next->next->next_expr->parent) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->next_expr->parent");
+      overall_status = FAILURE;
+    }
+    if (!d->code->next->next->next_expr->left) {
+      print_error(test_type, "NOT NULL", "expr* d->code->next->next->next_expr->left");
+      return FAILURE;
+    }
+    if (d->code->next->next->next_expr->right) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->next_expr->right"); 
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next_expr->name) {
+      print_error(test_type, "NULL", "char* d->code->next->next->next_expr->name");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next_expr->literal_value) {
+      print_error(test_type, "0", "int d->code->next->next->next_expr->literal_value");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next_expr->string_literal) {
+      print_error(test_type, "NULL", "char* d->code->next->next->next_expr->string_literal");
+      overall_status = FAILURE;
+    }
 
     // check for next_expr left subtree
     if (d->code->next->next->next_expr->left->kind != EXPR_NAME) {
       sprintf(kind_expect, "%d", EXPR_NAME); sprintf(kind_actual, "%d", d->code->next->next->next_expr->left->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->next_expr->left->left) { print_error(test_type, "NULL", "expr* d->code->next->next->next_expr->left->left"); overall_status = FAILURE; }
-    if (d->code->next->next->next_expr->left->right) { print_error(test_type, "NULL", "expr* d->code->next->next->next_expr->left->right"); overall_status = FAILURE; }
-    if (strcmp("i", d->code->next->next->next_expr->left->name)) { print_error(test_type, "i", "char* d->code->next->next->next_expr->left->name"); overall_status = FAILURE; }
-    if (d->code->next->next->next_expr->left->literal_value) { print_error(test_type, "NULL", "int d->code->next->next->next_expr->left->literal_value"); overall_status = FAILURE; }
-    if (d->code->next->next->expr->left->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->expr->left->string_literal"); overall_status = FAILURE; }
+    if (d->code->next->next->next_expr->left->parent != d->code->next->next->next_expr) {
+      print_error(test_type, "EQUAL", "expr* d->code->next->next->next_expr->left->parent == d->code->next->next->next_expr");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next_expr->left->left) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->next_expr->left->left");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next_expr->left->right) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->next_expr->left->right");
+      overall_status = FAILURE;
+    }
+    if (strcmp("i", d->code->next->next->next_expr->left->name)) {
+      print_error(test_type, "i", "char* d->code->next->next->next_expr->left->name");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next_expr->left->literal_value) {
+      print_error(test_type, "NULL", "int d->code->next->next->next_expr->left->literal_value");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->expr->left->string_literal) {
+      print_error(test_type, "0", "char* d->code->next->next->expr->left->string_literal");
+      overall_status = FAILURE;
+    }
 
     // check for body subtree
+    // print "hello world!:)\n"
     if (d->code->next->next->body->kind != STMT_PRINT) {
       sprintf(kind_expect, "%d", STMT_PRINT); sprintf(kind_actual, "%d", d->code->next->next->body->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->body->decl) { print_error(test_type, "NULL", "decl* d->code->next->next->body->decl"); overall_status = FAILURE; }
-    if (d->code->next->next->body->init_expr) { print_error(test_type, "NULL", "expr* d->code->next->next->body->init_expr"); overall_status = FAILURE; }
-    if (!d->code->next->next->body->expr) { print_error(test_type, "NOT NULL", "expr* d->code->next->next->body->expr"); overall_status = FAILURE; }
-    if (d->code->next->next->body->next_expr) { print_error(test_type, "NULL", "expr* d->code->next->next->body->next_expr"); overall_status = FAILURE; }
-    if (d->code->next->next->body->body) { print_error(test_type, "NULL", "stmt* d->code->next->next->body->body"); overall_status = FAILURE; }
-    if (d->code->next->next->body->else_body) { print_error(test_type, "NULL", "stmt* d->code->next->next->body->else_body"); overall_status = FAILURE; }
-    if (d->code->next->next->body->next) { print_error(test_type, "NULL", "stmt* d->code->next->next->body->next"); overall_status = FAILURE; }
+    if (d->code->next->next->body->decl) {
+      print_error(test_type, "NULL", "decl* d->code->next->next->body->decl");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->body->init_expr) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->body->init_expr");
+      overall_status = FAILURE;
+    }
+    if (!d->code->next->next->body->expr) {
+      print_error(test_type, "NOT NULL", "expr* d->code->next->next->body->expr");
+      return FAILURE;
+    }
+    if (d->code->next->next->body->next_expr) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->body->next_expr");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->body->body) {
+      print_error(test_type, "NULL", "stmt* d->code->next->next->body->body");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->body->else_body) {
+      print_error(test_type, "NULL", "stmt* d->code->next->next->body->else_body");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->body->next) {
+      print_error(test_type, "NULL", "stmt* d->code->next->next->body->next");
+      overall_status = FAILURE;
+    }
 
     // check for body expr subtree
     if (d->code->next->next->body->expr->kind != EXPR_STR) {
       sprintf(kind_expect, "%d", EXPR_STR); sprintf(kind_actual, "%d", d->code->next->next->body->expr->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->body->expr->left) { print_error(test_type, "NULL", "expr* d->code->next->next->next_expr->left->left"); overall_status = FAILURE; }
-    if (d->code->next->next->body->expr->right) { print_error(test_type, "NULL", "expr* d->code->next->next->next_expr->left->right"); overall_status = FAILURE; }
-    if (d->code->next->next->body->expr->name) { print_error(test_type, "NULL", "char* d->code->next->next->next_expr->left->name"); overall_status = FAILURE; }
-    if (d->code->next->next->body->expr->literal_value) { print_error(test_type, "NULL", "int d->code->next->next->next_expr->left->literal_value"); overall_status = FAILURE; }
-    if (strcmp(d->code->next->next->body->expr->string_literal, "hello world!:)\n")) { print_error(test_type, "NULL", " char* d->code->next->next->body->string_literal"); overall_status = FAILURE; }
+    if (d->code->next->next->body->expr->parent) {
+      print_error(test_type, "NULL", "stuct expr* d->code->next->next->body->expr->parent");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->body->expr->left) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->next_expr->left->left");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->body->expr->right) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->next_expr->left->right");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->body->expr->name) {
+      print_error(test_type, "NULL", "char* d->code->next->next->next_expr->left->name");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->body->expr->literal_value) {
+      print_error(test_type, "NULL", "int d->code->next->next->next_expr->left->literal_value");
+      overall_status = FAILURE;
+    }
+    if (strcmp(d->code->next->next->body->expr->string_literal, "hello world!:)\n")) {
+      print_error(test_type, "NULL", " char* d->code->next->next->body->string_literal");
+      overall_status = FAILURE;
+    }
 
     // return 0; d->code->next->next->next
     if (d->code->next->next->next->kind != STMT_RETURN) {
       sprintf(kind_expect, "%d", STMT_RETURN); sprintf(kind_actual, "%d", d->code->next->next->next->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->next->decl) { print_error(test_type, "NULL", "decl* d->code->next->next->next->decl"); overall_status = FAILURE; }
-    if (d->code->next->next->next->init_expr) { print_error(test_type, "NULL", "expr* d->code->next->next->next->init_expr"); overall_status = FAILURE; }
-    if (!d->code->next->next->next->expr) { print_error(test_type, "NOT NULL", "expr* d->code->next->next->next->expr"); overall_status = FAILURE; }
-    if (d->code->next->next->next->next_expr) { print_error(test_type, "NULL", "expr* d->code->next->next->next->next_expr"); overall_status = FAILURE; }
-    if (d->code->next->next->next->body) { print_error(test_type, "NULL", "stmt* d->code->next->next->next->body"); overall_status = FAILURE; }
-    if (d->code->next->next->next->else_body) { print_error(test_type, "NULL", "stmt* d->code->next->next->next->else_body"); overall_status = FAILURE; }
-    if (d->code->next->next->next->next) { print_error(test_type, "NULL", "stmt* d->code->next->next->next->next"); overall_status = FAILURE; }
+    if (d->code->next->next->next->decl) {
+      print_error(test_type, "NULL", "decl* d->code->next->next->next->decl");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next->init_expr) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->next->init_expr");
+      overall_status = FAILURE;
+    }
+    if (!d->code->next->next->next->expr) {
+      print_error(test_type, "NOT NULL", "expr* d->code->next->next->next->expr");
+      return FAILURE;
+    }
+    if (d->code->next->next->next->next_expr) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->next->next_expr");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next->body) {
+      print_error(test_type, "NULL", "stmt* d->code->next->next->next->body");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next->else_body) {
+      print_error(test_type, "NULL", "stmt* d->code->next->next->next->else_body");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next->next) {
+      print_error(test_type, "NULL", "stmt* d->code->next->next->next->next");
+      overall_status = FAILURE;
+    }
 
     // check for expr subtree
     if (d->code->next->next->next->expr->kind != EXPR_INT) {
       sprintf(kind_expect, "%d", EXPR_INT); sprintf(kind_actual, "%d", d->code->next->next->next->expr->kind);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->next->expr->left) { print_error(test_type, "NULL", "expr* d->code->next->next->next->expr->left"); overall_status = FAILURE; }
-    if (d->code->next->next->next->expr->right) { print_error(test_type, "NULL", "expr* d->code->next->next->next->expr->right"); overall_status = FAILURE; }
-    if (d->code->next->next->next->expr->name) { print_error(test_type, "NULL", "char* d->code->next->next->next->expr->name"); overall_status = FAILURE; }
+    if (d->code->next->next->next->expr->parent) {
+      print_error(test_type, "NULL", "struct expr* d->code->next->next->next->expr->parent");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next->expr->left) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->next->expr->left");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next->expr->right) {
+      print_error(test_type, "NULL", "expr* d->code->next->next->next->expr->right");
+      overall_status = FAILURE;
+    }
+    if (d->code->next->next->next->expr->name) {
+      print_error(test_type, "NULL", "char* d->code->next->next->next->expr->name");
+      overall_status = FAILURE;
+    }
     if (d->code->next->next->next->expr->literal_value != 0) {
       sprintf(kind_expect, "%d", 0); sprintf(kind_actual, "%ld", d->code->next->next->next->expr->literal_value);
       print_error(test_type, kind_expect, kind_actual); overall_status = FAILURE;
     }
-    if (d->code->next->next->next->expr->string_literal) { print_error(test_type, "NULL", "char* d->code->next->next->next->expr->string_literal"); overall_status = FAILURE; }
+    if (d->code->next->next->next->expr->string_literal) {
+      print_error(test_type, "NULL", "char* d->code->next->next->next->expr->string_literal");
+      overall_status = FAILURE;
+    }
   }
   decl_destroy(&d);
   return overall_status;

@@ -28,7 +28,7 @@ Changes since assignment 4:
       this saves the address value for a symbol while they are being generated.
    - Updated typechecker for constant expresion checking
    - Error handlers now display the error enum name to be more descriptive.
-   - Type structures are now bidirectional.
+   - Type and Expr structures are now bidirectional.
 
 4. Misc:
    - Various code cleanups for better readability, code-style consistency, and better cohesion.
@@ -65,7 +65,7 @@ Register Error Messages:
 Codegen Error Messages:
   Expressions:
       Errors:
-         EXPR_BYZERO --> Division or Modulus by zero deteted
+         EXPR_BYZERO --> Division or Modulus by zero detected
       Warnings:
          ERR_OVERFLOW --> Integer overflow detected
          ERR_UNDERFLOW --> Integer underflow detected
@@ -164,7 +164,7 @@ use assembly emulator to help you.
 		DONEtest
 	DONE- other operations
 		DONEimplement
-		DONEtest (for the most part, still plagued with segfaults when arrays are involved however...)
+		DONEtest (mostly, stil issues with error handlers)
 	- fcall (not necessarily declaration, just stuff before and after call)
 		implement
 		test
